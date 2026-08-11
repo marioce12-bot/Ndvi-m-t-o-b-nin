@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { collection, doc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { firestoreDb } from "@/lib/firebase";
 
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
@@ -12,7 +14,9 @@ const pentades = [
   { id: "2026-P41", label: "21–25 juillet 2026", detail: "P41 · 2026" },
 ];
 
-const maps = [
+type GalleryMap = { id: string | number; product: Product; label: string; date: string; tone: string; value?: string; imageUrl?: string; thumbnailUrl?: string };
+
+const mockMaps: GalleryMap[] = [
   { id: 1, product: "anomaly" as Product, label: "6–10 août 2026", date: "Il y a 18 min", tone: "olive", value: "108 %" },
   { id: 2, product: "ndvi" as Product, label: "1–5 août 2026", date: "Il y a 2 h", tone: "forest", value: "0,62" },
   { id: 3, product: "anomaly" as Product, label: "26–31 juillet 2026", date: "Hier", tone: "sand", value: "96 %" },
@@ -51,22 +55,56 @@ function MapArtwork({ tone, large = false }: { tone: string; large?: boolean }) 
 export default function HomePage() {
   const [product, setProduct] = useState<Product>("anomaly");
   const [pentade, setPentade] = useState(pentades[0].id);
+  const [availablePentades, setAvailablePentades] = useState(pentades);
   const [filter, setFilter] = useState<Filter>("all");
-  const [activeMap, setActiveMap] = useState<(typeof maps)[number] | null>(null);
-  const [status, setStatus] = useState<"idle" | "processing" | "done">("idle");
+  const [activeMap, setActiveMap] = useState<GalleryMap | null>(null);
+  const [maps, setMaps] = useState<GalleryMap[]>([]);
+  const [status, setStatus] = useState<"idle" | "pending" | "processing" | "done" | "error">("idle");
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [email, setEmail] = useState("");
 
-  useEffect(() => { document.title = status === "processing" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
+  useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
+      if (cancelled || !Array.isArray(data.pentades) || !data.pentades.length) return;
+      const next = data.pentades.map((item: { id: string; label: string; year: number; num: number }) => ({ id: item.id, label: item.label, detail: `P${String(item.num).padStart(2, "0")} · ${item.year}` }));
+      setAvailablePentades(next); setPentade(next[0].id);
+    }).catch(() => setToast("Impossible de charger les pentades"));
+    return () => { cancelled = true; };
+  }, [product]);
+  useEffect(() => {
+    const jobsQuery = query(collection(firestoreDb, "jobs"), where("status", "==", "done"), orderBy("completedAt", "desc"), limit(24));
+    return onSnapshot(jobsQuery, (snapshot) => setMaps(snapshot.docs.map((item) => {
+      const data = item.data();
+      return { id: item.id, product: data.product, label: data.label ?? data.pentadeId, date: data.completedAt?.toDate?.().toLocaleDateString("fr-FR") ?? "Récemment", tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl };
+    })), () => setToast("Galerie Firestore indisponible"));
+  }, []);
+  useEffect(() => {
+    if (!jobId) return;
+    return onSnapshot(doc(firestoreDb, "jobs", jobId), (snapshot) => {
+      const data = snapshot.data();
+      if (!data) return;
+      setStatus(data.status ?? "idle"); setError(data.error ?? "");
+      if (data.status === "done" && data.imageUrl) setActiveMap({ id: jobId, product: data.product, label: data.label, date: "À l'instant", tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl });
+    });
+  }, [jobId]);
 
-  const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter]);
-  const selected = pentades.find((item) => item.id === pentade) ?? pentades[0];
+  const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
+  const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
 
-  function generate() {
+  async function generate() {
     if (!email.trim() || !email.includes("@")) { setToast("Saisissez une adresse email valide"); return; }
-    setStatus("processing");
-    window.setTimeout(() => setStatus("done"), 1800);
+    const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setJobId(id); setStatus("pending"); setError("");
+    try {
+      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, email, force: false }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "La génération a échoué");
+    } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Erreur de génération"); setStatus("error"); }
   }
 
   function copyLink() { navigator.clipboard?.writeText("https://res.cloudinary.com/ndvi-benin/anomaly_2026-P44.jpg"); setToast("Lien copié"); }
@@ -89,18 +127,18 @@ export default function HomePage() {
       <div className="generation-card card">
         <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
         <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
-        <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{pentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
+        <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
         <div className="field-block"><label htmlFor="email">Email de réception</label><div className="email-wrap"><span aria-hidden="true">@</span><input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></div><span className="field-hint">La carte JPEG sera envoyée en pièce jointe à cette adresse.</span></div>
         <button className="generate-button" onClick={generate} disabled={status === "processing"}><span>{status === "processing" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
-        <div className={`job-status ${status}`} aria-live="polite">{status === "idle" && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>Prêt à générer</strong><small>Le traitement prend généralement moins de 2 minutes.</small></span></>}{status === "processing" && <><span className="spinner" /><span><strong>Génération en cours</strong><small>Téléchargement, découpage et rendu de la carte…</small></span><b>00:08</b></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => setActiveMap({ ...maps[0], product, label: selected.label })}>Voir</button></>}</div>
+        <div className={`job-status ${status}`} aria-live="polite">{(status === "idle" || status === "error") && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>{status === "error" ? "Échec de génération" : "Prêt à générer"}</strong><small>{status === "error" ? error : "Le traitement prend généralement moins de 2 minutes."}</small></span></>}{(status === "processing" || status === "pending") && <><span className="spinner" /><span><strong>{status === "pending" ? "Envoi au serveur…" : "Génération en cours"}</strong><small>{status === "pending" ? "Le serveur Render se réveille si nécessaire." : "Téléchargement, découpage et rendu de la carte…"}</small></span></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => activeMap && setActiveMap(activeMap)}>Voir</button></>}</div>
       </div>
       <div className="preview-card card"><div className="preview-top"><div><span className="section-kicker">APERÇU DU PRODUIT</span><h2>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"}</h2></div><span className={`product-badge ${product}`}>{product === "anomaly" ? "ANOMALIE" : "NDVI"}</span></div><MapArtwork tone={product === "anomaly" ? "olive" : "forest"} large /><div className="preview-caption"><span><Icon name="map" size={15} /> Bénin · {selected.label}</span><span className="caption-muted">USGS FEWS NET</span></div></div>
     </section>
 
-    <section className="gallery-section"><div className="gallery-heading"><div><div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div><h2>Cartes générées <span>{maps.length}</span></h2></div><div className="filter-tabs"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div></div><div className="gallery-grid">{visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}><MapArtwork tone={item.tone} /><div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div><div className="gallery-value">{item.value}</div></button>)}</div></section>
+    <section className="gallery-section"><div className="gallery-heading"><div><div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div><h2>Cartes générées <span>{maps.length}</span></h2></div><div className="filter-tabs"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div></div><div className="gallery-grid">{visibleMaps.length ? visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}>{item.thumbnailUrl ? <img className="real-thumb" src={item.thumbnailUrl} alt={`Carte ${item.label}`} /> : <MapArtwork tone={item.tone} />}<div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div></button>) : <div className="empty-gallery"><Icon name="map" size={22} /><strong>Aucune carte générée</strong><span>Choisissez une pentade ci-dessus pour commencer.</span></div>}</div></section>
 
     <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
-    {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div><MapArtwork tone={activeMap.tone} large /><div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button><button className="primary-small"><Icon name="download" size={16} /> Télécharger JPEG</button></div></div></div>}
+    {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl ? <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} /> : <MapArtwork tone={activeMap.tone} large />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
     {toast && <div className="toast">✓ {toast}</div>}
   </main>;
 }
