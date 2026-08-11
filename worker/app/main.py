@@ -74,16 +74,32 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str) -> None:
 
 @app.post("/generate", status_code=202, dependencies=[Depends(require_api_key)])
 def generate(request: GenerateRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
-    available = next((item for item in list_available(request.product) if item["id"] == request.pentadeId), None)
+    try:
+        available = next((item for item in list_available(request.product) if item["id"] == request.pentadeId), None)
+    except Exception as error:
+        logger.exception("Unable to list pentades for job %s", request.jobId)
+        raise HTTPException(status_code=503, detail="Source USGS indisponible") from error
     if not available:
         raise HTTPException(status_code=404, detail="Pentade indisponible")
     label = str(available["label"])
     if not request.force:
-        existing = db.find_done_job(request.product, request.pentadeId)
+        try:
+            existing = db.find_done_job(request.product, request.pentadeId)
+        except Exception as error:
+            logger.exception("Unable to query Firestore for job %s", request.jobId)
+            raise HTTPException(status_code=503, detail="Firestore indisponible") from error
         if existing:
             data = existing.to_dict()
-            db.update_job(request.jobId, status="done", imageUrl=data.get("imageUrl"), thumbnailUrl=data.get("thumbnailUrl"), completedAt=data.get("completedAt"), error=None)
+            try:
+                db.update_job(request.jobId, status="done", imageUrl=data.get("imageUrl"), thumbnailUrl=data.get("thumbnailUrl"), completedAt=data.get("completedAt"), error=None)
+            except Exception as error:
+                logger.exception("Unable to update existing job %s", request.jobId)
+                raise HTTPException(status_code=503, detail="Firestore indisponible") from error
             return {"status": "exists", "imageUrl": data.get("imageUrl", "")}
-    db.create_pending(request.jobId, request.product, request.pentadeId, label)
+    try:
+        db.create_pending(request.jobId, request.product, request.pentadeId, label)
+    except Exception as error:
+        logger.exception("Unable to create Firestore job %s", request.jobId)
+        raise HTTPException(status_code=503, detail="Impossible de créer le job dans Firestore") from error
     background_tasks.add_task(_run_pipeline, request, label, str(available["url"]))
     return {"status": "accepted"}
