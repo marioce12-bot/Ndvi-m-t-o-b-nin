@@ -1,0 +1,15 @@
+:root { --primary: #1e7a1e; --primary-soft: #e8f3e8; --bg: #fafaf8; --surface: #fff; --border: #e5e5e0; --text: #1a1a1a; --text-muted: #6b6b6b; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+.page-shell { max-width: 1024px; margin: 0 auto; padding: 48px 24px; }
+.site-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.site-header h1, .site-header p, h2 { margin: 0; }
+.site-header h1 { font-size: 24px; }
+.site-header p, .muted { color: var(--text-muted); }
+.site-header p { margin-top: 6px; }
+.brand-mark { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 12px; background: var(--primary); color: white; font-weight: 700; font-size: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgb(0 0 0 / 5%); }
+.panel h2 { font-size: 18px; margin-bottom: 12px; }
+.muted { margin: 0 0 18px; font-size: 15px; }
+.status { border-radius: 8px; background: var(--primary-soft); color: var(--primary); padding: 14px; font-size: 14px; }
+@media (max-width: 640px) { .page-shell { padding: 24px 16px; } }
