@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+rasterio
+geopandas
+numpy
+matplotlib
+requests
+pydantic-settings
+firebase-admin
+cloudinary

@@ -1,0 +1,1 @@
+"""NDVI Benin worker application."""

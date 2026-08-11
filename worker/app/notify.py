@@ -1,0 +1,1 @@
+"""EmailJS notifications."""
