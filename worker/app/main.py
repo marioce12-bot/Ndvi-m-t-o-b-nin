@@ -28,6 +28,7 @@ class GenerateRequest(BaseModel):
     jobId: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
     pentadeId: str = Field(pattern=r"^20\d{2}-P(?:0[1-9]|[1-6]\d|7[0-2])$")
     product: str = Field(pattern=r"^(ndvi|anomaly)$")
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=254)
     force: bool = False
 
 
@@ -56,16 +57,16 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str) -> None:
         values, transform = process_raster(raster, request.product, Path(__file__).parents[1] / "data" / "benin_adm1.geojson")
         output = workdir / f"{request.product}_{request.pentadeId}.jpg"
         year, pentade_num = request.pentadeId.split("-P")
-        render_map(values, transform, request.product, int(year), int(pentade_num), Path(__file__).parents[1] / "data" / "benin_adm1.geojson", output)
+        render_map(values, transform, request.product, int(year), int(pentade_num), Path(__file__).parents[1] / "data" / "benin_adm1.geojson", output, Path(__file__).parents[1] / "assets" / "logo.webp")
         image_url, thumbnail_url = upload_image(output, f"{request.product}_{request.pentadeId}")
         db.mark_done(request.jobId, image_url, thumbnail_url)
-        notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, image_url, "Carte prête")
+        notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, image_url, "Carte prête", request.email, output)
         logger.info("Job %s: done", request.jobId)
     except Exception as error:
         logger.exception("Job %s: failed", request.jobId)
         try:
             db.mark_error(request.jobId, str(error))
-            notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, "", f"Échec : {str(error)[:500]}")
+            notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, "", f"Échec : {str(error)[:500]}", request.email)
         except Exception:
             logger.exception("Job %s: unable to persist failure", request.jobId)
     finally:
@@ -91,13 +92,13 @@ def generate(request: GenerateRequest, background_tasks: BackgroundTasks) -> dic
         if existing:
             data = existing.to_dict()
             try:
-                db.update_job(request.jobId, status="done", imageUrl=data.get("imageUrl"), thumbnailUrl=data.get("thumbnailUrl"), completedAt=data.get("completedAt"), error=None)
+                db.update_job(request.jobId, email=request.email, status="done", imageUrl=data.get("imageUrl"), thumbnailUrl=data.get("thumbnailUrl"), completedAt=data.get("completedAt"), error=None)
             except Exception as error:
                 logger.exception("Unable to update existing job %s", request.jobId)
                 raise HTTPException(status_code=503, detail="Firestore indisponible") from error
             return {"status": "exists", "imageUrl": data.get("imageUrl", "")}
     try:
-        db.create_pending(request.jobId, request.product, request.pentadeId, label)
+        db.create_pending(request.jobId, request.product, request.pentadeId, label, request.email)
     except Exception as error:
         logger.exception("Unable to create Firestore job %s", request.jobId)
         raise HTTPException(status_code=503, detail="Impossible de créer le job dans Firestore") from error

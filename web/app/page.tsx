@@ -55,6 +55,7 @@ export default function HomePage() {
   const [activeMap, setActiveMap] = useState<(typeof maps)[number] | null>(null);
   const [status, setStatus] = useState<"idle" | "processing" | "done">("idle");
   const [toast, setToast] = useState("");
+  const [email, setEmail] = useState("");
 
   useEffect(() => { document.title = status === "processing" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
@@ -63,6 +64,7 @@ export default function HomePage() {
   const selected = pentades.find((item) => item.id === pentade) ?? pentades[0];
 
   function generate() {
+    if (!email.trim() || !email.includes("@")) { setToast("Saisissez une adresse email valide"); return; }
     setStatus("processing");
     window.setTimeout(() => setStatus("done"), 1800);
   }
@@ -88,6 +90,7 @@ export default function HomePage() {
         <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
         <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
         <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{pentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
+        <div className="field-block"><label htmlFor="email">Email de réception</label><div className="email-wrap"><span aria-hidden="true">@</span><input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></div><span className="field-hint">La carte JPEG sera envoyée en pièce jointe à cette adresse.</span></div>
         <button className="generate-button" onClick={generate} disabled={status === "processing"}><span>{status === "processing" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
         <div className={`job-status ${status}`} aria-live="polite">{status === "idle" && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>Prêt à générer</strong><small>Le traitement prend généralement moins de 2 minutes.</small></span></>}{status === "processing" && <><span className="spinner" /><span><strong>Génération en cours</strong><small>Téléchargement, découpage et rendu de la carte…</small></span><b>00:08</b></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => setActiveMap({ ...maps[0], product, label: selected.label })}>Voir</button></>}</div>
       </div>

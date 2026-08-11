@@ -36,9 +36,9 @@ def find_done_job(product: str, pentade_id: str):
     return next(iter(query.stream()), None)
 
 
-def create_pending(job_id: str, product: str, pentade_id: str, label: str) -> None:
+def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str) -> None:
     get_client().collection("jobs").document(job_id).set({
-        "product": product, "pentadeId": pentade_id, "label": label, "status": "pending",
+        "product": product, "pentadeId": pentade_id, "label": label, "email": email, "status": "pending",
         "imageUrl": None, "thumbnailUrl": None, "error": None, "createdAt": _now(),
         "startedAt": None, "completedAt": None,
     })
