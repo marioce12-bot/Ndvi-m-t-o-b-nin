@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, type User } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
@@ -43,7 +45,28 @@ function MapArtwork({ tone, large = false }: { tone: string; large?: boolean }) 
   </div>;
 }
 
-export default function HomePage() {
+function AuthScreen() {
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) throw new Error("Auth indisponible");
+      if (mode === "reset") await sendPasswordResetEmail(auth, email);
+      else if (mode === "signup") await createUserWithEmailAndPassword(auth, email, password);
+      else await signInWithEmailAndPassword(auth, email, password);
+      if (mode === "reset") setMessage("Un lien de réinitialisation a été envoyé.");
+    } catch { setMessage("Email ou mot de passe invalide. Vérifiez vos informations."); }
+    finally { setBusy(false); }
+  }
+  return <main className="auth-shell"><div className="auth-card"><div className="brand-symbol"><span>ND</span><i /></div><span className="section-kicker">MÉTÉO BÉNIN · eVIIRS 375 m</span><h1>{mode === "login" ? "Votre espace cartes" : mode === "signup" ? "Créer un compte" : "Mot de passe oublié"}</h1><p>Accédez à vos générations et à votre archive personnelle.</p><form onSubmit={submit}><label htmlFor="auth-email">Adresse email<input id="auth-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></label>{mode !== "reset" && <label htmlFor="auth-password">Mot de passe<input id="auth-password" type="password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6 caractères minimum" autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>}<button className="auth-submit" disabled={busy}>{busy ? "Veuillez patienter…" : mode === "login" ? "Se connecter" : mode === "signup" ? "Créer mon compte" : "Envoyer le lien"}</button></form>{message && <div className="auth-message">{message}</div>}<div className="auth-links">{mode === "login" && <><button onClick={() => setMode("reset")}>Mot de passe oublié ?</button><button onClick={() => setMode("signup")}>Créer un compte</button></>}{mode !== "login" && <button onClick={() => setMode("login")}>Retour à la connexion</button>}</div></div></main>;
+}
+
+function Dashboard({ user }: { user: User }) {
   const [product, setProduct] = useState<Product>("anomaly");
   const [pentade, setPentade] = useState(pentades[0].id);
   const [availablePentades, setAvailablePentades] = useState(pentades);
@@ -54,8 +77,6 @@ export default function HomePage() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
-  const [email, setEmail] = useState("");
-
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => {
@@ -71,7 +92,7 @@ export default function HomePage() {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await fetch("/api/jobs", { cache: "no-store" });
+        const response = await fetch("/api/jobs", { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" });
         const data = await response.json();
         if (!cancelled && response.ok) setMaps((data.jobs ?? []).map((item: { id: string; product: Product; label?: string; pentadeId: string; completedAt?: { _seconds?: number }; imageUrl?: string; thumbnailUrl?: string }) => ({ id: item.id, product: item.product, label: item.label ?? item.pentadeId, date: item.completedAt?._seconds ? new Date(item.completedAt._seconds * 1000).toLocaleDateString("fr-FR") : "Récemment", tone: item.product === "anomaly" ? "olive" : "forest", imageUrl: item.imageUrl, thumbnailUrl: item.thumbnailUrl })));
       } catch { if (!cancelled) setToast("Galerie Firestore indisponible"); }
@@ -82,7 +103,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!jobId) return;
     let cancelled = false;
-    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setActiveMap({ id: jobId, product: data.product, label: data.label, date: "À l'instant", tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
+    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setActiveMap({ id: jobId, product: data.product, label: data.label, date: "À l'instant", tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
     load(); const timer = window.setInterval(load, 4000); return () => { cancelled = true; window.clearInterval(timer); };
   }, [jobId]);
 
@@ -91,11 +112,10 @@ export default function HomePage() {
   const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? maps.find((item) => item.product === product);
 
   async function generate() {
-    if (!email.trim() || !email.includes("@")) { setToast("Saisissez une adresse email valide"); return; }
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setJobId(id); setStatus("pending"); setError("");
     try {
-      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, email, force: false }) });
+      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "La génération a échoué");
     } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Erreur de génération"); setStatus("error"); }
@@ -109,7 +129,7 @@ export default function HomePage() {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta"><span className="live-dot" /> Données eVIIRS <span className="meta-divider" /> Mise à jour pentadale</div>
+      <div className="topbar-meta"><span className="live-dot" /> {user.email} <button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
@@ -122,7 +142,6 @@ export default function HomePage() {
         <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
         <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
         <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
-        <div className="field-block"><label htmlFor="email">Email de réception</label><div className="email-wrap"><span aria-hidden="true">@</span><input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></div><span className="field-hint">La carte JPEG sera envoyée en pièce jointe à cette adresse.</span></div>
         <button className="generate-button" onClick={generate} disabled={status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
         <div className={`job-status ${status}`} aria-live="polite">{(status === "idle" || status === "error") && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>{status === "error" ? "Échec de génération" : "Prêt à générer"}</strong><small>{status === "error" ? error : "Le traitement prend généralement 1 à 5 minutes sur Render Free."}</small></span></>}{(status === "processing" || status === "pending") && <><span className="spinner" /><span><strong>{status === "pending" ? "Serveur en réveil…" : "Génération en cours"}</strong><small>{status === "pending" ? "Render démarre le worker, puis USGS sera téléchargé." : "Découpage du Bénin, rendu cartographique et publication…"}</small></span></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => previewMap && setActiveMap(previewMap)}>Voir</button></>}</div>
       </div>
@@ -135,4 +154,11 @@ export default function HomePage() {
     {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl && <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
     {toast && <div className="toast">✓ {toast}</div>}
   </main>;
+}
+
+export default function HomePage() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  useEffect(() => { const auth = getFirebaseAuth(); return auth ? onAuthStateChanged(auth, setUser) : undefined; }, []);
+  if (user === undefined) return <main className="auth-shell"><div className="auth-card"><span className="spinner" /></div></main>;
+  return user ? <Dashboard user={user} /> : <AuthScreen />;
 }

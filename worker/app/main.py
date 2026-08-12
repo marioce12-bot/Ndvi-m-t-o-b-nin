@@ -29,6 +29,7 @@ class GenerateRequest(BaseModel):
     pentadeId: str = Field(pattern=r"^20\d{2}-P(?:0[1-9]|[1-6]\d|7[0-2])$")
     product: str = Field(pattern=r"^(ndvi|anomaly)$")
     email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=254)
+    ownerId: str = Field(min_length=1, max_length=128)
     force: bool = False
 
 
@@ -85,7 +86,7 @@ def generate(request: GenerateRequest, background_tasks: BackgroundTasks) -> dic
     label = str(available["label"])
     if not request.force:
         try:
-            existing = db.find_done_job(request.product, request.pentadeId)
+            existing = db.find_done_job(request.product, request.pentadeId, request.ownerId)
         except Exception as error:
             logger.exception("Unable to query Firestore for job %s", request.jobId)
             raise HTTPException(status_code=503, detail="Firestore indisponible") from error
@@ -98,7 +99,7 @@ def generate(request: GenerateRequest, background_tasks: BackgroundTasks) -> dic
                 raise HTTPException(status_code=503, detail="Firestore indisponible") from error
             return {"status": "exists", "imageUrl": data.get("imageUrl", "")}
     try:
-        db.create_pending(request.jobId, request.product, request.pentadeId, label, request.email)
+        db.create_pending(request.jobId, request.product, request.pentadeId, label, request.email, request.ownerId)
     except Exception as error:
         logger.exception("Unable to create Firestore job %s", request.jobId)
         raise HTTPException(status_code=503, detail="Impossible de créer le job dans Firestore") from error

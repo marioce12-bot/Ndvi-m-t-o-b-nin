@@ -31,14 +31,14 @@ def get_job(job_id: str):
     return get_client().collection("jobs").document(job_id).get()
 
 
-def find_done_job(product: str, pentade_id: str):
-    query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("status", "==", "done").limit(1)
+def find_done_job(product: str, pentade_id: str, owner_id: str):
+    query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
     return next(iter(query.stream()), None)
 
 
-def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str) -> None:
+def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str, owner_id: str) -> None:
     get_client().collection("jobs").document(job_id).set({
-        "product": product, "pentadeId": pentade_id, "label": label, "email": email, "status": "pending",
+        "product": product, "pentadeId": pentade_id, "label": label, "email": email, "ownerId": owner_id, "status": "pending",
         "imageUrl": None, "thumbnailUrl": None, "error": None, "createdAt": _now(),
         "startedAt": None, "completedAt": None,
     })
