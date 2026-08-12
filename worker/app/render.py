@@ -104,7 +104,13 @@ def render_map(
 
     legend_left, legend_bottom = data_to_figure(-3.15, 6.55)
     legend_right, legend_top = data_to_figure(1.10, 7.35)
-    legend_ax = fig.add_axes((legend_left, legend_bottom, legend_right - legend_left, legend_top - legend_bottom))
+    legend_ax = fig.add_axes(
+        (legend_left, legend_bottom, legend_right - legend_left, legend_top - legend_bottom),
+        facecolor="white",
+        frameon=True,
+        zorder=10,
+    )
+    legend_ax.patch.set_alpha(1.0)
     gradient = np.linspace(norm.vmin, norm.vmax, 512).reshape(1, -1)
     legend_ax.imshow(gradient, aspect="auto", cmap=cmap, norm=norm)
     legend_ax.set_yticks([])
@@ -130,6 +136,8 @@ def render_map(
         legend_ax.text(0.0, 1.12, "NDVI anomalie (%)", transform=legend_ax.transAxes, fontsize=12, fontweight="bold", ha="left", va="bottom")
     for spine in legend_ax.spines.values():
         spine.set_visible(False)
+    # Keep every legend label inside the opaque block and above leader lines.
+    legend_ax.set_clip_on(False)
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)

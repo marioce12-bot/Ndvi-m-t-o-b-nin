@@ -54,12 +54,17 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str) -> None:
     try:
         logger.info("Job %s: processing", request.jobId)
         db.mark_processing(request.jobId)
+        db.update_progress(request.jobId, 5, "Téléchargement des données USGS")
         raster = download_and_extract(url, workdir)
+        db.update_progress(request.jobId, 10, "Données raster téléchargées")
         values, transform = process_raster(raster, request.product, Path(__file__).parents[1] / "data" / "benin_adm1.geojson")
+        db.update_progress(request.jobId, 40, "Découpe sur le Bénin")
         output = workdir / f"{request.product}_{request.pentadeId}.jpg"
         year, pentade_num = request.pentadeId.split("-P")
         render_map(values, transform, request.product, int(year), int(pentade_num), Path(__file__).parents[1] / "data" / "benin_adm1.geojson", output, Path(__file__).parents[1] / "assets" / "logo.webp")
+        db.update_progress(request.jobId, 75, "Génération de la carte")
         image_url, thumbnail_url = upload_image(output, f"{request.product}_{request.pentadeId}")
+        db.update_progress(request.jobId, 95, "Envoi de l'image")
         db.mark_done(request.jobId, image_url, thumbnail_url)
         notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, image_url, "Carte prête", request.email)
         logger.info("Job %s: done", request.jobId)
