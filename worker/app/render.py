@@ -102,8 +102,10 @@ def render_map(
     def data_to_figure(x: float, y: float) -> tuple[float, float]:
         return (ax_left + ax_width * (x - xmin) / (xmax - xmin), ax_bottom + ax_height * (y - ymin) / (ymax - ymin))
 
-    legend_left, legend_bottom = data_to_figure(-3.15, 6.55)
-    legend_right, legend_top = data_to_figure(1.10, 7.35)
+    # Compact box matching the reference: it stays below Couffo/Plateau
+    # leaders and above the coastal labels and their horizontal callouts.
+    legend_left, legend_bottom = data_to_figure(-3.18, 6.48)
+    legend_right, legend_top = data_to_figure(0.55, 7.27)
     legend_ax = fig.add_axes(
         (legend_left, legend_bottom, legend_right - legend_left, legend_top - legend_bottom),
         facecolor="white",
@@ -115,25 +117,25 @@ def render_map(
     legend_ax.imshow(gradient, aspect="auto", cmap=cmap, norm=norm)
     legend_ax.set_yticks([])
     legend_ax.set_xlim(0, 511)
-    legend_ax.set_ylim(-0.55, 1.0)
+    legend_ax.set_ylim(-0.43, 1.0)
     if product == "ndvi":
         ticks = np.arange(0.1, 1.0, 0.1)
         labels = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]
         legend_ax.set_xticks(np.linspace(0, 511, len(ticks)), labels=labels, fontsize=9)
         legend_ax.tick_params(axis="x", pad=1)
-        legend_ax.text(0.02, -0.33, "Clairsemee", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="left", va="top")
-        legend_ax.text(0.50, -0.33, "Moderee", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="center", va="top")
-        legend_ax.text(0.98, -0.33, "Dense", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="right", va="top")
-        legend_ax.text(0.0, 1.12, "NDVI", transform=legend_ax.transAxes, fontsize=12, fontweight="bold", ha="left", va="bottom")
+        legend_ax.text(0.02, -0.26, "Clairsemee", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="left", va="top")
+        legend_ax.text(0.50, -0.26, "Moderee", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="center", va="top")
+        legend_ax.text(0.98, -0.26, "Dense", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="right", va="top")
+        legend_ax.text(0.0, 1.05, "NDVI", transform=legend_ax.transAxes, fontsize=10, fontweight="bold", ha="left", va="bottom")
     else:
         ticks = [80, 90, 100, 110, 120, 150]
         positions = [(tick - norm.vmin) / (norm.vmax - norm.vmin) * 511 for tick in ticks]
         legend_ax.set_xticks(positions, labels=["<80", "90", "100", "110", "120", "150"], fontsize=9)
         legend_ax.tick_params(axis="x", pad=1)
-        legend_ax.text(0.02, -0.33, "Faible", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="left", va="top")
-        legend_ax.text(0.50, -0.33, "Normal", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="center", va="top")
-        legend_ax.text(0.98, -0.33, "Fort", transform=legend_ax.transAxes, fontsize=11, fontweight="bold", ha="right", va="top")
-        legend_ax.text(0.0, 1.12, "NDVI anomalie (%)", transform=legend_ax.transAxes, fontsize=12, fontweight="bold", ha="left", va="bottom")
+        legend_ax.text(0.02, -0.26, "Faible", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="left", va="top")
+        legend_ax.text(0.50, -0.26, "Normal", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="center", va="top")
+        legend_ax.text(0.98, -0.26, "Fort", transform=legend_ax.transAxes, fontsize=9, fontweight="bold", ha="right", va="top")
+        legend_ax.text(0.0, 1.05, "NDVI anomalie (%)", transform=legend_ax.transAxes, fontsize=10, fontweight="bold", ha="left", va="bottom")
     for spine in legend_ax.spines.values():
         spine.set_visible(False)
     # Keep every legend label inside the opaque block and above leader lines.
