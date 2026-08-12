@@ -18,8 +18,8 @@ DEPARTMENT_LABEL_POSITIONS = {
     "COUFFO": (0.88, 7.72),
     "PLATEAU": (3.25, 7.72),
     "OUEME": (3.25, 6.42),
-    "MONO": (0.72, 6.88),
-    "ATLANTIQUE": (0.82, 6.12),
+    "MONO": (0.96, 6.82),
+    "ATLANTIQUE": (1.12, 6.16),
     "LITTORAL": (3.12, 6.04),
 }
 
@@ -66,7 +66,7 @@ def render_map(
             connectionstyle = "angle,angleA=0,angleB=90" if name == "ATLANTIQUE" else "angle"
             # Route ATLANTIQUE rightward first, then vertically upward into
             # its polygon, matching the annotated reference and clearing MONO.
-            anchor = (2.18, 6.55) if name == "ATLANTIQUE" else (point.x, point.y)
+            anchor = (2.18, 6.40) if name == "ATLANTIQUE" else (point.x, point.y)
             ax.annotate(name, xy=anchor, xytext=(x, y), fontsize=10, fontweight="normal", ha="center", va="center", arrowprops={"arrowstyle": "-", "connectionstyle": connectionstyle, "color": "black", "lw": 0.75, "shrinkA": 0, "shrinkB": 0})
         else:
             point = row.geometry.representative_point()
