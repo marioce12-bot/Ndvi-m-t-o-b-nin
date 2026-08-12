@@ -63,7 +63,9 @@ def render_map(
         if name in DEPARTMENT_LABEL_POSITIONS:
             x, y = DEPARTMENT_LABEL_POSITIONS[name]
             point = row.geometry.representative_point()
-            ax.annotate(name, xy=(point.x, point.y), xytext=(x, y), fontsize=10, fontweight="normal", ha="center", va="center", arrowprops={"arrowstyle": "-", "connectionstyle": "angle", "color": "black", "lw": 0.75, "shrinkA": 0, "shrinkB": 0})
+            connectionstyle = "angle,angleA=0,angleB=90" if name == "ATLANTIQUE" else "angle"
+            anchor = (1.25, 6.55) if name == "ATLANTIQUE" else (point.x, point.y)
+            ax.annotate(name, xy=anchor, xytext=(x, y), fontsize=10, fontweight="normal", ha="center", va="center", arrowprops={"arrowstyle": "-", "connectionstyle": connectionstyle, "color": "black", "lw": 0.75, "shrinkA": 0, "shrinkB": 0})
         else:
             point = row.geometry.representative_point()
             ax.text(point.x, point.y, name, fontsize=10, fontweight="normal", ha="center", va="center")
