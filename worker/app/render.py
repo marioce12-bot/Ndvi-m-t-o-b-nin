@@ -64,7 +64,9 @@ def render_map(
             x, y = DEPARTMENT_LABEL_POSITIONS[name]
             point = row.geometry.representative_point()
             connectionstyle = "angle,angleA=0,angleB=90" if name == "ATLANTIQUE" else "angle"
-            anchor = (1.25, 6.55) if name == "ATLANTIQUE" else (point.x, point.y)
+            # Route ATLANTIQUE rightward first, then vertically upward into
+            # its polygon, matching the annotated reference and clearing MONO.
+            anchor = (2.18, 6.55) if name == "ATLANTIQUE" else (point.x, point.y)
             ax.annotate(name, xy=anchor, xytext=(x, y), fontsize=10, fontweight="normal", ha="center", va="center", arrowprops={"arrowstyle": "-", "connectionstyle": connectionstyle, "color": "black", "lw": 0.75, "shrinkA": 0, "shrinkB": 0})
         else:
             point = row.geometry.representative_point()
