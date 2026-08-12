@@ -15,5 +15,6 @@ export function getAdminDb() {
 export async function verifyRequestUser(request: Request) {
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) throw new Error("AUTH_REQUIRED");
+  getAdminDb();
   return getAuth().verifyIdToken(header.slice(7));
 }
