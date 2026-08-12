@@ -18,8 +18,8 @@ DEPARTMENT_LABEL_POSITIONS = {
     "COUFFO": (0.88, 7.72),
     "PLATEAU": (3.25, 7.72),
     "OUEME": (3.25, 6.42),
-    "MONO": (0.92, 6.62),
-    "ATLANTIQUE": (0.95, 5.92),
+    "MONO": (0.72, 6.88),
+    "ATLANTIQUE": (0.82, 6.12),
     "LITTORAL": (3.12, 6.04),
 }
 
