@@ -113,7 +113,7 @@ function Dashboard({ user }: { user: User }) {
 
   const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
   const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
-  const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? maps.find((item) => item.product === product);
+  const previewMap = maps.find((item) => item.product === product && item.label === selected.label);
 
   async function generate() {
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
