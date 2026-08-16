@@ -133,7 +133,7 @@ function Dashboard({ user }: { user: User }) {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta"><span className="live-dot" /> {user.email} <button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
+      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
