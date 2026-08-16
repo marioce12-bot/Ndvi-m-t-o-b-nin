@@ -73,6 +73,7 @@ function Dashboard({ user }: { user: User }) {
   const [availablePentades, setAvailablePentades] = useState(pentades);
   const [filter, setFilter] = useState<Filter>("all");
   const [activeMap, setActiveMap] = useState<GalleryMap | null>(null);
+  const [jobMap, setJobMap] = useState<GalleryMap | null>(null);
   const [maps, setMaps] = useState<GalleryMap[]>([]);
   const [status, setStatus] = useState<"idle" | "pending" | "processing" | "done" | "error">("idle");
   const [jobId, setJobId] = useState<string | null>(null);
@@ -107,17 +108,17 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     if (!jobId) return;
     let cancelled = false;
-    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); };
+    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
     load(); const timer = window.setInterval(load, 4000); return () => { cancelled = true; window.clearInterval(timer); };
   }, [jobId]);
 
   const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
   const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
-  const previewMap = maps.find((item) => item.product === product && item.label === selected.label);
+  const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? jobMap;
 
   async function generate() {
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setJobId(id); setStatus("pending"); setError("");
+    setJobId(id); setJobMap(null); setStatus("pending"); setError("");
     try {
       const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
       const data = await response.json();

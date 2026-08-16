@@ -14,6 +14,9 @@ export async function GET(_request: Request, context: { params: Promise<{ jobId:
     if (data?.ownerId !== user.uid) return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
     return NextResponse.json({
       id: snapshot.id,
+      product: data?.product ?? null,
+      pentadeId: data?.pentadeId ?? null,
+      label: data?.label ?? data?.pentadeId ?? null,
       status: data?.status ?? "unknown",
       progress: Number(data?.progress ?? 0),
       step: data?.step ?? "",
