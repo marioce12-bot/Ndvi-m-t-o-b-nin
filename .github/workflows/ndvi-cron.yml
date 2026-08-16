@@ -1,0 +1,22 @@
+name: NDVI pentade generation
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render worker
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          WORKER_API_KEY: ${{ secrets.WORKER_API_KEY }}
+        run: |
+          test -n "$WORKER_URL"
+          test -n "$WORKER_API_KEY"
+          curl --fail-with-body --show-error --silent \
+            --max-time 30 \
+            -X POST "$WORKER_URL/cron/run" \
+            -H "X-API-Key: $WORKER_API_KEY"

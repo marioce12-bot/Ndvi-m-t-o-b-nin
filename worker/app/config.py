@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     emailjs_template_id: str = ""
     emailjs_public_key: str = ""
     emailjs_private_key: str = ""
+    cron_product: str = "ndvi"
+    cron_safety_delay_days: int = 1
+    cron_retry_attempts: int = 3
+    cron_retry_delay_hours: int = 6
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

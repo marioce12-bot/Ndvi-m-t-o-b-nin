@@ -44,13 +44,23 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.post("/cron/run", status_code=202, dependencies=[Depends(require_api_key)])
+def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
+    """Start one automatic cycle from an external scheduler such as GitHub Actions."""
+    from .cron import run
+
+    background_tasks.add_task(run)
+    return {"status": "accepted"}
+
+
 @app.get("/pentades", dependencies=[Depends(require_api_key)])
 def pentades(product: str = Query(pattern=r"^(ndvi|anomaly)$")) -> dict[str, list[dict[str, object]]]:
     return {"pentades": list_available(product)}
 
 
-def _run_pipeline(request: GenerateRequest, label: str, url: str) -> None:
+def _run_pipeline(request: GenerateRequest, label: str, url: str, notify_failure: bool = True) -> bool:
     workdir = Path(tempfile.mkdtemp(prefix="ndvi-benin-", dir="/tmp"))
+    succeeded = False
     try:
         logger.info("Job %s: processing", request.jobId)
         db.mark_processing(request.jobId)
@@ -68,15 +78,18 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str) -> None:
         db.mark_done(request.jobId, image_url, thumbnail_url)
         notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, image_url, "Carte prête", request.email)
         logger.info("Job %s: done", request.jobId)
+        succeeded = True
     except Exception as error:
         logger.exception("Job %s: failed", request.jobId)
         try:
             db.mark_error(request.jobId, str(error))
-            notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, "", f"Échec : {str(error)[:500]}", request.email)
+            if notify_failure:
+                notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, "", f"Échec : {str(error)[:500]}", request.email)
         except Exception:
             logger.exception("Job %s: unable to persist failure", request.jobId)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
+    return succeeded
 
 
 @app.post("/generate", status_code=202, dependencies=[Depends(require_api_key)])
@@ -110,3 +123,10 @@ def generate(request: GenerateRequest, background_tasks: BackgroundTasks) -> dic
         raise HTTPException(status_code=503, detail="Impossible de créer le job dans Firestore") from error
     background_tasks.add_task(_run_pipeline, request, label, str(available["url"]))
     return {"status": "accepted"}
+
+
+@app.post("/replay", status_code=202, dependencies=[Depends(require_api_key)])
+def replay(request: GenerateRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
+    """Replay a pentade manually; force bypasses the completed-job deduplication."""
+    request.force = True
+    return generate(request, background_tasks)

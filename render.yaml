@@ -1,0 +1,15 @@
+services:
+  - type: cron
+    name: ndvi-benin-pentade-cron
+    runtime: docker
+    dockerfilePath: ./worker/Dockerfile
+    dockerContext: ./worker
+    dockerCommand: python -m app.cron
+    schedule: "0 12 * * *"
+    envVars:
+      - key: CRON_SAFETY_DELAY_DAYS
+        value: "1"
+      - key: CRON_RETRY_ATTEMPTS
+        value: "3"
+      - key: CRON_RETRY_DELAY_HOURS
+        value: "6"

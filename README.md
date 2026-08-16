@@ -21,3 +21,11 @@ python -m venv .venv
 ```
 
 Le health check est alors disponible sur `http://127.0.0.1:8000/health`.
+
+## Automatisation et rattrapage
+
+`render.yaml` déclare un Cron Job Render natif, exécuté chaque jour à 12:00 UTC. Il vise la dernière pentade terminée depuis au moins un jour, puis effectue jusqu'à trois tentatives espacées de six heures si l'archive USGS FEWS NET n'est pas encore disponible.
+
+Le cron parcourt automatiquement tous les utilisateurs Firebase inscrits qui ont une adresse email. Les notifications utilisent EmailJS comme le reste de l'application; aucun destinataire individuel n'est à configurer.
+
+Pour rejouer manuellement une pentade, envoyer la même charge que `/generate` vers `/replay` avec l'en-tête `X-API-Key` du worker. Le champ `force` est activé automatiquement et permet de régénérer une carte déjà existante.

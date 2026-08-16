@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import auth, credentials, firestore
 
 from .config import get_settings
 
@@ -29,6 +29,11 @@ def _now() -> datetime:
 
 def get_job(job_id: str):
     return get_client().collection("jobs").document(job_id).get()
+
+
+def list_users() -> list[tuple[str, str]]:
+    """Return registered Firebase users that have an email address."""
+    return [(user.uid, user.email) for user in auth.list_users().iterate_all() if user.email]
 
 
 def find_done_job(product: str, pentade_id: str, owner_id: str):
