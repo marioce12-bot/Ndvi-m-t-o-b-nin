@@ -2,15 +2,18 @@ import { NextResponse } from "next/server";
 import { getAdminDb, verifyRequestUser } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
     const user = await verifyRequestUser(request);
     const payload = await request.json();
-    const { jobId, pentadeId, force = false } = payload;
+    const jobId = typeof payload.jobId === "string" && payload.jobId ? payload.jobId : `job-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const pentadeId = payload.pentade ?? payload.pentadeId;
+    const force = payload.force === true;
     const email = user.email;
     const product = payload.product;
-    if (!jobId || !pentadeId || !email || !["ndvi", "anomaly"].includes(product)) {
+    if (typeof pentadeId !== "string" || !email || !["ndvi", "anomaly"].includes(product)) {
       return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
     }
     const workerUrl = process.env.WORKER_URL;
