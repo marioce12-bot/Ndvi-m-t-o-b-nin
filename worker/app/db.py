@@ -40,6 +40,14 @@ def save_pentades(product: str, pentades: list[dict[str, object]]) -> None:
     get_client().collection("pentadeCatalog").document(product).set({"pentades": pentades, "updatedAt": _now()})
 
 
+def get_pentades(product: str) -> list[dict[str, object]]:
+    snapshot = get_client().collection("pentadeCatalog").document(product).get()
+    if not snapshot.exists:
+        return []
+    value = snapshot.to_dict().get("pentades", [])
+    return value if isinstance(value, list) else []
+
+
 def find_done_job(product: str, pentade_id: str, owner_id: str):
     query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
     return next(iter(query.stream()), None)

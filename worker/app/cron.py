@@ -15,8 +15,36 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _sync_catalog(product: str, attempts: int, delay_hours: int) -> list[dict[str, object]] | None:
+    """Refresh one catalog atomically; never replace a valid catalog with empty data."""
+    last_error = "Catalogue FEWS NET vide"
+    for attempt in range(1, max(1, attempts) + 1):
+        try:
+            catalog = list_available(product)
+            if not catalog:
+                raise RuntimeError("FEWS NET a renvoye un catalogue vide")
+            existing = db.get_pentades(product)
+            if existing and len(catalog) < len(existing):
+                raise RuntimeError(f"Reponse FEWS NET incomplete ({len(catalog)} < {len(existing)} pentades); catalogue conserve")
+            db.save_pentades(product, catalog)
+            logger.info("Catalogue %s synchronise: %s pentades", product, len(catalog))
+            return catalog
+        except Exception as error:
+            last_error = str(error)
+            logger.warning("Catalogue %s, tentative %s/%s echouee: %s", product, attempt, attempts, error)
+        if attempt < attempts:
+            time.sleep(max(1, delay_hours) * 3600)
+    logger.error("Catalogue %s conserve sans modification: %s", product, last_error)
+    return None
+
+
 def run() -> int:
     settings = get_settings()
+    attempts = max(1, settings.cron_retry_attempts)
+    primary_catalog = _sync_catalog(settings.cron_product, attempts, settings.cron_retry_delay_hours)
+    other_product = "anomaly" if settings.cron_product == "ndvi" else "ndvi"
+    _sync_catalog(other_product, attempts, settings.cron_retry_delay_hours)
+
     target = pentade_for_date(date.today(), settings.cron_safety_delay_days)
     if target is None:
         logger.info("Aucune pentade eligible aujourd'hui")
@@ -24,31 +52,10 @@ def run() -> int:
     year = date.today().year
     pentade_id = f"{year}-P{target:02d}"
     label = pentade_label(year, target)
-    available = None
-    last_source_error = "COG/ZIP absent sur FEWS NET"
-    for attempt in range(1, max(1, settings.cron_retry_attempts) + 1):
-        try:
-            catalog = list_available(settings.cron_product)
-            db.save_pentades(settings.cron_product, catalog)
-            available = next((item for item in catalog if item["id"] == pentade_id), None)
-            if available:
-                break
-            last_source_error = f"COG/ZIP absent pour {pentade_id}"
-        except Exception as error:
-            last_source_error = str(error)
-            logger.warning("Lecture FEWS NET, tentative %s/%s echouee: %s", attempt, settings.cron_retry_attempts, error)
-        if attempt < settings.cron_retry_attempts:
-            time.sleep(max(1, settings.cron_retry_delay_hours) * 3600)
+    available = next((item for item in (primary_catalog or []) if item["id"] == pentade_id), None)
     if not available:
-        logger.error("Echec final de lecture FEWS NET: %s", last_source_error)
+        logger.error("Pentade %s indisponible; catalogue conserve", pentade_id)
         return 1
-    other_product = "anomaly" if settings.cron_product == "ndvi" else "ndvi"
-    try:
-        other_catalog = list_available(other_product)
-        db.save_pentades(other_product, other_catalog)
-        logger.info("Catalogue %s synchronise: %s pentades", other_product, len(other_catalog))
-    except Exception:
-        logger.warning("Impossible de synchroniser le catalogue %s", other_product, exc_info=True)
     failures = 0
     for owner_id, email in db.list_users():
         request = GenerateRequest(jobId=f"auto-{settings.cron_product}-{pentade_id}-{owner_id}", pentadeId=pentade_id, product=settings.cron_product, email=email, ownerId=owner_id, force=True)
