@@ -106,10 +106,10 @@ def render_map(
     def data_to_figure(x: float, y: float) -> tuple[float, float]:
         return (ax_left + ax_width * (x - xmin) / (xmax - xmin), ax_bottom + ax_height * (y - ymin) / (ymax - ymin))
 
-    # Keep the legend in the lower-left margin, outside all department
-    # leaders and coastal callouts.
-    legend_left, legend_bottom = data_to_figure(-3.30, 5.78)
-    legend_right, legend_top = data_to_figure(-0.10, 6.40)
+    # Validated layout: compact box below the Couffo/Plateau leaders and
+    # above the coastal labels and their horizontal callouts.
+    legend_left, legend_bottom = data_to_figure(-3.18, 6.48)
+    legend_right, legend_top = data_to_figure(0.55, 7.27)
     legend_ax = fig.add_axes(
         (legend_left, legend_bottom, legend_right - legend_left, legend_top - legend_bottom),
         facecolor="white",
