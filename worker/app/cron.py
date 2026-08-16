@@ -42,6 +42,13 @@ def run() -> int:
     if not available:
         logger.error("Echec final de lecture FEWS NET: %s", last_source_error)
         return 1
+    other_product = "anomaly" if settings.cron_product == "ndvi" else "ndvi"
+    try:
+        other_catalog = list_available(other_product)
+        db.save_pentades(other_product, other_catalog)
+        logger.info("Catalogue %s synchronise: %s pentades", other_product, len(other_catalog))
+    except Exception:
+        logger.warning("Impossible de synchroniser le catalogue %s", other_product, exc_info=True)
     failures = 0
     for owner_id, email in db.list_users():
         request = GenerateRequest(jobId=f"auto-{settings.cron_product}-{pentade_id}-{owner_id}", pentadeId=pentade_id, product=settings.cron_product, email=email, ownerId=owner_id, force=True)
