@@ -13,6 +13,7 @@ from . import db
 from .config import get_settings
 from .download import download_and_extract
 from .notify import notify
+from .memory import collect_memory, log_memory
 from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
@@ -62,18 +63,28 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str, notify_failure
     workdir = Path(tempfile.mkdtemp(prefix="ndvi-benin-", dir="/tmp"))
     succeeded = False
     try:
+        log_memory(f"{request.jobId}:before_download")
         logger.info("Job %s: processing", request.jobId)
         db.mark_processing(request.jobId)
         db.update_progress(request.jobId, 5, "Téléchargement des données USGS")
         raster = download_and_extract(url, workdir)
+        log_memory(f"{request.jobId}:after_download")
         db.update_progress(request.jobId, 10, "Données raster téléchargées")
+        log_memory(f"{request.jobId}:before_clip")
         values, transform = process_raster(raster, request.product, Path(__file__).parents[1] / "data" / "benin_adm1.geojson")
+        log_memory(f"{request.jobId}:after_clip")
         db.update_progress(request.jobId, 40, "Découpe sur le Bénin")
         output = workdir / f"{request.product}_{request.pentadeId}.jpg"
         year, pentade_num = request.pentadeId.split("-P")
+        log_memory(f"{request.jobId}:before_render")
         render_map(values, transform, request.product, int(year), int(pentade_num), Path(__file__).parents[1] / "data" / "benin_adm1.geojson", output, Path(__file__).parents[1] / "assets" / "logo.webp")
+        log_memory(f"{request.jobId}:after_render")
         db.update_progress(request.jobId, 75, "Génération de la carte")
+        del values
+        collect_memory(f"{request.jobId}:after_release_raster")
+        log_memory(f"{request.jobId}:before_upload")
         image_url, thumbnail_url = upload_image(output, f"{request.product}_{request.pentadeId}")
+        log_memory(f"{request.jobId}:after_upload")
         db.update_progress(request.jobId, 95, "Envoi de l'image")
         db.mark_done(request.jobId, image_url, thumbnail_url)
         notify("NDVI anomalie" if request.product == "anomaly" else "NDVI", label, image_url, "Carte prête", request.email)
@@ -88,6 +99,7 @@ def _run_pipeline(request: GenerateRequest, label: str, url: str, notify_failure
         except Exception:
             logger.exception("Job %s: unable to persist failure", request.jobId)
     finally:
+        collect_memory(f"{request.jobId}:finally")
         shutil.rmtree(workdir, ignore_errors=True)
     return succeeded
 

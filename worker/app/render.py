@@ -147,6 +147,9 @@ def render_map(
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, format="jpg", dpi=300, facecolor="white", pil_kwargs={"quality": 92})
-    plt.close(fig)
+    try:
+        fig.savefig(output, format="jpg", dpi=300, facecolor="white", pil_kwargs={"quality": 92})
+    finally:
+        plt.close(fig)
+        del legend_ax, country, boundaries, fig
     return output
