@@ -7,14 +7,6 @@ import { getFirebaseAuth } from "@/lib/firebase";
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
 
-const pentades = [
-  { id: "2026-P45", label: "11–15 août 2026", detail: "P45 · 2026" },
-  { id: "2026-P44", label: "6–10 août 2026", detail: "P44 · 2026" },
-  { id: "2026-P43", label: "1–5 août 2026", detail: "P43 · 2026" },
-  { id: "2026-P42", label: "26–31 juillet 2026", detail: "P42 · 2026" },
-  { id: "2026-P41", label: "21–25 juillet 2026", detail: "P41 · 2026" },
-];
-
 type GalleryMap = { id: string | number; product: Product; label: string; date: string; tone: string; value?: string; imageUrl?: string; thumbnailUrl?: string };
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
@@ -69,8 +61,8 @@ function AuthScreen() {
 
 function Dashboard({ user }: { user: User }) {
   const [product, setProduct] = useState<Product>("anomaly");
-  const [pentade, setPentade] = useState(pentades[0].id);
-  const [availablePentades, setAvailablePentades] = useState(pentades);
+  const [pentade, setPentade] = useState("");
+  const [availablePentades, setAvailablePentades] = useState<Array<{ id: string; label: string; detail: string }>>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [activeMap, setActiveMap] = useState<GalleryMap | null>(null);
   const [jobMap, setJobMap] = useState<GalleryMap | null>(null);
@@ -86,9 +78,9 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     let cancelled = false;
     const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
-      if (cancelled || !Array.isArray(data.pentades) || !data.pentades.length) return;
+      if (cancelled || !Array.isArray(data.pentades)) return;
       const next = data.pentades.map((item: { id: string; label: string; year: number; num: number }) => ({ id: item.id, label: item.label, detail: `P${String(item.num).padStart(2, "0")} · ${item.year}` }));
-      setAvailablePentades(next); setPentade(next[0].id);
+      setAvailablePentades(next); setPentade(next[0]?.id ?? "");
     }).catch(() => setToast("Impossible de charger les pentades"));
     loadPentades();
     return () => { cancelled = true; };
@@ -113,10 +105,11 @@ function Dashboard({ user }: { user: User }) {
   }, [jobId]);
 
   const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
-  const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
+  const selected = availablePentades.find((item) => item.id === pentade) ?? { id: "", label: "Aucune pentade disponible", detail: "" };
   const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? jobMap;
 
   async function generate() {
+    if (!pentade) { setError("Aucune pentade FEWS NET disponible"); setStatus("error"); return; }
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setJobId(id); setJobMap(null); setStatus("pending"); setError("");
     try {
@@ -146,8 +139,8 @@ function Dashboard({ user }: { user: User }) {
       <div className="generation-card card">
         <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
         <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
-        <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
-        <button className="generate-button" onClick={generate} disabled={status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
+         <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)} disabled={!availablePentades.length}><option value="">{availablePentades.length ? "Sélectionner une pentade" : "Aucune pentade FEWS NET disponible"}</option>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
+         <button className="generate-button" onClick={generate} disabled={!pentade || status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
         <div className={`job-status ${status}`} aria-live="polite">{(status === "idle" || status === "error") && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>{status === "error" ? "Échec de génération" : "Prêt à générer"}</strong><small>{status === "error" ? error : "Le traitement prend généralement 1 à 5 minutes sur Render Free."}</small></span></>}{(status === "processing" || status === "pending") && <><span className="spinner" /><span className="progress-copy"><strong>{status === "pending" ? "Serveur en réveil…" : "Génération en cours"}</strong><small>{step}</small><span className="progress-track"><span style={{ width: `${progress}%` }} /></span></span><b>{progress}%</b></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => previewMap && setActiveMap(previewMap)}>Voir</button></>}</div>
       </div>
       <div className="preview-card card"><div className="preview-top"><div><span className="section-kicker">APERÇU DU PRODUIT</span><h2>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"}</h2></div><span className={`product-badge ${product}`}>{product === "anomaly" ? "ANOMALIE" : "NDVI"}</span></div>{previewMap?.imageUrl ? <img className="real-preview" src={previewMap.imageUrl} alt={`Carte réelle ${product} du Bénin · ${previewMap.label}`} /> : <div className="preview-empty"><Icon name="map" size={26} /><strong>Aucune carte réelle disponible</strong><span>Générez cette période pour afficher le raster USGS découpé sur les limites du Bénin.</span></div>}<div className="preview-caption"><span><Icon name="map" size={15} /> Bénin · {previewMap?.label ?? selected.label}</span><span className="caption-muted">USGS FEWS NET · données réelles uniquement</span></div></div>
