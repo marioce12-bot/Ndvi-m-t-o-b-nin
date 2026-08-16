@@ -8,6 +8,7 @@ type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
 
 const pentades = [
+  { id: "2026-P45", label: "11–15 août 2026", detail: "P45 · 2026" },
   { id: "2026-P44", label: "6–10 août 2026", detail: "P44 · 2026" },
   { id: "2026-P43", label: "1–5 août 2026", detail: "P43 · 2026" },
   { id: "2026-P42", label: "26–31 juillet 2026", detail: "P42 · 2026" },
@@ -83,12 +84,14 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
+    const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
       if (cancelled || !Array.isArray(data.pentades) || !data.pentades.length) return;
       const next = data.pentades.map((item: { id: string; label: string; year: number; num: number }) => ({ id: item.id, label: item.label, detail: `P${String(item.num).padStart(2, "0")} · ${item.year}` }));
       setAvailablePentades(next); setPentade(next[0].id);
     }).catch(() => setToast("Impossible de charger les pentades"));
-    return () => { cancelled = true; };
+    loadPentades();
+    const timer = window.setInterval(loadPentades, 15 * 60 * 1000);
+    return () => { cancelled = true; window.clearInterval(timer); };
   }, [product]);
   useEffect(() => {
     let cancelled = false;
