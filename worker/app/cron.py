@@ -24,9 +24,24 @@ def run() -> int:
     year = date.today().year
     pentade_id = f"{year}-P{target:02d}"
     label = pentade_label(year, target)
-    available = next((item for item in list_available(settings.cron_product) if item["id"] == pentade_id), None)
+    available = None
+    last_source_error = "COG/ZIP absent sur FEWS NET"
+    for attempt in range(1, max(1, settings.cron_retry_attempts) + 1):
+        try:
+            catalog = list_available(settings.cron_product)
+            db.save_pentades(settings.cron_product, catalog)
+            available = next((item for item in catalog if item["id"] == pentade_id), None)
+            if available:
+                break
+            last_source_error = f"COG/ZIP absent pour {pentade_id}"
+        except Exception as error:
+            last_source_error = str(error)
+            logger.warning("Lecture FEWS NET, tentative %s/%s echouee: %s", attempt, settings.cron_retry_attempts, error)
+        if attempt < settings.cron_retry_attempts:
+            time.sleep(max(1, settings.cron_retry_delay_hours) * 3600)
     if not available:
-        raise RuntimeError(f"COG/ZIP absent pour {pentade_id}")
+        logger.error("Echec final de lecture FEWS NET: %s", last_source_error)
+        return 1
     failures = 0
     for owner_id, email in db.list_users():
         request = GenerateRequest(jobId=f"auto-{settings.cron_product}-{pentade_id}-{owner_id}", pentadeId=pentade_id, product=settings.cron_product, email=email, ownerId=owner_id, force=True)

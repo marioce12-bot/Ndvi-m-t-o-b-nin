@@ -90,8 +90,7 @@ function Dashboard({ user }: { user: User }) {
       setAvailablePentades(next); setPentade(next[0].id);
     }).catch(() => setToast("Impossible de charger les pentades"));
     loadPentades();
-    const timer = window.setInterval(loadPentades, 15 * 60 * 1000);
-    return () => { cancelled = true; window.clearInterval(timer); };
+    return () => { cancelled = true; };
   }, [product]);
   useEffect(() => {
     let cancelled = false;

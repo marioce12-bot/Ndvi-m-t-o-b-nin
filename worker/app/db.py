@@ -36,6 +36,10 @@ def list_users() -> list[tuple[str, str]]:
     return [(user.uid, user.email) for user in auth.list_users().iterate_all() if user.email]
 
 
+def save_pentades(product: str, pentades: list[dict[str, object]]) -> None:
+    get_client().collection("pentadeCatalog").document(product).set({"pentades": pentades, "updatedAt": _now()})
+
+
 def find_done_job(product: str, pentade_id: str, owner_id: str):
     query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
     return next(iter(query.stream()), None)
