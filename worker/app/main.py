@@ -4,6 +4,7 @@ import hmac
 import logging
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query
@@ -23,6 +24,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
+_cron_lock = threading.Lock()
 
 
 class GenerateRequest(BaseModel):
@@ -50,7 +52,16 @@ def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
     """Start one automatic cycle from an external scheduler such as GitHub Actions."""
     from .cron import run
 
-    background_tasks.add_task(run)
+    if not _cron_lock.acquire(blocking=False):
+        return {"status": "already_running"}
+
+    def execute() -> None:
+        try:
+            run()
+        finally:
+            _cron_lock.release()
+
+    background_tasks.add_task(execute)
     return {"status": "accepted"}
 
 
