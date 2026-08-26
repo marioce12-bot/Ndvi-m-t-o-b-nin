@@ -60,6 +60,24 @@ def list_rainfall_imports(source: str | None = None) -> list[dict[str, object]]:
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def build_rainfall_output() -> list[dict[str, object]]:
+    imports = list_rainfall_imports("decades")
+    by_station: dict[str, dict[str, object]] = {}
+    for item in imports:
+        for row in item.get("rows", []):
+            station = str(row.get("station", ""))
+            if not station:
+                continue
+            target = by_station.setdefault(station, {"station": station, "department": row.get("department"), "nbRainDays": 0, "nbOver20": 0, "decadeTotal": 0.0, "maxDaily": None, "yearTotal": 0.0, "seasonTotal": 0.0, "waterBalance": None})
+            target["nbRainDays"] += int(row.get("nbRainDays") or 0)
+            target["nbOver20"] += int(row.get("nbOver20") or 0)
+            target["decadeTotal"] += float(row.get("decadeTotal") or 0)
+            target["yearTotal"] += float(row.get("decadeTotal") or 0)
+            max_daily = row.get("maxDaily")
+            if max_daily is not None and (target["maxDaily"] is None or max_daily > target["maxDaily"]): target["maxDaily"] = max_daily
+    return list(by_station.values())
+
+
 def create_rainfall_job(job_id: str, source: str) -> None:
     get_client().collection("rainfallJobs").document(job_id).set({"source": source, "status": "queued", "progress": 0, "error": None, "createdAt": _now(), "completedAt": None})
 

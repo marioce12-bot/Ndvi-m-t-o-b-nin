@@ -7,6 +7,9 @@ import tempfile
 import threading
 import uuid
 import time
+from fastapi.responses import StreamingResponse
+from io import BytesIO
+import openpyxl
 from fastapi import File, UploadFile
 from pathlib import Path
 
@@ -131,6 +134,23 @@ def rainfall_imports(source: str | None = None) -> dict[str, object]:
     except Exception as error:
         logger.exception("Rainfall imports listing failed")
         raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@app.get("/rainfall/output", dependencies=[Depends(require_api_key)])
+def rainfall_output() -> dict[str, object]:
+    return {"rows": db.build_rainfall_output()}
+
+
+@app.get("/rainfall/output.xlsx", dependencies=[Depends(require_api_key)])
+def rainfall_output_xlsx() -> StreamingResponse:
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "RESA-01"
+    headers = ["Poste", "Département", "NbJP ≥1 mm", "NbJP >20 mm", "Cumul décadaire", "Max journalier", "Cumul année", "Cumul saison", "Bilan hydrique"]
+    sheet.append(headers)
+    for row in db.build_rainfall_output(): sheet.append([row.get(key) for key in ["station", "department", "nbRainDays", "nbOver20", "decadeTotal", "maxDaily", "yearTotal", "seasonTotal", "waterBalance"]])
+    stream = BytesIO(); workbook.save(stream); stream.seek(0)
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=RESA-01.xlsx"})
 
 
 @app.post("/rainfall/normals/initialize", dependencies=[Depends(require_api_key)])

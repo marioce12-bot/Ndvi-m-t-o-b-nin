@@ -27,7 +27,14 @@ const tableDefinitions = [
   { id: "resa", title: "RESA-01", description: "Sortie automatisée calculée à partir des deux entrées et de l’historique.", editable: false },
 ] as const;
 
-export function GET() {
+export async function GET(request: Request) {
+  if (new URL(request.url).searchParams.get("output") === "xlsx") {
+    const workerUrl = process.env.WORKER_URL; const workerKey = process.env.WORKER_API_KEY;
+    if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker non configuré" }, { status: 503 });
+    const response = await callWorker(`${workerUrl.replace(/\/$/, "")}/rainfall/output.xlsx`, { headers: { "X-API-Key": workerKey } });
+    const buffer = await response.arrayBuffer();
+    return new Response(buffer, { status: response.status, headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": "attachment; filename=RESA-01.xlsx" } });
+  }
   return NextResponse.json({
     tableDefinitions,
     inputModel: {
@@ -99,4 +106,14 @@ export async function PATCH(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Worker inaccessible" }, { status: 502 });
   }
+}
+
+export async function OPTIONS() { return NextResponse.json({ ok: true }); }
+
+export async function HEAD(request: Request) {
+  const workerUrl = process.env.WORKER_URL;
+  const workerKey = process.env.WORKER_API_KEY;
+  if (!workerUrl || !workerKey) return new Response(null, { status: 503 });
+  const response = await callWorker(`${workerUrl.replace(/\/$/, "")}/rainfall/output.xlsx`, { headers: { "X-API-Key": workerKey } });
+  return new Response(null, { status: response.status });
 }

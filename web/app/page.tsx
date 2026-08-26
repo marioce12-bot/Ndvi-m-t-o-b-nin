@@ -111,6 +111,12 @@ function Dashboard({ user }: { user: User }) {
       throw new Error("Le traitement dépasse le délai d’attente");
     } catch (error) { setRainfallUpload("error"); setToast(error instanceof Error ? error.message : "Échec de l’import"); }
   }
+  async function downloadResa() {
+    setToast("La sortie RESA-01 est générée côté serveur");
+    const response = await fetch("/api/rainfall?output=xlsx");
+    if (!response.ok) { setToast("Sortie RESA-01 indisponible"); return; }
+    const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "RESA-01.xlsx"; link.click(); URL.revokeObjectURL(url);
+  }
   useEffect(() => {
     const savedJobId = localStorage.getItem("rainfallJobId");
     if (!savedJobId) return;
