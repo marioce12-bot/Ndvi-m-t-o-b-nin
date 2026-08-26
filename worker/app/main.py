@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import threading
 import uuid
+import time
 from fastapi import File, UploadFile
 from pathlib import Path
 
@@ -77,18 +78,25 @@ async def import_rainfall(background_tasks: BackgroundTasks, source: str, year: 
     db.create_rainfall_job(job_id, source)
 
     def process_import() -> None:
+        started = time.monotonic()
         try:
             db.update_rainfall_job(job_id, status="processing", progress=10)
+            parse_started = time.monotonic()
             metadata = (year, month, decade) if source == "decades" and year and month and decade else None
             parsed = (parse_decades_xlsx(content, metadata) if file.filename and file.filename.lower().endswith(".xlsx") else parse_decades_xls(content)) if source == "decades" else parse_agro_xls(content)
+            logger.info("Rainfall import job=%s phase=parse duration_s=%.2f rows=%s", job_id, time.monotonic() - parse_started, len(parsed.rows))
             rows = [compute_resa_row(row) for row in parsed.rows] if source == "decades" else parsed.rows
             payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
             db.update_rainfall_job(job_id, progress=80)
+            save_started = time.monotonic()
             db.save_rainfall_import(payload)
+            logger.info("Rainfall import job=%s phase=firestore duration_s=%.2f", job_id, time.monotonic() - save_started)
             db.update_rainfall_job(job_id, status="done", progress=100, result={"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}, completedAt=db._now())
+            logger.info("Rainfall import job=%s status=done total_duration_s=%.2f", job_id, time.monotonic() - started)
         except Exception as error:
             logger.exception("Rainfall import failed")
             db.update_rainfall_job(job_id, status="error", error=str(error)[:500], completedAt=db._now())
+            logger.info("Rainfall import job=%s status=error total_duration_s=%.2f", job_id, time.monotonic() - started)
 
     background_tasks.add_task(process_import)
     return {"status": "accepted", "jobId": job_id}

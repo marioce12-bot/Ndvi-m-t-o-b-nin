@@ -84,6 +84,7 @@ function Dashboard({ user }: { user: User }) {
   const [rainfallMonth, setRainfallMonth] = useState("8");
   const [rainfallDecade, setRainfallDecade] = useState("1");
   const [rainfallImports, setRainfallImports] = useState<Array<{ id: string; source?: string; year?: number; month?: number; decade?: number; rows?: Array<Record<string, unknown>> }>>([]);
+  const [rainfallJobId, setRainfallJobId] = useState<string | null>(null);
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
   async function loadRainfallImports() {
@@ -97,17 +98,37 @@ function Dashboard({ user }: { user: User }) {
       const response = await fetch("/api/rainfall", { method: "POST", body: form });
       const accepted = await response.json();
       if (!response.ok || !accepted.jobId) throw new Error(accepted.error ?? "Import impossible");
+      setRainfallJobId(accepted.jobId);
+      localStorage.setItem("rainfallJobId", accepted.jobId);
       setToast("Import lancé en arrière-plan");
       for (let attempt = 0; attempt < 60; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const statusResponse = await fetch(`/api/rainfall?jobId=${encodeURIComponent(accepted.jobId)}`, { method: "PATCH", cache: "no-store" });
         const status = await statusResponse.json();
-        if (status.status === "done") { setRainfallUpload("done"); await loadRainfallImports(); setToast("Décade importée et conservée"); return; }
-        if (status.status === "error") throw new Error(status.error ?? "Échec du traitement");
+        if (status.status === "done") { setRainfallUpload("done"); setRainfallJobId(null); localStorage.removeItem("rainfallJobId"); await loadRainfallImports(); setToast("Décade importée et conservée"); return; }
+        if (status.status === "error") { localStorage.removeItem("rainfallJobId"); throw new Error(status.error ?? "Échec du traitement"); }
       }
       throw new Error("Le traitement dépasse le délai d’attente");
     } catch (error) { setRainfallUpload("error"); setToast(error instanceof Error ? error.message : "Échec de l’import"); }
   }
+  useEffect(() => {
+    const savedJobId = localStorage.getItem("rainfallJobId");
+    if (!savedJobId) return;
+    setRainfallJobId(savedJobId);
+    setRainfallUpload("uploading");
+    let cancelled = false;
+    const resume = async () => {
+      for (let attempt = 0; attempt < 60 && !cancelled; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const response = await fetch(`/api/rainfall?jobId=${encodeURIComponent(savedJobId)}`, { method: "PATCH", cache: "no-store" });
+        const status = await response.json();
+        if (status.status === "done") { setRainfallUpload("done"); setRainfallJobId(null); localStorage.removeItem("rainfallJobId"); await loadRainfallImports(); return; }
+        if (status.status === "error") { setRainfallUpload("error"); localStorage.removeItem("rainfallJobId"); setToast(status.error ?? "Échec de l’import"); return; }
+      }
+    };
+    void resume();
+    return () => { cancelled = true; };
+  }, []);
   useEffect(() => {
     let cancelled = false;
     const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
