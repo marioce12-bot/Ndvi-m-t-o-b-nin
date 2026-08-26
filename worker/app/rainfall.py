@@ -8,6 +8,7 @@ from io import BytesIO
 from typing import Any
 
 import xlrd
+import openpyxl
 
 
 @dataclass(frozen=True)
@@ -37,25 +38,30 @@ def _metadata(sheet: Any) -> tuple[int, int, int]:
     values = [str(sheet.cell_value(r, c)).strip() for r in range(min(sheet.nrows, 12)) for c in range(sheet.ncols)]
     year = next((int(float(v)) for v in values if re.fullmatch(r"20\d{2}(?:\.0)?", v)), 0)
     month_name = next((v.upper() for v in values if v.upper() in MONTHS), "")
-    decade_map = {"I": 1, "II": 2, "III": 3}
+    decade_map = {"I": 1, "II": 2, "III": 3, "1ERE": 1, "1ÈRE": 1, "2EME": 2, "2ÈME": 2, "3EME": 3, "3ÈME": 3}
     decade = next((decade_map[v.upper()] for v in values if v.upper() in decade_map), 0)
     if not year or not month_name or not decade:
         raise ValueError("Métadonnées année/mois/décade introuvables")
     return year, MONTHS[month_name], decade
 
 
-def parse_decades_xls(content: bytes) -> RainfallImport:
-    book = xlrd.open_workbook(file_contents=content)
-    sheet = next((s for s in book.sheets() if s.nrows and any("HAUTEURS JOURNALIERES" in str(s.cell_value(r, c)).upper() for r in range(min(s.nrows, 10)) for c in range(s.ncols))), None)
-    if sheet is None:
-        raise ValueError("Feuille DECADES introuvable")
-    # DECADES files contain repeated department blocks. Header rows identify
-    # the daily columns; data rows are normalized without trusting summaries.
-    year, month, decade = _metadata(sheet)
+def _parse_decades_sheet(sheet: Any, cell: Any, metadata: tuple[int, int, int] | None = None) -> RainfallImport:
+    rows_count = sheet.nrows if hasattr(sheet, "nrows") else sheet.max_row
+    cols_count = sheet.ncols if hasattr(sheet, "ncols") else sheet.max_column
+    value = lambda r, c: sheet.cell_value(r, c) if hasattr(sheet, "cell_value") else sheet.cell(r + 1, c + 1).value
+    class Adapter:
+        nrows = rows_count
+        ncols = cols_count
+        def cell_value(self, r: int, c: int) -> Any:
+            return value(r, c)
+        def cell(self, r: int, c: int) -> Any:
+            return type("Cell", (), {"value": value(r, c)})()
+    adapted = Adapter()
+    year, month, decade = metadata or _metadata(adapted)
     rows: list[dict[str, Any]] = []
     department = ""
-    for r in range(sheet.nrows):
-        values = [sheet.cell_value(r, c) for c in range(sheet.ncols)]
+    for r in range(rows_count):
+        values = [value(r, c) for c in range(cols_count)]
         text = " ".join(str(v).strip() for v in values[:3] if v not in ("", None)).strip()
         if text.upper() in {"ATLANTIQUE-LITTORAL", "ATACORA-DONGA", "BORGOU-ALIBORI", "MONO-COUFFO", "OUEME-PLATEAU", "ZOU-COLLINE"}:
             department = text
@@ -67,6 +73,67 @@ def parse_decades_xls(content: bytes) -> RainfallImport:
         if any(value is not None for value in daily):
             rows.append({"department": department, "station": localite, "daily": daily})
     return RainfallImport(year, month, decade, "decades", rows)
+
+
+def parse_decades_xls(content: bytes) -> RainfallImport:
+    book = xlrd.open_workbook(file_contents=content)
+    sheet = next((s for s in book.sheets() if s.nrows and any("HAUTEURS JOURNALIERES" in str(s.cell_value(r, c)).upper() for r in range(min(s.nrows, 10)) for c in range(s.ncols))), None)
+    if sheet is None:
+        raise ValueError("Feuille DECADES introuvable")
+    return _parse_decades_sheet(sheet, None)
+
+
+def parse_decades_xlsx(content: bytes, metadata: tuple[int, int, int] | None = None) -> RainfallImport:
+    book = openpyxl.load_workbook(BytesIO(content), data_only=True, read_only=True)
+    sheet = next((s for s in book.worksheets if s.max_row and any("HAUTEURS JOURNALIERES" in str(s.cell(r, c).value).upper() for r in range(1, min(s.max_row, 10) + 1) for c in range(1, s.max_column + 1))), None)
+    if sheet is None:
+        raise ValueError("Feuille DECADES introuvable")
+    result = _parse_decades_sheet(sheet, None, metadata)
+    return result
+
+
+def parse_agro_xls(content: bytes) -> RainfallImport:
+    book = xlrd.open_workbook(file_contents=content)
+    sheet = next((s for s in book.sheets() if s.nrows and any("RENSEIGNEMENTS AGROMETEOROLOGIQUES" in str(s.cell_value(r, c)).upper() for r in range(min(s.nrows, 3)) for c in range(s.ncols))), None)
+    if sheet is None:
+        raise ValueError("Feuille opérationnelle Renseignements Agro introuvable")
+    year, month, decade = _metadata(sheet)
+    rows: list[dict[str, Any]] = []
+    station = ""
+    for r in range(sheet.nrows):
+        first = str(sheet.cell_value(r, 0)).strip() if sheet.ncols else ""
+        station_text = next((str(sheet.cell_value(r, c)).strip() for c in range(sheet.ncols) if re.match(r"STATION\s*:", str(sheet.cell_value(r, c)).strip(), re.I)), "")
+        station_match = re.match(r"STATION\s*:\s*(.+)", station_text or first, re.I)
+        if station_match:
+            station = station_match.group(1).strip()
+            continue
+        day = _number(sheet.cell_value(r, 0)) if sheet.ncols else None
+        if day is None and first.upper().startswith("STATION"):
+            station = first.split(":", 1)[-1].strip()
+            continue
+        if not station or day is None or not 1 <= day <= 31:
+            continue
+        rows.append({
+            "station": station,
+            "day": int(day),
+            "rain": _number(sheet.cell_value(r, 1)),
+            "tmin": _number(sheet.cell_value(r, 2)),
+            "tmax": _number(sheet.cell_value(r, 3)),
+            "tmean": _number(sheet.cell_value(r, 4)),
+            "soil10": _number(sheet.cell_value(r, 5)),
+            "soil50": _number(sheet.cell_value(r, 6)),
+            "windMean": _number(sheet.cell_value(r, 7)),
+            "windMax": _number(sheet.cell_value(r, 8)),
+            "sunshine": _number(sheet.cell_value(r, 9)),
+            "humidityMin": _number(sheet.cell_value(r, 10)),
+            "humidityMax": _number(sheet.cell_value(r, 11)),
+            "humidityMean": _number(sheet.cell_value(r, 12)),
+            "vaporPressure": _number(sheet.cell_value(r, 13)),
+            "evapPan": _number(sheet.cell_value(r, 14)),
+        })
+    if not rows:
+        raise ValueError("Aucune observation journalière synoptique trouvée")
+    return RainfallImport(year, month, decade, "agro", rows)
 
 
 def compute_resa_row(row: dict[str, Any], normal_cuma: float | None = None, etp: float | None = None) -> dict[str, Any]:

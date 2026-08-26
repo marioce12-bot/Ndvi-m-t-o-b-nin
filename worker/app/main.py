@@ -20,7 +20,7 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
-from .rainfall import compute_resa_row, parse_decades_xls
+from .rainfall import compute_resa_row, parse_agro_xls, parse_decades_xls, parse_decades_xlsx
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -68,13 +68,14 @@ def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
 
 
 @app.post("/rainfall/import", dependencies=[Depends(require_api_key)])
-async def import_rainfall(source: str, file: UploadFile = File(...)) -> dict[str, object]:
-    if source != "decades":
-        raise HTTPException(status_code=400, detail="Source supportée: decades")
+async def import_rainfall(source: str, year: int | None = None, month: int | None = None, decade: int | None = None, file: UploadFile = File(...)) -> dict[str, object]:
+    if source not in {"decades", "agro"}:
+        raise HTTPException(status_code=400, detail="Source supportée: decades ou agro")
     content = await file.read()
     try:
-        parsed = parse_decades_xls(content)
-        rows = [compute_resa_row(row) for row in parsed.rows]
+        metadata = (year, month, decade) if source == "decades" and year and month and decade else None
+        parsed = (parse_decades_xlsx(content, metadata) if file.filename and file.filename.lower().endswith(".xlsx") else parse_decades_xls(content)) if source == "decades" else parse_agro_xls(content)
+        rows = [compute_resa_row(row) for row in parsed.rows] if source == "decades" else parsed.rows
         payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
         db.save_rainfall_import(payload)
         return {"status": "imported", "year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}
