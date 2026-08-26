@@ -60,6 +60,14 @@ def list_rainfall_imports(source: str | None = None) -> list[dict[str, object]]:
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def save_normals(kind: str, rows: list[dict[str, object]]) -> None:
+    batch = get_client().batch()
+    collection = get_client().collection("rainfallNormals").document(kind).collection("rows")
+    for index, row in enumerate(rows):
+        batch.set(collection.document(str(index)), row)
+    batch.commit()
+
+
 def find_done_job(product: str, pentade_id: str, owner_id: str):
     query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
     return next(iter(query.stream()), None)

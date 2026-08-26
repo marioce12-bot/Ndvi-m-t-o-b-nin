@@ -63,10 +63,13 @@ def _parse_decades_sheet(sheet: Any, cell: Any, metadata: tuple[int, int, int] |
     for r in range(rows_count):
         values = [value(r, c) for c in range(cols_count)]
         text = " ".join(str(v).strip() for v in values[:3] if v not in ("", None)).strip()
-        if text.upper() in {"ATLANTIQUE-LITTORAL", "ATACORA-DONGA", "BORGOU-ALIBORI", "MONO-COUFFO", "OUEME-PLATEAU", "ZOU-COLLINE"}:
+        normalized = re.sub(r"\s+", " ", text.upper()).replace("É", "E")
+        if normalized in {"ATLANTIQUE-LITTORAL", "ATACORA-DONGA", "BORGOU-ALIBORI", "MONO-COUFFO", "OUEME-PLATEAU", "ZOU-COLLINE"}:
             department = text
             continue
         localite = str(values[1]).strip() if len(values) > 1 and values[1] not in ("", None) else ""
+        if not department and localite:
+            department = str(values[0]).strip()
         if not department or not localite or localite.upper() in {"LOCALITES", "DEPARTEMENTS"}:
             continue
         daily = [_number(values[c]) for c in range(2, min(13, len(values)))]
@@ -134,6 +137,38 @@ def parse_agro_xls(content: bytes) -> RainfallImport:
     if not rows:
         raise ValueError("Aucune observation journalière synoptique trouvée")
     return RainfallImport(year, month, decade, "agro", rows)
+
+
+def parse_rainfall_normals_xls(content: bytes) -> list[dict[str, Any]]:
+    sheet = xlrd.open_workbook(file_contents=content).sheet_by_name("Normales")
+    result: list[dict[str, Any]] = []
+    for col in range(sheet.ncols):
+        station = str(sheet.cell_value(1, col)).strip()
+        if not station or station.upper() == "DECADES":
+            continue
+        if col + 2 >= sheet.ncols or str(sheet.cell_value(1, col + 1)).strip().upper() != "CUMA":
+            continue
+        for row in range(2, sheet.nrows):
+            code = str(sheet.cell_value(row, col - 1 if col else col)).strip().lower()
+            if not re.fullmatch(r"(?:j|f|m|a|ma|ju|ju|au|s|o|n|d|a)\d|[a-z]+\d", code):
+                continue
+            result.append({"station": station, "decadeCode": code, "cuma": _number(sheet.cell_value(row, col + 1)), "cums": _number(sheet.cell_value(row, col + 2)), "source": "rainfall"})
+    return result
+
+
+def parse_agro_normals_xls(content: bytes) -> list[dict[str, Any]]:
+    sheet = xlrd.open_workbook(file_contents=content).sheet_by_name("Normales")
+    result: list[dict[str, Any]] = []
+    station = ""
+    for row in range(sheet.nrows):
+        first = str(sheet.cell_value(row, 0)).strip()
+        if first and not re.match(r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\d_m$", first, re.I):
+            station = first
+            continue
+        if not station or not first:
+            continue
+        result.append({"station": station, "decadeCode": first.lower(), "tmin": _number(sheet.cell_value(row, 1)), "tmax": _number(sheet.cell_value(row, 2)), "tmean": _number(sheet.cell_value(row, 3)), "humidityMin": _number(sheet.cell_value(row, 4)), "humidityMax": _number(sheet.cell_value(row, 5)), "humidityMean": _number(sheet.cell_value(row, 6)), "sunshine": _number(sheet.cell_value(row, 7)), "source": "agro"})
+    return result
 
 
 def compute_resa_row(row: dict[str, Any], normal_cuma: float | None = None, etp: float | None = None) -> dict[str, Any]:

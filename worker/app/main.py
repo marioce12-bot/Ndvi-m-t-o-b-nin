@@ -20,7 +20,7 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
-from .rainfall import compute_resa_row, parse_agro_xls, parse_decades_xls, parse_decades_xlsx
+from .rainfall import compute_resa_row, parse_agro_normals_xls, parse_agro_xls, parse_decades_xls, parse_decades_xlsx, parse_rainfall_normals_xls
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -87,6 +87,20 @@ async def import_rainfall(source: str, year: int | None = None, month: int | Non
 @app.get("/rainfall/imports", dependencies=[Depends(require_api_key)])
 def rainfall_imports(source: str | None = None) -> dict[str, object]:
     return {"imports": db.list_rainfall_imports(source)}
+
+
+@app.post("/rainfall/normals/initialize", dependencies=[Depends(require_api_key)])
+def initialize_normals() -> dict[str, int]:
+    settings = get_settings()
+    if not settings.rainfall_normals_rain_path or not settings.rainfall_normals_agro_path:
+        raise HTTPException(status_code=503, detail="Chemins des deux feuilles Normales non configurés")
+    rain_rows = parse_rainfall_normals_xls(Path(settings.rainfall_normals_rain_path).read_bytes())
+    agro_rows = parse_agro_normals_xls(Path(settings.rainfall_normals_agro_path).read_bytes())
+    if not rain_rows or not agro_rows:
+        raise HTTPException(status_code=422, detail="Une feuille Normales est vide ou illisible")
+    db.save_normals("rainfall", rain_rows)
+    db.save_normals("agro", agro_rows)
+    return {"rainfallRows": len(rain_rows), "agroRows": len(agro_rows)}
 
 
 @app.get("/pentades", dependencies=[Depends(require_api_key)])

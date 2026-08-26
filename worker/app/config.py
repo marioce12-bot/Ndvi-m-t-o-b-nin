@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     cron_retry_attempts: int = 3
     cron_retry_delay_hours: int = 6
     rainfall_access_code: str = ""
+    rainfall_normals_rain_path: str = ""
+    rainfall_normals_agro_path: str = ""
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
