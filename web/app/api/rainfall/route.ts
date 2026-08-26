@@ -83,3 +83,20 @@ export async function PUT() {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Worker inaccessible" }, { status: 502 });
   }
 }
+
+export async function PATCH(request: Request) {
+  const workerUrl = process.env.WORKER_URL;
+  const workerKey = process.env.WORKER_API_KEY;
+  const jobId = new URL(request.url).searchParams.get("jobId");
+  if (!workerUrl || !workerKey || !jobId) return NextResponse.json({ error: "Worker ou jobId manquant" }, { status: 400 });
+  try {
+    const response = await callWorker(`${workerUrl.replace(/\/$/, "")}/rainfall/import-jobs/${encodeURIComponent(jobId)}`, { headers: { "X-API-Key": workerKey }, cache: "no-store" });
+    const raw = await response.text();
+    let body: Record<string, unknown>;
+    try { body = raw.trim() ? JSON.parse(raw) : { error: `Worker vide (${response.status})` }; }
+    catch { body = { error: `Réponse worker invalide (${response.status})` }; }
+    return NextResponse.json(body, { status: response.ok ? 200 : response.status });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Worker inaccessible" }, { status: 502 });
+  }
+}

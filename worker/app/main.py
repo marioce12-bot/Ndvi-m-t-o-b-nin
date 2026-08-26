@@ -5,6 +5,7 @@ import logging
 import shutil
 import tempfile
 import threading
+import uuid
 from fastapi import File, UploadFile
 from pathlib import Path
 
@@ -68,9 +69,40 @@ def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
 
 
 @app.post("/rainfall/import", dependencies=[Depends(require_api_key)])
-async def import_rainfall(source: str, year: int | None = None, month: int | None = None, decade: int | None = None, file: UploadFile = File(...)) -> dict[str, object]:
+async def import_rainfall(background_tasks: BackgroundTasks, source: str, year: int | None = None, month: int | None = None, decade: int | None = None, file: UploadFile = File(...)) -> dict[str, object]:
     if source not in {"decades", "agro"}:
         raise HTTPException(status_code=400, detail="Source supportée: decades ou agro")
+    content = await file.read()
+    job_id = f"rainfall-{uuid.uuid4().hex}"
+    db.create_rainfall_job(job_id, source)
+
+    def process_import() -> None:
+        try:
+            db.update_rainfall_job(job_id, status="processing", progress=10)
+            metadata = (year, month, decade) if source == "decades" and year and month and decade else None
+            parsed = (parse_decades_xlsx(content, metadata) if file.filename and file.filename.lower().endswith(".xlsx") else parse_decades_xls(content)) if source == "decades" else parse_agro_xls(content)
+            rows = [compute_resa_row(row) for row in parsed.rows] if source == "decades" else parsed.rows
+            payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
+            db.update_rainfall_job(job_id, progress=80)
+            db.save_rainfall_import(payload)
+            db.update_rainfall_job(job_id, status="done", progress=100, result={"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}, completedAt=db._now())
+        except Exception as error:
+            logger.exception("Rainfall import failed")
+            db.update_rainfall_job(job_id, status="error", error=str(error)[:500], completedAt=db._now())
+
+    background_tasks.add_task(process_import)
+    return {"status": "accepted", "jobId": job_id}
+
+
+@app.get("/rainfall/import-jobs/{job_id}", dependencies=[Depends(require_api_key)])
+def rainfall_import_job(job_id: str) -> dict[str, object]:
+    snapshot = db.get_rainfall_job(job_id)
+    if not snapshot.exists:
+        raise HTTPException(status_code=404, detail="Import introuvable")
+    return {"id": snapshot.id, **snapshot.to_dict()}
+
+
+async def _legacy_import_rainfall(source: str, year: int | None, month: int | None, decade: int | None, file: UploadFile) -> dict[str, object]:
     content = await file.read()
     try:
         metadata = (year, month, decade) if source == "decades" and year and month and decade else None

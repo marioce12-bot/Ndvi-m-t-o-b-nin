@@ -48,6 +48,7 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .table-preview { overflow:auto; margin-top:18px; border:1px solid var(--line); border-radius:8px; }
 .table-preview-head { display:grid; grid-template-columns:repeat(6,minmax(100px,1fr)); gap:0; padding:11px; color:var(--muted); background:#f2f6f2; font:10px 'DM Mono',monospace; }
 .table-preview-empty { padding:42px 20px; color:var(--muted); text-align:center; font-size:11px; }
+.table-preview-row { display:grid; grid-template-columns:repeat(5,minmax(80px,1fr)); gap:0; padding:10px 11px; border-top:1px solid var(--line); font-size:10px; }
 .upload-box { display:grid; gap:10px; margin:18px 0; padding:18px; border:1px dashed var(--green); border-radius:8px; color:var(--green); background:var(--mint); font-size:11px; font-weight:700; }
 .upload-box input { color:var(--muted); font-size:11px; font-weight:400; }
 .archive-panel { width:min(1080px,100%); max-height:90vh; overflow:auto; }

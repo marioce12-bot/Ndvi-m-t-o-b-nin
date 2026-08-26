@@ -60,6 +60,18 @@ def list_rainfall_imports(source: str | None = None) -> list[dict[str, object]]:
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def create_rainfall_job(job_id: str, source: str) -> None:
+    get_client().collection("rainfallJobs").document(job_id).set({"source": source, "status": "queued", "progress": 0, "error": None, "createdAt": _now(), "completedAt": None})
+
+
+def update_rainfall_job(job_id: str, **fields: object) -> None:
+    get_client().collection("rainfallJobs").document(job_id).update(fields)
+
+
+def get_rainfall_job(job_id: str):
+    return get_client().collection("rainfallJobs").document(job_id).get()
+
+
 def save_normals(kind: str, rows: list[dict[str, object]]) -> None:
     batch = get_client().batch()
     collection = get_client().collection("rainfallNormals").document(kind).collection("rows")
