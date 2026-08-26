@@ -25,27 +25,25 @@ export function GET() {
 }
 
 export async function POST(request: Request) {
-  const formData = await request.formData();
-  const source = formData.get("source");
-  const file = formData.get("file");
-  const workerUrl = process.env.WORKER_URL;
-  const workerKey = process.env.WORKER_API_KEY;
-  if (!(file instanceof File) || (source !== "decades" && source !== "agro")) {
-    return NextResponse.json({ error: "Fichier ou source invalide" }, { status: 400 });
+  try {
+    const formData = await request.formData();
+    const source = formData.get("source");
+    const file = formData.get("file");
+    const workerUrl = process.env.WORKER_URL;
+    const workerKey = process.env.WORKER_API_KEY;
+    if (!(file instanceof File) || (source !== "decades" && source !== "agro")) return NextResponse.json({ error: "Fichier ou source invalide" }, { status: 400 });
+    if (!workerUrl || !workerKey) return NextResponse.json({ error: "WORKER_URL et WORKER_API_KEY doivent être configurées dans Vercel" }, { status: 503 });
+    const upstream = new FormData();
+    upstream.set("file", file, file.name);
+    const query = new URLSearchParams({ source: String(source) });
+    for (const key of ["year", "month", "decade"]) { const value = formData.get(key); if (value) query.set(key, String(value)); }
+    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream });
+    const body = await response.json();
+    return NextResponse.json(body, { status: response.status });
+  } catch (error) {
+    console.error("Rainfall API proxy error", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur interne pendant l’import" }, { status: 502 });
   }
-  if (!workerUrl || !workerKey) {
-    return NextResponse.json({ error: "WORKER_URL et WORKER_API_KEY doivent être configurées dans Vercel" }, { status: 503 });
-  }
-  const upstream = new FormData();
-  upstream.set("file", file, file.name);
-  const query = new URLSearchParams({ source: String(source) });
-  for (const key of ["year", "month", "decade"]) {
-    const value = formData.get(key);
-    if (value) query.set(key, String(value));
-  }
-  const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream });
-  const body = await response.json();
-  return NextResponse.json(body, { status: response.status });
 }
 
 export async function PUT() {

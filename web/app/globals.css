@@ -37,6 +37,7 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .progress-copy { flex:1; min-width:0; }.progress-track { display:block; height:5px; margin-top:8px; overflow:hidden; border-radius:5px; background:#dce9de; }.progress-track span { display:block; height:100%; border-radius:inherit; background:var(--green); transition:width .35s ease; }.job-status.pending .progress-track span { width:35% !important; animation:indeterminate 1.2s ease-in-out infinite; }.job-status.pending b { color:var(--muted); font-size:10px; }@keyframes indeterminate { 0% { transform:translateX(-100%); } 100% { transform:translateX(280%); } }
 :root { --settings-border: #d8e3d9; }
 .settings-button { padding:5px; border:0; background:transparent; color:var(--muted); }
+.settings-text-button { padding:0; border:0; background:transparent; color:var(--muted); font-size:10px; text-decoration:underline; }
 .tables-panel { width:min(620px,100%); }
 .settings-intro { color:var(--muted); font-size:12px; line-height:1.6; }
 .settings-table-list { display:grid; gap:8px; margin-top:18px; }
