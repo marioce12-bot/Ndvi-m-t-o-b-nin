@@ -7,7 +7,13 @@ import { getFirebaseAuth } from "@/lib/firebase";
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
 
-type RainfallSource = { id: string; name: string; type: string; description: string; url: string; sheets: string[]; editableFields: string[] };
+const pentades = [
+  { id: "2026-P45", label: "11–15 août 2026", detail: "P45 · 2026" },
+  { id: "2026-P44", label: "6–10 août 2026", detail: "P44 · 2026" },
+  { id: "2026-P43", label: "1–5 août 2026", detail: "P43 · 2026" },
+  { id: "2026-P42", label: "26–31 juillet 2026", detail: "P42 · 2026" },
+  { id: "2026-P41", label: "21–25 juillet 2026", detail: "P41 · 2026" },
+];
 
 type GalleryMap = { id: string | number; product: Product; label: string; date: string; tone: string; value?: string; imageUrl?: string; thumbnailUrl?: string };
 
@@ -18,7 +24,6 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
     copy: <><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></>,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6"/>,
     close: <><path d="m6 6 12 12M18 6 6 18"/></>,
-    settings: <><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.2a2 2 0 0 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 3.6 12a2 2 0 0 0-.6-1.4l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.2 6.4v-.2a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 20.4 12a2 2 0 0 0-1 3Z"/></>,
     refresh: <><path d="M20 11a8 8 0 0 0-14.9-3L3 11m0 0V5m0 6h6M4 13a8 8 0 0 0 14.9 3L21 13m0 0v6m0-6h-6"/></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></>,
     map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></>,
@@ -64,8 +69,8 @@ function AuthScreen() {
 
 function Dashboard({ user }: { user: User }) {
   const [product, setProduct] = useState<Product>("anomaly");
-  const [pentade, setPentade] = useState("");
-  const [availablePentades, setAvailablePentades] = useState<Array<{ id: string; label: string; detail: string }>>([]);
+  const [pentade, setPentade] = useState(pentades[0].id);
+  const [availablePentades, setAvailablePentades] = useState(pentades);
   const [filter, setFilter] = useState<Filter>("all");
   const [activeMap, setActiveMap] = useState<GalleryMap | null>(null);
   const [jobMap, setJobMap] = useState<GalleryMap | null>(null);
@@ -76,70 +81,14 @@ function Dashboard({ user }: { user: User }) {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState("Préparation du traitement");
   const [toast, setToast] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<"decades" | "synoptic" | "normales" | "resa" | null>(null);
-  const [showArchive, setShowArchive] = useState(false);
-  const [rainfallUpload, setRainfallUpload] = useState<"idle" | "uploading" | "done" | "error">("idle");
-  const [rainfallYear, setRainfallYear] = useState("2026");
-  const [rainfallMonth, setRainfallMonth] = useState("8");
-  const [rainfallDecade, setRainfallDecade] = useState("1");
-  const [rainfallImports, setRainfallImports] = useState<Array<{ id: string; source?: string; year?: number; month?: number; decade?: number; rows?: Array<Record<string, unknown>> }>>([]);
-  const [rainfallJobId, setRainfallJobId] = useState<string | null>(null);
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
-  async function loadRainfallImports() {
-    try { const response = await fetch("/api/rainfall", { method: "PUT", cache: "no-store" }); const data = await response.json(); if (response.ok) setRainfallImports(data.imports ?? []); } catch { setToast("Impossible de lire les imports pluviométriques"); }
-  }
-  async function uploadRainfallFile(file: File, source: "decades" | "agro") {
-    setRainfallUpload("uploading");
-    const form = new FormData(); form.set("source", source); form.set("file", file);
-    if (source === "decades") { form.set("year", rainfallYear); form.set("month", rainfallMonth); form.set("decade", rainfallDecade); }
-    try {
-      const response = await fetch("/api/rainfall", { method: "POST", body: form });
-      const accepted = await response.json();
-      if (!response.ok || !accepted.jobId) throw new Error(accepted.error ?? "Import impossible");
-      setRainfallJobId(accepted.jobId);
-      localStorage.setItem("rainfallJobId", accepted.jobId);
-      setToast("Import lancé en arrière-plan");
-      for (let attempt = 0; attempt < 60; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        const statusResponse = await fetch(`/api/rainfall?jobId=${encodeURIComponent(accepted.jobId)}`, { method: "PATCH", cache: "no-store" });
-        const status = await statusResponse.json();
-        if (status.status === "done") { setRainfallUpload("done"); setRainfallJobId(null); localStorage.removeItem("rainfallJobId"); await loadRainfallImports(); setToast("Décade importée et conservée"); return; }
-        if (status.status === "error") { localStorage.removeItem("rainfallJobId"); throw new Error(status.error ?? "Échec du traitement"); }
-      }
-      throw new Error("Le traitement dépasse le délai d’attente");
-    } catch (error) { setRainfallUpload("error"); setToast(error instanceof Error ? error.message : "Échec de l’import"); }
-  }
-  async function downloadResa() {
-    setToast("La sortie RESA-01 est générée côté serveur");
-    const response = await fetch("/api/rainfall?output=xlsx");
-    if (!response.ok) { setToast("Sortie RESA-01 indisponible"); return; }
-    const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "RESA-01.xlsx"; link.click(); URL.revokeObjectURL(url);
-  }
-  useEffect(() => {
-    const savedJobId = localStorage.getItem("rainfallJobId");
-    if (!savedJobId) return;
-    setRainfallJobId(savedJobId);
-    let cancelled = false;
-    const resume = async () => {
-      for (let attempt = 0; attempt < 60 && !cancelled; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        const response = await fetch(`/api/rainfall?jobId=${encodeURIComponent(savedJobId)}`, { method: "PATCH", cache: "no-store" });
-        const status = await response.json();
-        if (status.status === "done") { setRainfallUpload("done"); setRainfallJobId(null); localStorage.removeItem("rainfallJobId"); await loadRainfallImports(); return; }
-        if (status.status === "error") { setRainfallUpload("error"); localStorage.removeItem("rainfallJobId"); setToast(status.error ?? "Échec de l’import"); return; }
-      }
-    };
-    void resume();
-    return () => { cancelled = true; };
-  }, []);
   useEffect(() => {
     let cancelled = false;
     const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
-      if (cancelled || !Array.isArray(data.pentades)) return;
+      if (cancelled || !Array.isArray(data.pentades) || !data.pentades.length) return;
       const next = data.pentades.map((item: { id: string; label: string; year: number; num: number }) => ({ id: item.id, label: item.label, detail: `P${String(item.num).padStart(2, "0")} · ${item.year}` }));
-      setAvailablePentades(next); setPentade(next[0]?.id ?? "");
+      setAvailablePentades(next); setPentade(next[0].id);
     }).catch(() => setToast("Impossible de charger les pentades"));
     loadPentades();
     return () => { cancelled = true; };
@@ -164,11 +113,10 @@ function Dashboard({ user }: { user: User }) {
   }, [jobId]);
 
   const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
-  const selected = availablePentades.find((item) => item.id === pentade) ?? { id: "", label: "Aucune pentade disponible", detail: "" };
+  const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
   const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? jobMap;
 
   async function generate() {
-    if (!pentade) { setError("Aucune pentade FEWS NET disponible"); setStatus("error"); return; }
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setJobId(id); setJobMap(null); setStatus("pending"); setError("");
     try {
@@ -186,7 +134,7 @@ function Dashboard({ user }: { user: User }) {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="settings-text-button" onClick={() => { setShowSettings(true); void loadRainfallImports(); }}>Paramètres</button><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
+      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
@@ -198,33 +146,16 @@ function Dashboard({ user }: { user: User }) {
       <div className="generation-card card">
         <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
         <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
-         <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)} disabled={!availablePentades.length}><option value="">{availablePentades.length ? "Sélectionner une pentade" : "Aucune pentade FEWS NET disponible"}</option>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
-         <button className="generate-button" onClick={generate} disabled={!pentade || status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
+        <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
+        <button className="generate-button" onClick={generate} disabled={status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
         <div className={`job-status ${status}`} aria-live="polite">{(status === "idle" || status === "error") && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>{status === "error" ? "Échec de génération" : "Prêt à générer"}</strong><small>{status === "error" ? error : "Le traitement prend généralement 1 à 5 minutes sur Render Free."}</small></span></>}{(status === "processing" || status === "pending") && <><span className="spinner" /><span className="progress-copy"><strong>{status === "pending" ? "Serveur en réveil…" : "Génération en cours"}</strong><small>{step}</small><span className="progress-track"><span style={{ width: `${progress}%` }} /></span></span><b>{progress}%</b></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => previewMap && setActiveMap(previewMap)}>Voir</button></>}</div>
       </div>
       <div className="preview-card card"><div className="preview-top"><div><span className="section-kicker">APERÇU DU PRODUIT</span><h2>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"}</h2></div><span className={`product-badge ${product}`}>{product === "anomaly" ? "ANOMALIE" : "NDVI"}</span></div>{previewMap?.imageUrl ? <img className="real-preview" src={previewMap.imageUrl} alt={`Carte réelle ${product} du Bénin · ${previewMap.label}`} /> : <div className="preview-empty"><Icon name="map" size={26} /><strong>Aucune carte réelle disponible</strong><span>Générez cette période pour afficher le raster USGS découpé sur les limites du Bénin.</span></div>}<div className="preview-caption"><span><Icon name="map" size={15} /> Bénin · {previewMap?.label ?? selected.label}</span><span className="caption-muted">USGS FEWS NET · données réelles uniquement</span></div></div>
     </section>
 
-      {showArchive && <div className="lightbox archive-overlay" role="dialog" aria-modal="true" aria-label="Archive des cartes" onClick={() => setShowArchive(false)}><div className="lightbox-panel archive-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className="section-kicker">ARCHIVE</span><h2>Cartes générées <span>{maps.length}</span></h2></div><button className="icon-button" onClick={() => setShowArchive(false)} aria-label="Fermer"><Icon name="close" /></button></div><div className="filter-tabs archive-filters"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div><div className="gallery-grid archive-grid">{visibleMaps.length ? visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}>{item.thumbnailUrl ? <img className="real-thumb" src={item.thumbnailUrl} alt={`Carte ${item.label}`} /> : <div className="preview-empty"><Icon name="map" size={20} /><span>Aperçu indisponible</span></div>}<div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div></button>) : <div className="empty-gallery"><Icon name="map" size={22} /><strong>Aucune carte générée</strong><span>Les cartes terminées apparaîtront ici.</span></div>}</div></div></div>}
-      {showSettings && (
-        <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setShowSettings(false)}>
-          <div className="lightbox-panel tables-panel" onClick={(event) => event.stopPropagation()}>
-            {selectedTable ? (
-              <>
-                <div className="lightbox-head"><h2>{selectedTable}</h2><button className="icon-button" onClick={() => setSelectedTable(null)} aria-label="Retour">←</button></div>
-                {(selectedTable === "decades" || selectedTable === "synoptic") && <><label className="upload-box">Téléverser le fichier Excel<input type="file" accept=".xls,.xlsx" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadRainfallFile(file, selectedTable === "decades" ? "decades" : "agro"); }} /></label>{rainfallJobId && <button className="secondary-button" onClick={() => { localStorage.removeItem("rainfallJobId"); setRainfallJobId(null); setRainfallUpload("idle"); setToast("Suivi local arrêté; le traitement serveur continue"); }}>Arrêter le suivi de cet import</button>}</>}
-                <div className="table-preview"><div className="table-preview-head"><span>Source</span><span>Année</span><span>Mois</span><span>Décade</span><span>Lignes</span></div>{rainfallImports.length ? rainfallImports.map((item) => <div className="table-preview-row" key={item.id}><span>{item.source}</span><span>{item.year}</span><span>{item.month}</span><span>{item.decade}</span><span>{item.rows?.length ?? 0}</span></div>) : <div className="table-preview-empty">Aucun import enregistré.</div>}</div>
-              </>
-            ) : (
-              <>
-                <div className="lightbox-head"><h2>Chaîne pluviométrique</h2><button className="icon-button" onClick={() => setShowSettings(false)} aria-label="Fermer"><Icon name="close" /></button></div>
-                <div className="settings-table-list"><button className="settings-table-item" onClick={() => setSelectedTable("decades")}><strong>DECADES</strong><span>Entrée pluviométrique</span></button><button className="settings-table-item" onClick={() => setSelectedTable("synoptic")}><strong>RENSEIGNEMENTS AGRO</strong><span>Entrée synoptique</span></button><button className="settings-table-item" onClick={() => setSelectedTable("normales")}><strong>NORMALES</strong><span>Référentiels pluie et température</span></button><button className="settings-table-item" onClick={() => setSelectedTable("resa")}><strong>RESA-01</strong><span>Sortie calculée</span></button></div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-      <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /> <button className="logout-button" onClick={() => setShowSettings(true)}>Paramètres</button></span></footer>
+    <section className="gallery-section"><div className="gallery-heading"><div><div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div><h2>Cartes générées <span>{maps.length}</span></h2></div><div className="filter-tabs"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div></div><div className="gallery-grid">{visibleMaps.length ? visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}>{item.thumbnailUrl ? <img className="real-thumb" src={item.thumbnailUrl} alt={`Carte ${item.label}`} /> : <div className="preview-empty"><Icon name="map" size={20} /><span>Aperçu indisponible</span></div>}<div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div></button>) : <div className="empty-gallery"><Icon name="map" size={22} /><strong>Aucune carte générée</strong><span>Choisissez une pentade ci-dessus pour commencer.</span></div>}</div></section>
+
+    <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
     {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl && <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
     {toast && <div className="toast">✓ {toast}</div>}
   </main>;

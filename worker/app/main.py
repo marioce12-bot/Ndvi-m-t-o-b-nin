@@ -4,13 +4,6 @@ import hmac
 import logging
 import shutil
 import tempfile
-import threading
-import uuid
-import time
-from fastapi.responses import StreamingResponse
-from io import BytesIO
-import openpyxl
-from fastapi import File, UploadFile
 from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query
@@ -25,13 +18,11 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
-from .rainfall import compute_resa_row, parse_agro_normals_xls, parse_agro_xls, parse_decades_xls, parse_decades_xlsx, parse_rainfall_normals_xls
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
-_cron_lock = threading.Lock()
 
 
 class GenerateRequest(BaseModel):
@@ -59,112 +50,8 @@ def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
     """Start one automatic cycle from an external scheduler such as GitHub Actions."""
     from .cron import run
 
-    if not _cron_lock.acquire(blocking=False):
-        return {"status": "already_running"}
-
-    def execute() -> None:
-        try:
-            run()
-        finally:
-            _cron_lock.release()
-
-    background_tasks.add_task(execute)
+    background_tasks.add_task(run)
     return {"status": "accepted"}
-
-
-@app.post("/rainfall/import", dependencies=[Depends(require_api_key)])
-async def import_rainfall(background_tasks: BackgroundTasks, source: str, year: int | None = None, month: int | None = None, decade: int | None = None, file: UploadFile = File(...)) -> dict[str, object]:
-    if source not in {"decades", "agro"}:
-        raise HTTPException(status_code=400, detail="Source supportée: decades ou agro")
-    content = await file.read()
-    job_id = f"rainfall-{uuid.uuid4().hex}"
-    db.create_rainfall_job(job_id, source)
-
-    def process_import() -> None:
-        started = time.monotonic()
-        try:
-            db.update_rainfall_job(job_id, status="processing", progress=10)
-            parse_started = time.monotonic()
-            metadata = (year, month, decade) if source == "decades" and year and month and decade else None
-            parsed = (parse_decades_xlsx(content, metadata) if file.filename and file.filename.lower().endswith(".xlsx") else parse_decades_xls(content)) if source == "decades" else parse_agro_xls(content)
-            logger.info("Rainfall import job=%s phase=parse duration_s=%.2f rows=%s", job_id, time.monotonic() - parse_started, len(parsed.rows))
-            rows = [compute_resa_row(row) for row in parsed.rows] if source == "decades" else parsed.rows
-            payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
-            db.update_rainfall_job(job_id, progress=80)
-            save_started = time.monotonic()
-            db.save_rainfall_import(payload)
-            logger.info("Rainfall import job=%s phase=firestore duration_s=%.2f", job_id, time.monotonic() - save_started)
-            db.update_rainfall_job(job_id, status="done", progress=100, result={"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}, completedAt=db._now())
-            logger.info("Rainfall import job=%s status=done total_duration_s=%.2f", job_id, time.monotonic() - started)
-        except Exception as error:
-            logger.exception("Rainfall import failed")
-            db.update_rainfall_job(job_id, status="error", error=str(error)[:500], completedAt=db._now())
-            logger.info("Rainfall import job=%s status=error total_duration_s=%.2f", job_id, time.monotonic() - started)
-
-    background_tasks.add_task(process_import)
-    return {"status": "accepted", "jobId": job_id}
-
-
-@app.get("/rainfall/import-jobs/{job_id}", dependencies=[Depends(require_api_key)])
-def rainfall_import_job(job_id: str) -> dict[str, object]:
-    snapshot = db.get_rainfall_job(job_id)
-    if not snapshot.exists:
-        raise HTTPException(status_code=404, detail="Import introuvable")
-    return {"id": snapshot.id, **snapshot.to_dict()}
-
-
-async def _legacy_import_rainfall(source: str, year: int | None, month: int | None, decade: int | None, file: UploadFile) -> dict[str, object]:
-    content = await file.read()
-    try:
-        metadata = (year, month, decade) if source == "decades" and year and month and decade else None
-        parsed = (parse_decades_xlsx(content, metadata) if file.filename and file.filename.lower().endswith(".xlsx") else parse_decades_xls(content)) if source == "decades" else parse_agro_xls(content)
-        rows = [compute_resa_row(row) for row in parsed.rows] if source == "decades" else parsed.rows
-        payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
-        db.save_rainfall_import(payload)
-        return {"status": "imported", "year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}
-    except Exception as error:
-        logger.exception("Rainfall import failed")
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-
-@app.get("/rainfall/imports", dependencies=[Depends(require_api_key)])
-def rainfall_imports(source: str | None = None) -> dict[str, object]:
-    try:
-        return {"imports": db.list_rainfall_imports(source)}
-    except Exception as error:
-        logger.exception("Rainfall imports listing failed")
-        raise HTTPException(status_code=503, detail=str(error)) from error
-
-
-@app.get("/rainfall/output", dependencies=[Depends(require_api_key)])
-def rainfall_output() -> dict[str, object]:
-    return {"rows": db.build_rainfall_output()}
-
-
-@app.get("/rainfall/output.xlsx", dependencies=[Depends(require_api_key)])
-def rainfall_output_xlsx() -> StreamingResponse:
-    workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    sheet.title = "RESA-01"
-    headers = ["Poste", "Département", "NbJP ≥1 mm", "NbJP >20 mm", "Cumul décadaire", "Normale décade", "Écart décade", "Max journalier", "Cumul année", "Écart année", "Cumul saison", "Normale saison", "Écart saison", "ETP", "Bilan hydrique"]
-    sheet.append(headers)
-    for row in db.build_rainfall_output(): sheet.append([row.get(key) for key in ["station", "department", "nbRainDays", "nbOver20", "decadeTotal", "normalDecade", "decadeDeviation", "maxDaily", "yearTotal", "yearDeviation", "seasonTotal", "normalSeason", "seasonDeviation", "etp", "waterBalance"]])
-    stream = BytesIO(); workbook.save(stream); stream.seek(0)
-    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=RESA-01.xlsx"})
-
-
-@app.post("/rainfall/normals/initialize", dependencies=[Depends(require_api_key)])
-def initialize_normals() -> dict[str, int]:
-    settings = get_settings()
-    if not settings.rainfall_normals_rain_path or not settings.rainfall_normals_agro_path:
-        raise HTTPException(status_code=503, detail="Chemins des deux feuilles Normales non configurés")
-    rain_rows = parse_rainfall_normals_xls(Path(settings.rainfall_normals_rain_path).read_bytes())
-    agro_rows = parse_agro_normals_xls(Path(settings.rainfall_normals_agro_path).read_bytes())
-    if not rain_rows or not agro_rows:
-        raise HTTPException(status_code=422, detail="Une feuille Normales est vide ou illisible")
-    db.save_normals("rainfall", rain_rows)
-    db.save_normals("agro", agro_rows)
-    return {"rainfallRows": len(rain_rows), "agroRows": len(agro_rows)}
 
 
 @app.get("/pentades", dependencies=[Depends(require_api_key)])

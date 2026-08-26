@@ -9,40 +9,14 @@ jobs:
   trigger-worker:
     runs-on: ubuntu-latest
     steps:
-      - name: Wake Render and trigger worker
+      - name: Trigger Render worker
         env:
           WORKER_URL: ${{ secrets.WORKER_URL }}
           WORKER_API_KEY: ${{ secrets.WORKER_API_KEY }}
         run: |
           test -n "$WORKER_URL"
           test -n "$WORKER_API_KEY"
-          worker="${WORKER_URL%/}"
-
-          echo "Waking Render worker"
-          for attempt in 1 2 3; do
-            if curl --fail-with-body --show-error --silent --max-time 120 "$worker/health"; then
-              break
-            fi
-            if [ "$attempt" = "3" ]; then
-              echo "Render worker did not wake after three attempts" >&2
-              exit 1
-            fi
-            echo "Health check failed; retrying in 20 seconds"
-            sleep 20
-          done
-
-          echo "Triggering automatic pentade cycle"
-          for attempt in 1 2 3; do
-            if curl --fail-with-body --show-error --silent \
-              --max-time 120 \
-              -X POST "$worker/cron/run" \
-              -H "X-API-Key: $WORKER_API_KEY"; then
-              exit 0
-            fi
-            if [ "$attempt" = "3" ]; then
-              echo "Cron trigger failed after three attempts" >&2
-              exit 1
-            fi
-            echo "Cron trigger failed; retrying in 20 seconds"
-            sleep 20
-          done
+          curl --fail-with-body --show-error --silent \
+            --max-time 30 \
+            -X POST "$WORKER_URL/cron/run" \
+            -H "X-API-Key: $WORKER_API_KEY"
