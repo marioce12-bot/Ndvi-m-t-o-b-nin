@@ -47,3 +47,12 @@ export async function POST(request: Request) {
   const body = await response.json();
   return NextResponse.json(body, { status: response.status });
 }
+
+export async function PUT() {
+  const workerUrl = process.env.WORKER_URL;
+  const workerKey = process.env.WORKER_API_KEY;
+  if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker non configuré" }, { status: 503 });
+  const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/imports`, { headers: { "X-API-Key": workerKey }, cache: "no-store" });
+  const body = await response.json();
+  return NextResponse.json(body, { status: response.status });
+}

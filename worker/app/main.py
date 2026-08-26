@@ -86,7 +86,11 @@ async def import_rainfall(source: str, year: int | None = None, month: int | Non
 
 @app.get("/rainfall/imports", dependencies=[Depends(require_api_key)])
 def rainfall_imports(source: str | None = None) -> dict[str, object]:
-    return {"imports": db.list_rainfall_imports(source)}
+    try:
+        return {"imports": db.list_rainfall_imports(source)}
+    except Exception as error:
+        logger.exception("Rainfall imports listing failed")
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 @app.post("/rainfall/normals/initialize", dependencies=[Depends(require_api_key)])
