@@ -35,3 +35,12 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .preview-empty { height:292px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:30px; text-align:center; border:1px dashed #cbd8cd; border-radius:8px; color:var(--muted); }
 .preview-empty .icon { color:var(--green); }.preview-empty strong { color:var(--ink); font-size:13px; }.preview-empty span { max-width:310px; font-size:10px; line-height:1.55; }
 .progress-copy { flex:1; min-width:0; }.progress-track { display:block; height:5px; margin-top:8px; overflow:hidden; border-radius:5px; background:#dce9de; }.progress-track span { display:block; height:100%; border-radius:inherit; background:var(--green); transition:width .35s ease; }.job-status.pending .progress-track span { width:35% !important; animation:indeterminate 1.2s ease-in-out infinite; }.job-status.pending b { color:var(--muted); font-size:10px; }@keyframes indeterminate { 0% { transform:translateX(-100%); } 100% { transform:translateX(280%); } }
+:root { --settings-border: #d8e3d9; }
+.settings-button { padding:5px; border:0; background:transparent; color:var(--muted); }
+.tables-panel { width:min(620px,100%); }
+.settings-intro { color:var(--muted); font-size:12px; line-height:1.6; }
+.settings-table-list { display:grid; gap:8px; margin-top:18px; }
+.settings-table-item { display:grid; gap:5px; padding:14px; text-align:left; border:1px solid var(--settings-border); border-radius:8px; color:var(--ink); background:#fff; }
+.settings-table-item:hover { border-color:var(--green); background:var(--mint); }
+.settings-table-item strong { font-size:12px; }
+.settings-table-item span { color:var(--muted); font-size:10px; }

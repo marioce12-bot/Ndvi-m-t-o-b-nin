@@ -18,6 +18,7 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
     copy: <><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></>,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6"/>,
     close: <><path d="m6 6 12 12M18 6 6 18"/></>,
+    settings: <><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.2a2 2 0 0 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 3.6 12a2 2 0 0 0-.6-1.4l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.2 6.4v-.2a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 20.4 12a2 2 0 0 0-1 3Z"/></>,
     refresh: <><path d="M20 11a8 8 0 0 0-14.9-3L3 11m0 0V5m0 6h6M4 13a8 8 0 0 0 14.9 3L21 13m0 0v6m0-6h-6"/></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></>,
     map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></>,
@@ -75,10 +76,9 @@ function Dashboard({ user }: { user: User }) {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState("Préparation du traitement");
   const [toast, setToast] = useState("");
-  const [rainfallSources, setRainfallSources] = useState<RainfallSource[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
-  useEffect(() => { fetch("/api/rainfall").then((response) => response.json()).then((data) => setRainfallSources(data.sources ?? [])).catch(() => setToast("Sources pluviométriques indisponibles")); }, []);
   useEffect(() => {
     let cancelled = false;
     const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
@@ -131,7 +131,7 @@ function Dashboard({ user }: { user: User }) {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
+      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="icon-button settings-button" onClick={() => setShowSettings(true)} aria-label="Paramètres"><Icon name="settings" size={17} /></button><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
@@ -152,9 +152,9 @@ function Dashboard({ user }: { user: User }) {
 
      <section className="gallery-section"><div className="gallery-heading"><div><div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div><h2>Cartes générées <span>{maps.length}</span></h2></div><div className="filter-tabs"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div></div><div className="gallery-grid">{visibleMaps.length ? visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}>{item.thumbnailUrl ? <img className="real-thumb" src={item.thumbnailUrl} alt={`Carte ${item.label}`} /> : <div className="preview-empty"><Icon name="map" size={20} /><span>Aperçu indisponible</span></div>}<div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div></button>) : <div className="empty-gallery"><Icon name="map" size={22} /><strong>Aucune carte générée</strong><span>Choisissez une pentade ci-dessus pour commencer.</span></div>}</div></section>
 
-     <section className="gallery-section rainfall-sources"><div className="gallery-heading"><div><div className="eyebrow">DONNÉES PLUVIOMÉTRIQUES INTÉGRÉES</div><h2>Tableaux sources</h2></div></div><div className="gallery-grid">{rainfallSources.map((source) => <article className="card" key={source.id}><span className="section-kicker">{source.type}</span><h3>{source.name}</h3><p>{source.description}</p><div className="field-hint">Feuilles : {source.sheets.length ? source.sheets.join(", ") : "à détailler"}</div><div className="field-hint">Champs éditables prévus : {source.editableFields.join(", ")}</div><a className="primary-small" href={source.url} download>Télécharger la source</a></article>)}</div></section>
-
-    <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
+     <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
+      {showSettings && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Paramètres et tableaux" onClick={() => setShowSettings(false)}><div className="lightbox-panel tables-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className="section-kicker">PARAMÈTRES</span><h2>Tableaux pluviométriques</h2></div><button className="icon-button" onClick={() => setShowSettings(false)} aria-label="Fermer"><Icon name="close" /></button></div><p className="settings-intro">Choisissez le tableau à consulter. Les données seront organisées par année, mois et décade; seuls les tableaux autorisés seront éditables.</p><div className="settings-table-list"><button className="settings-table-item"><strong>Cumuls des décades</strong><span>Pluies journalières, cumul décadaire, maximum et jours de pluie</span></button><button className="settings-table-item"><strong>Stations synoptiques</strong><span>Données des stations, EW et ETP</span></button><button className="settings-table-item"><strong>Tableau final</strong><span>Synthèse des indicateurs pluviométriques et cumuls saisonniers</span></button></div><div className="field-hint">Les fichiers d’août fournis servent de modèles de structure, pas de données fixes.</div></div></div>}
+      <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /> <button className="logout-button" onClick={() => setShowSettings(true)}>Paramètres</button></span></footer>
     {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl && <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
     {toast && <div className="toast">✓ {toast}</div>}
   </main>;
