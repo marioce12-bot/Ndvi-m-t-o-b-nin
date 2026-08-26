@@ -7,10 +7,10 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function callWorker(url: string, init: RequestInit): Promise<Response> {
   let lastError: unknown;
-  for (const [attempt, delay] of [ [1, 0], [2, 5000], [3, 15000] ] as const) {
+  for (const [attempt, delay] of [ [1, 0], [2, 3000], [3, 8000] ] as const) {
     if (delay) await sleep(delay);
     try {
-      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(attempt === 1 ? 25000 : 12000) });
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(attempt === 1 ? 20000 : 10000) });
       if (response.ok || (response.status >= 400 && response.status < 500)) return response;
       lastError = new Error(`Worker HTTP ${response.status}`);
     } catch (error) {
