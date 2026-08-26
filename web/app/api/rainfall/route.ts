@@ -37,9 +37,12 @@ export async function POST(request: Request) {
     upstream.set("file", file, file.name);
     const query = new URLSearchParams({ source: String(source) });
     for (const key of ["year", "month", "decade"]) { const value = formData.get(key); if (value) query.set(key, String(value)); }
-    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream });
-    const body = await response.json();
-    return NextResponse.json(body, { status: response.status });
+    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream, signal: AbortSignal.timeout(120000) });
+    const raw = await response.text();
+    let body: Record<string, unknown>;
+    try { body = raw.trim() ? JSON.parse(raw) : { error: `Worker vide (${response.status})` }; }
+    catch { console.error("Rainfall worker invalid response", { status: response.status, body: raw.slice(0, 1000) }); body = { error: `Réponse worker invalide (${response.status})`, raw: raw.slice(0, 300) }; }
+    return NextResponse.json(body, { status: response.ok ? 200 : response.status });
   } catch (error) {
     console.error("Rainfall API proxy error", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur interne pendant l’import" }, { status: 502 });
@@ -50,7 +53,15 @@ export async function PUT() {
   const workerUrl = process.env.WORKER_URL;
   const workerKey = process.env.WORKER_API_KEY;
   if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker non configuré" }, { status: 503 });
-  const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/imports`, { headers: { "X-API-Key": workerKey }, cache: "no-store" });
-  const body = await response.json();
-  return NextResponse.json(body, { status: response.status });
+  try {
+    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/imports`, { headers: { "X-API-Key": workerKey }, cache: "no-store", signal: AbortSignal.timeout(120000) });
+    const raw = await response.text();
+    let body: Record<string, unknown>;
+    try { body = raw.trim() ? JSON.parse(raw) : { error: `Worker vide (${response.status})` }; }
+    catch { console.error("Rainfall imports invalid response", { status: response.status, body: raw.slice(0, 1000) }); body = { error: `Réponse worker invalide (${response.status})`, raw: raw.slice(0, 300) }; }
+    return NextResponse.json(body, { status: response.ok ? 200 : response.status });
+  } catch (error) {
+    console.error("Rainfall imports proxy error", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Worker inaccessible" }, { status: 502 });
+  }
 }
