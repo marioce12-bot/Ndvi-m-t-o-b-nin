@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function callWorker(url: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (const [attempt, delay] of [ [1, 0], [2, 5000], [3, 15000] ] as const) {
+    if (delay) await sleep(delay);
+    try {
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(attempt === 1 ? 25000 : 12000) });
+      if (response.ok || (response.status >= 400 && response.status < 500)) return response;
+      lastError = new Error(`Worker HTTP ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Worker inaccessible après 3 tentatives");
+}
 
 const tableDefinitions = [
   { id: "decades", title: "DECADES", description: "Entrée réseau pluviométrique : relevés journaliers par poste et par décade.", editable: true },
@@ -37,7 +55,7 @@ export async function POST(request: Request) {
     upstream.set("file", file, file.name);
     const query = new URLSearchParams({ source: String(source) });
     for (const key of ["year", "month", "decade"]) { const value = formData.get(key); if (value) query.set(key, String(value)); }
-    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream, signal: AbortSignal.timeout(120000) });
+    const response = await callWorker(`${workerUrl.replace(/\/$/, "")}/rainfall/import?${query.toString()}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream });
     const raw = await response.text();
     let body: Record<string, unknown>;
     try { body = raw.trim() ? JSON.parse(raw) : { error: `Worker vide (${response.status})` }; }
@@ -54,7 +72,7 @@ export async function PUT() {
   const workerKey = process.env.WORKER_API_KEY;
   if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker non configuré" }, { status: 503 });
   try {
-    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/imports`, { headers: { "X-API-Key": workerKey }, cache: "no-store", signal: AbortSignal.timeout(120000) });
+    const response = await callWorker(`${workerUrl.replace(/\/$/, "")}/rainfall/imports`, { headers: { "X-API-Key": workerKey }, cache: "no-store" });
     const raw = await response.text();
     let body: Record<string, unknown>;
     try { body = raw.trim() ? JSON.parse(raw) : { error: `Worker vide (${response.status})` }; }
