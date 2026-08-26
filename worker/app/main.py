@@ -146,9 +146,9 @@ def rainfall_output_xlsx() -> StreamingResponse:
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "RESA-01"
-    headers = ["Poste", "Département", "NbJP ≥1 mm", "NbJP >20 mm", "Cumul décadaire", "Max journalier", "Cumul année", "Cumul saison", "Bilan hydrique"]
+    headers = ["Poste", "Département", "NbJP ≥1 mm", "NbJP >20 mm", "Cumul décadaire", "Normale décade", "Écart décade", "Max journalier", "Cumul année", "Écart année", "Cumul saison", "Normale saison", "Écart saison", "ETP", "Bilan hydrique"]
     sheet.append(headers)
-    for row in db.build_rainfall_output(): sheet.append([row.get(key) for key in ["station", "department", "nbRainDays", "nbOver20", "decadeTotal", "maxDaily", "yearTotal", "seasonTotal", "waterBalance"]])
+    for row in db.build_rainfall_output(): sheet.append([row.get(key) for key in ["station", "department", "nbRainDays", "nbOver20", "decadeTotal", "normalDecade", "decadeDeviation", "maxDaily", "yearTotal", "yearDeviation", "seasonTotal", "normalSeason", "seasonDeviation", "etp", "waterBalance"]])
     stream = BytesIO(); workbook.save(stream); stream.seek(0)
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=RESA-01.xlsx"})
 

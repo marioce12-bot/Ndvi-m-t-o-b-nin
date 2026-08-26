@@ -63,18 +63,37 @@ def list_rainfall_imports(source: str | None = None) -> list[dict[str, object]]:
 def build_rainfall_output() -> list[dict[str, object]]:
     imports = list_rainfall_imports("decades")
     by_station: dict[str, dict[str, object]] = {}
+    rainfall_normals = {str(row.get("station", "")).upper(): row for row in get_client().collection("rainfallNormals").document("rainfall").collection("rows").stream() for row in [{**row.to_dict()}]}
+    agro_normals = {str(row.get("station", "")).upper(): row for row in get_client().collection("rainfallNormals").document("agro").collection("rows").stream() for row in [{**row.to_dict()}]}
     for item in imports:
         for row in item.get("rows", []):
             station = str(row.get("station", ""))
             if not station:
                 continue
-            target = by_station.setdefault(station, {"station": station, "department": row.get("department"), "nbRainDays": 0, "nbOver20": 0, "decadeTotal": 0.0, "maxDaily": None, "yearTotal": 0.0, "seasonTotal": 0.0, "waterBalance": None})
+            target = by_station.setdefault(station, {"station": station, "department": row.get("department"), "nbRainDays": 0, "nbOver20": 0, "decadeTotal": 0.0, "maxDaily": None, "yearTotal": 0.0, "seasonTotal": 0.0, "waterBalance": None, "normalDecade": None, "normalSeason": None, "decadeDeviation": None, "yearDeviation": None, "seasonDeviation": None, "etp": None})
             target["nbRainDays"] += int(row.get("nbRainDays") or 0)
             target["nbOver20"] += int(row.get("nbOver20") or 0)
             target["decadeTotal"] += float(row.get("decadeTotal") or 0)
             target["yearTotal"] += float(row.get("decadeTotal") or 0)
+            month = int(item.get("month") or 0)
+            department = str(target.get("department") or "").upper()
+            north = any(name in department for name in ("ATACORA", "DONGA", "BORGOU", "ALIBORI"))
+            in_season = (4 <= month <= 10) if north else (3 <= month <= 7 or 9 <= month <= 11)
+            if in_season: target["seasonTotal"] += float(row.get("decadeTotal") or 0)
+            target["yearDeviation"] = target["yearTotal"]
             max_daily = row.get("maxDaily")
             if max_daily is not None and (target["maxDaily"] is None or max_daily > target["maxDaily"]): target["maxDaily"] = max_daily
+            code = f"{int(item.get('month', 0)):02d}-{int(item.get('decade', 0))}"
+            normal = rainfall_normals.get(station.upper())
+            if normal:
+                target["normalDecade"] = normal.get("cuma")
+                target["normalSeason"] = normal.get("cums")
+                target["decadeDeviation"] = target["decadeTotal"] - float(normal.get("cuma") or 0)
+                target["seasonDeviation"] = target["seasonTotal"] - float(normal.get("cums") or 0)
+            agro = agro_normals.get(station.upper())
+            if agro:
+                target["etp"] = agro.get("etp") or agro.get("evapPan")
+                if target["etp"] is not None: target["waterBalance"] = target["decadeTotal"] - float(target["etp"])
     return list(by_station.values())
 
 
