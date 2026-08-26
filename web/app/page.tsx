@@ -121,11 +121,10 @@ function Dashboard({ user }: { user: User }) {
     const savedJobId = localStorage.getItem("rainfallJobId");
     if (!savedJobId) return;
     setRainfallJobId(savedJobId);
-    setRainfallUpload("uploading");
     let cancelled = false;
     const resume = async () => {
       for (let attempt = 0; attempt < 60 && !cancelled; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         const response = await fetch(`/api/rainfall?jobId=${encodeURIComponent(savedJobId)}`, { method: "PATCH", cache: "no-store" });
         const status = await response.json();
         if (status.status === "done") { setRainfallUpload("done"); setRainfallJobId(null); localStorage.removeItem("rainfallJobId"); await loadRainfallImports(); return; }
@@ -213,7 +212,7 @@ function Dashboard({ user }: { user: User }) {
             {selectedTable ? (
               <>
                 <div className="lightbox-head"><h2>{selectedTable}</h2><button className="icon-button" onClick={() => setSelectedTable(null)} aria-label="Retour">←</button></div>
-                {(selectedTable === "decades" || selectedTable === "synoptic") && <label className="upload-box">Téléverser le fichier Excel<input type="file" accept=".xls,.xlsx" disabled={rainfallUpload === "uploading"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadRainfallFile(file, selectedTable === "decades" ? "decades" : "agro"); }} /></label>}
+                {(selectedTable === "decades" || selectedTable === "synoptic") && <><label className="upload-box">Téléverser le fichier Excel<input type="file" accept=".xls,.xlsx" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadRainfallFile(file, selectedTable === "decades" ? "decades" : "agro"); }} /></label>{rainfallJobId && <button className="secondary-button" onClick={() => { localStorage.removeItem("rainfallJobId"); setRainfallJobId(null); setRainfallUpload("idle"); setToast("Suivi local arrêté; le traitement serveur continue"); }}>Arrêter le suivi de cet import</button>}</>}
                 <div className="table-preview"><div className="table-preview-head"><span>Source</span><span>Année</span><span>Mois</span><span>Décade</span><span>Lignes</span></div>{rainfallImports.length ? rainfallImports.map((item) => <div className="table-preview-row" key={item.id}><span>{item.source}</span><span>{item.year}</span><span>{item.month}</span><span>{item.decade}</span><span>{item.rows?.length ?? 0}</span></div>) : <div className="table-preview-empty">Aucun import enregistré.</div>}</div>
               </>
             ) : (
