@@ -44,3 +44,6 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .settings-table-item:hover { border-color:var(--green); background:var(--mint); }
 .settings-table-item strong { font-size:12px; }
 .settings-table-item span { color:var(--muted); font-size:10px; }
+.table-preview { overflow:auto; margin-top:18px; border:1px solid var(--line); border-radius:8px; }
+.table-preview-head { display:grid; grid-template-columns:repeat(6,minmax(100px,1fr)); gap:0; padding:11px; color:var(--muted); background:#f2f6f2; font:10px 'DM Mono',monospace; }
+.table-preview-empty { padding:42px 20px; color:var(--muted); text-align:center; font-size:11px; }
