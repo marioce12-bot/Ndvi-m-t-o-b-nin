@@ -9,3 +9,5 @@ pydantic-settings
 firebase-admin
 cloudinary
 psutil
+xlrd
+openpyxl

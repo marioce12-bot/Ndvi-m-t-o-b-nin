@@ -5,6 +5,7 @@ import logging
 import shutil
 import tempfile
 import threading
+from fastapi import File, UploadFile
 from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query
@@ -19,6 +20,7 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
+from .rainfall import compute_resa_row, parse_decades_xls
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,6 +65,27 @@ def run_cron(background_tasks: BackgroundTasks) -> dict[str, str]:
 
     background_tasks.add_task(execute)
     return {"status": "accepted"}
+
+
+@app.post("/rainfall/import", dependencies=[Depends(require_api_key)])
+async def import_rainfall(source: str, file: UploadFile = File(...)) -> dict[str, object]:
+    if source != "decades":
+        raise HTTPException(status_code=400, detail="Source supportée: decades")
+    content = await file.read()
+    try:
+        parsed = parse_decades_xls(content)
+        rows = [compute_resa_row(row) for row in parsed.rows]
+        payload = {"year": parsed.year, "month": parsed.month, "decade": parsed.decade, "source": parsed.source, "rows": rows}
+        db.save_rainfall_import(payload)
+        return {"status": "imported", "year": parsed.year, "month": parsed.month, "decade": parsed.decade, "rows": len(rows)}
+    except Exception as error:
+        logger.exception("Rainfall import failed")
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/rainfall/imports", dependencies=[Depends(require_api_key)])
+def rainfall_imports(source: str | None = None) -> dict[str, object]:
+    return {"imports": db.list_rainfall_imports(source)}
 
 
 @app.get("/pentades", dependencies=[Depends(require_api_key)])

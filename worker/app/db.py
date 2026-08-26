@@ -48,6 +48,18 @@ def get_pentades(product: str) -> list[dict[str, object]]:
     return value if isinstance(value, list) else []
 
 
+def save_rainfall_import(import_data: dict[str, object]) -> None:
+    key = f"{import_data['source']}-{import_data['year']}-{import_data['month']:02d}-{import_data['decade']}"
+    get_client().collection("rainfallImports").document(key).set({**import_data, "updatedAt": _now()})
+
+
+def list_rainfall_imports(source: str | None = None) -> list[dict[str, object]]:
+    query = get_client().collection("rainfallImports")
+    if source:
+        query = query.where("source", "==", source)
+    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+
 def find_done_job(product: str, pentade_id: str, owner_id: str):
     query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
     return next(iter(query.stream()), None)

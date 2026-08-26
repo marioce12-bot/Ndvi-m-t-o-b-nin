@@ -23,3 +23,19 @@ export function GET() {
     },
   });
 }
+
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const source = formData.get("source");
+  const file = formData.get("file");
+  const workerUrl = process.env.WORKER_URL;
+  const workerKey = process.env.WORKER_API_KEY;
+  if (!(file instanceof File) || (source !== "decades" && source !== "agro") || !workerUrl || !workerKey) {
+    return NextResponse.json({ error: "Fichier, source ou worker invalide" }, { status: 400 });
+  }
+  const upstream = new FormData();
+  upstream.set("file", file, file.name);
+  const response = await fetch(`${workerUrl.replace(/\/$/, "")}/rainfall/import?source=${source}`, { method: "POST", headers: { "X-API-Key": workerKey }, body: upstream });
+  const body = await response.json();
+  return NextResponse.json(body, { status: response.status });
+}
