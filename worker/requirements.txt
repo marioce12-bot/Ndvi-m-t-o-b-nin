@@ -11,3 +11,4 @@ cloudinary
 psutil
 xlrd
 openpyxl
+python-multipart
