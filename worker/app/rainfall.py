@@ -91,8 +91,20 @@ def parse_decades_xlsx(content: bytes, metadata: tuple[int, int, int] | None = N
     sheet = next((s for s in book.worksheets if s.max_row and any("HAUTEURS JOURNALIERES" in str(s.cell(r, c).value).upper() for r in range(1, min(s.max_row, 10) + 1) for c in range(1, s.max_column + 1))), None)
     if sheet is None:
         raise ValueError("Feuille DECADES introuvable")
-    result = _parse_decades_sheet(sheet, None, metadata)
-    return result
+    if metadata is None:
+        metadata = _metadata_from_text(" ".join(str(sheet.cell(r, c).value) for r in range(1, min(sheet.max_row, 8) + 1) for c in range(1, sheet.max_column + 1)))
+    return _parse_decades_sheet(sheet, None, metadata)
+
+
+def _metadata_from_text(text: str) -> tuple[int, int, int]:
+    upper = text.upper()
+    year_match = re.search(r"\b(20\d{2})\b", upper)
+    month_match = next((name for name in MONTHS if name in upper), None)
+    decade_match = re.search(r"(?:1(?:ERE|ÈRE)|2(?:EME|ÈME)|3(?:EME|ÈME))", upper)
+    if not year_match or not month_match or not decade_match:
+        raise ValueError("Métadonnées année/mois/décade introuvables; renseignez la période")
+    decade = int(decade_match.group()[0])
+    return int(year_match.group(1)), MONTHS[month_match], decade
 
 
 def parse_agro_xls(content: bytes) -> RainfallImport:
