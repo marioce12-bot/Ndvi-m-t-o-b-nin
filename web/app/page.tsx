@@ -99,7 +99,11 @@ function Dashboard({ user }: { user: User }) {
   const agroFetch = async (path: string, init?: RequestInit) => { const response = await fetch(path, init); const data = await response.json(); if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro"); return data; };
   const saveRain = async () => { await agroFetch("/agro/pluies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: rainRows }) }); setAgroMessage("Pluies enregistrées"); };
   const saveObservations = async () => { await agroFetch("/agro/observations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), station_id: agroStation, valeurs: agroRows }) }); setAgroMessage("Observations enregistrées"); };
-  const days = Array.from({ length: Number(agroDecade) === 3 ? 11 : 10 }, (_, index) => index + 1);
+  const daysInMonth = new Date(Number(agroYear), Number(agroMonth), 0).getDate();
+  const decadeNumber = Number(agroDecade);
+  const firstDay = decadeNumber === 1 ? 1 : decadeNumber === 2 ? 11 : 21;
+  const lastDay = decadeNumber === 1 ? 10 : decadeNumber === 2 ? 20 : daysInMonth;
+  const days = Array.from({ length: lastDay - firstDay + 1 }, (_, index) => firstDay + index);
   const updateRain = (station_id: string, jour: number, value: string) => setRainRows((rows) => [...rows.filter((row) => !(row.station_id === station_id && row.jour === jour)), ...(value === "" ? [] : [{ station_id, jour, hauteur_mm: Number(value) }])]);
   const updateAgro = (jour: number, key: string, value: string) => setAgroRows((rows) => { const current = rows.find((row) => row.jour === jour) ?? { jour }; const next = { ...current, [key]: value === "" ? undefined : Number(value) }; return [...rows.filter((row) => row.jour !== jour), next]; });
   useEffect(() => {
