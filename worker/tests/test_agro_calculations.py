@@ -3,6 +3,7 @@ import unittest
 
 from app.agro.calculations import build_summary, grouped_stations, rain_statistics, resolve_etp_station, rolling_totals, season_contains
 from app.agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
+from app.agro.registry import canonical_stations
 
 
 class AgroCalculationTests(unittest.TestCase):
@@ -63,6 +64,13 @@ class AgroCalculationTests(unittest.TestCase):
         unknown = Station("u", "U", "Mono", "U")
         self.assertEqual(resolve_etp_station(come, {"c": cotonou}), cotonou)
         self.assertIsNone(resolve_etp_station(unknown, {"c": cotonou}))
+
+    def test_canonical_registry_contains_all_resa_stations(self) -> None:
+        stations = canonical_stations()
+        self.assertGreater(len(stations), 100)
+        self.assertEqual([station.name for station in stations if station.principal], ["Kandi", "Parakou", "Natitingou", "Savè", "Bohicon", "Cotonou"])
+        come = next(station for station in stations if station.name == "Comè")
+        self.assertEqual(come.etp_station_id, "cotonou")
 
 
 if __name__ == "__main__":

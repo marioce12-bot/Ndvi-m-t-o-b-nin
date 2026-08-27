@@ -39,20 +39,12 @@ def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]
 
 
 def ensure_principal_stations() -> None:
-    stations = {
-        "cotonou": ("Cotonou", "Littoral", "Cotonou"),
-        "bohicon": ("Bohicon", "Zou", "Bohicon"),
-        "save": ("Savè", "Collines", "Savè"),
-        "parakou": ("Parakou", "Borgou", "Parakou"),
-        "natitingou": ("Natitingou", "Atacora", "Natitingou"),
-        "kandi": ("Kandi", "Alibori", "Kandi"),
-    }
+    from .agro.registry import station_documents
     client = get_client()
     batch = client.batch()
-    for station_id, (name, department, locality) in stations.items():
-        reference = client.collection("agroStations").document(station_id)
-        if not reference.get().exists:
-            batch.set(reference, {"name": name, "department": department, "locality": locality, "principal": True, "etp_station_id": None})
+    for station in station_documents():
+        reference = client.collection("agroStations").document(str(station["id"]))
+        batch.set(reference, {key: value for key, value in station.items() if key != "id"}, merge=True)
     batch.commit()
 
 
