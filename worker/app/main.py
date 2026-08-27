@@ -57,6 +57,7 @@ def _validate_period(year: int, month: int, decade: int) -> None:
 
 @app.get("/agro/stations", dependencies=[Depends(require_api_key)])
 def agro_stations(principale: bool | None = None) -> dict[str, object]:
+    db.ensure_principal_stations()
     return {"stations": db.list_agro_stations(principale)}
 
 
