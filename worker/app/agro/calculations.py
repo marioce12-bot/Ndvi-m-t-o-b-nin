@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Iterable
 
 from .models import AstronomicalConstant, DailyAgro, DailyRain, DecadeSummary, EditableDecadeValues, RainfallNormal, Station
@@ -21,6 +21,52 @@ def season_contains(station: Station, month: int) -> bool:
     return 4 <= month <= 10 if north else 3 <= month <= 7 or 9 <= month <= 11
 
 
+TABLEAU_BLOCKS = (
+    ("Tableau 1", ("Alibori", "Atacora", "Borgou", "Donga")),
+    ("Tableau 2", ("Collines", "Couffo", "Mono", "Zou")),
+    ("Tableau 3", ("Atlantique", "Littoral", "Ouémé", "Plateau")),
+)
+VALID_DEPARTMENTS = {department.upper() for _, departments in TABLEAU_BLOCKS for department in departments}
+
+
+def season_start(station: Station, observed_on: date) -> date | None:
+    department = station.department.upper()
+    if any(name in department for name in ("ATACORA", "DONGA", "BORGOU", "ALIBORI")):
+        return date(observed_on.year, 4, 1) if 4 <= observed_on.month <= 10 else None
+    if 3 <= observed_on.month <= 7:
+        return date(observed_on.year, 3, 1)
+    if 9 <= observed_on.month <= 11:
+        return date(observed_on.year, 9, 1)
+    return None
+
+
+def rolling_totals(station: Station, current_end: date, history: Iterable[DailyRain]) -> tuple[float, float | None]:
+    values = [item for item in history if item.station_id == station.id and item.observed_on <= current_end and item.amount_mm is not None]
+    year_total = sum(item.amount_mm for item in values if item.observed_on.year == current_end.year)
+    start = season_start(station, current_end)
+    season_total = sum(item.amount_mm for item in values if start and start <= item.observed_on <= current_end) if start else None
+    return year_total, season_total
+
+
+def grouped_stations(stations: Iterable[Station]) -> list[tuple[str, str, list[Station]]]:
+    by_department = {station.department.upper(): [] for station in stations}
+    for station in stations:
+        if station.department.upper() not in VALID_DEPARTMENTS:
+            raise ValueError(f"Département hors référentiel RESA: {station.department}")
+        by_department[station.department.upper()].append(station)
+    result: list[tuple[str, str, list[Station]]] = []
+    for block, departments in TABLEAU_BLOCKS:
+        for department in departments:
+            result.append((block, department, by_department.get(department.upper(), [])))
+    return result
+
+
+def resolve_etp_station(station: Station, stations: dict[str, Station]) -> Station | None:
+    if station.principal:
+        return station
+    return stations.get(station.etp_station_id) if station.etp_station_id else None
+
+
 def build_summary(
     station: Station,
     year: int,
@@ -35,9 +81,8 @@ def build_summary(
 ) -> DecadeSummary:
     current = list(current_rain)
     rain_days, heavy_days, maximum, total = rain_statistics(item.amount_mm for item in current)
-    history = [item for item in history_rain if item.observed_on.year == year and item.observed_on <= date(year, month, min(28, 1 + decade * 10))]
-    year_total = sum(item.amount_mm or 0 for item in history) + (total or 0)
-    season_total = sum(item.amount_mm or 0 for item in history if season_contains(station, item.observed_on.month)) + ((total or 0) if season_contains(station, month) else 0)
+    current_end = max((item.observed_on for item in current), default=date(year, month, 1))
+    year_total, season_total = rolling_totals(station, current_end, list(history_rain) + current)
     agro = list(agro_days)
     sunshine_total = sum(item.sunshine or 0 for item in agro)
     h10 = astronomical.h10 if astronomical else None
