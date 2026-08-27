@@ -12,7 +12,7 @@ from .calculations import grouped_stations, resolve_etp_station
 from .models import DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
 
 MONTHS = ("JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE")
-NETWORK_HEADERS = ["STATIONS", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Cumul décade", "Écart normale décade", "Cumul année civile", "Écart normale année", "Cumul saison", "Écart normale saison", "Bilan hydrique"]
+NETWORK_HEADERS = ["STATIONS", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Cumul décade", "Écart normale décade", "% de la normale", "Cumul année civile", "Écart normale année", "Cumul saison", "Écart normale saison", "Bilan hydrique"]
 
 
 def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]:
@@ -41,7 +41,13 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.append(NETWORK_HEADERS)
         for station in members:
             summary = summaries.get(station.id, {})
-            sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+            total = summary.get("rainfall_total")
+            normal = summary.get("normal_decade")
+            percentage = total / normal if total is not None and normal else None
+            sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), total, summary.get("decade_deviation"), percentage, summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+    for row in sheet.iter_rows():
+        for cell in row:
+            if cell.column == 6 and isinstance(cell.value, (int, float)): cell.number_format = "0.0%"
     sheet.append([])
     sheet.append(["Notes : Nord : saison du 1er avril au 31 octobre. Sud : du 1er mars au 31 juillet puis du 1er septembre au 30 novembre."])
     sheet.append(["- : donnée manquante. Bilan hydrique = pluie de la décade - ETP de rattachement."])
