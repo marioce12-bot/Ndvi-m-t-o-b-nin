@@ -18,6 +18,9 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
+from .agro.exports import build_climate_export, build_network_export
+from .agro.models import Station
+from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,6 +46,18 @@ def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/agro/export/network.xlsx", dependencies=[Depends(require_api_key)])
+def agro_network_export(year: int, month: int, decade: int) -> StreamingResponse:
+    stream, filename = build_network_export(year, month, decade, [], {})
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+@app.get("/agro/export/climate.xlsx", dependencies=[Depends(require_api_key)])
+def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse:
+    stream, filename = build_climate_export(year, month, decade, [], {})
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 
 @app.post("/cron/run", status_code=202, dependencies=[Depends(require_api_key)])
