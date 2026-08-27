@@ -31,6 +31,56 @@ def get_job(job_id: str):
     return get_client().collection("jobs").document(job_id).get()
 
 
+def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
+    query = get_client().collection("agroStations")
+    if principale is not None:
+        query = query.where("principal", "==", principale)
+    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+
+def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = None) -> list[dict[str, object]]:
+    query = get_client().collection("agroRainDaily").where("year", "==", year).where("month", "==", month).where("decade", "==", decade)
+    if station_id: query = query.where("station_id", "==", station_id)
+    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+
+def upsert_agro_rain(payloads: list[dict[str, object]]) -> None:
+    batch = get_client().batch()
+    collection = get_client().collection("agroRainDaily")
+    for value in payloads:
+        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}-{value['jour']}"
+        batch.set(collection.document(doc_id), value, merge=True)
+    batch.commit()
+
+
+def list_agro_observations(year: int, month: int, decade: int, station_id: str) -> list[dict[str, object]]:
+    query = get_client().collection("agroObservations").where("year", "==", year).where("month", "==", month).where("decade", "==", decade).where("station_id", "==", station_id)
+    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+
+def upsert_agro_observations(payloads: list[dict[str, object]]) -> None:
+    batch = get_client().batch()
+    collection = get_client().collection("agroObservations")
+    for value in payloads:
+        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}-{value['jour']}"
+        batch.set(collection.document(doc_id), value, merge=True)
+    batch.commit()
+
+
+def get_agro_ew_etp(year: int, month: int, decade: int) -> list[dict[str, object]]:
+    query = get_client().collection("agroEwEtp").where("year", "==", year).where("month", "==", month).where("decade", "==", decade)
+    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+
+def upsert_agro_ew_etp(payloads: list[dict[str, object]]) -> None:
+    batch = get_client().batch()
+    collection = get_client().collection("agroEwEtp")
+    for value in payloads:
+        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}"
+        batch.set(collection.document(doc_id), value, merge=True)
+    batch.commit()
+
+
 def list_users() -> list[tuple[str, str]]:
     """Return registered Firebase users that have an email address."""
     return [(user.uid, user.email) for user in auth.list_users().iterate_all() if user.email]

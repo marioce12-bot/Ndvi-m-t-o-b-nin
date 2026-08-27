@@ -20,6 +20,8 @@ from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
 from .agro.models import Station
+from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest
+from .agro.calculations import rain_statistics
 from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +48,60 @@ def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def _validate_period(year: int, month: int, decade: int) -> None:
+    if not 1900 <= year <= 2100 or not 1 <= month <= 12 or decade not in (1, 2, 3):
+        raise HTTPException(status_code=422, detail="Période invalide")
+
+
+@app.get("/agro/stations", dependencies=[Depends(require_api_key)])
+def agro_stations(principale: bool | None = None) -> dict[str, object]:
+    return {"stations": db.list_agro_stations(principale)}
+
+
+@app.get("/agro/pluies", dependencies=[Depends(require_api_key)])
+def agro_rains(year: int, month: int, decade: int) -> dict[str, object]:
+    _validate_period(year, month, decade)
+    return {"valeurs": db.list_agro_rain(year, month, decade)}
+
+
+@app.post("/agro/pluies", dependencies=[Depends(require_api_key)])
+def save_agro_rains(request: RainRequest) -> dict[str, object]:
+    _validate_period(request.year, request.month, request.decade)
+    payloads = [{"year": request.year, "month": request.month, "decade": request.decade, **value.model_dump()} for value in request.valeurs if value.hauteur_mm is not None]
+    db.upsert_agro_rain(payloads)
+    grouped: dict[str, list[float | None]] = {}
+    for value in db.list_agro_rain(request.year, request.month, request.decade): grouped.setdefault(str(value["station_id"]), []).append(value.get("hauteur_mm"))
+    return {"valeurs": db.list_agro_rain(request.year, request.month, request.decade), "calculs": {station: dict(zip(("nbjp_gt0", "nbjp_gt20", "max", "total"), rain_statistics(values))) for station, values in grouped.items()}}
+
+
+@app.get("/agro/observations", dependencies=[Depends(require_api_key)])
+def agro_observations(year: int, month: int, decade: int, station_id: str) -> dict[str, object]:
+    _validate_period(year, month, decade)
+    return {"valeurs": db.list_agro_observations(year, month, decade, station_id)}
+
+
+@app.post("/agro/observations", dependencies=[Depends(require_api_key)])
+def save_agro_observations(request: AgroRequest) -> dict[str, object]:
+    _validate_period(request.year, request.month, request.decade)
+    payloads = [{"year": request.year, "month": request.month, "decade": request.decade, "station_id": request.station_id, **value.model_dump()} for value in request.valeurs]
+    db.upsert_agro_observations(payloads)
+    values = db.list_agro_observations(request.year, request.month, request.decade, request.station_id)
+    return {"valeurs": values, "totaux_moyennes": {"pluie": sum(v.get("pluie") or 0 for v in values), "insolation": sum(v.get("insolation") or 0 for v in values), "evapo_bac_a": sum(v.get("evapo_bac_a") or 0 for v in values), "temp_moy": sum((v.get("temp_min") + v.get("temp_max")) / 2 for v in values if v.get("temp_min") is not None and v.get("temp_max") is not None) / max(1, len(values))}}
+
+
+@app.get("/agro/ew-etp", dependencies=[Depends(require_api_key)])
+def agro_ew_etp(year: int, month: int, decade: int) -> dict[str, object]:
+    _validate_period(year, month, decade)
+    return {"valeurs": db.get_agro_ew_etp(year, month, decade), "calculs": []}
+
+
+@app.post("/agro/ew-etp", dependencies=[Depends(require_api_key)])
+def save_agro_ew_etp(request: EwEtpRequest) -> dict[str, object]:
+    _validate_period(request.year, request.month, request.decade)
+    db.upsert_agro_ew_etp([{ "year": request.year, "month": request.month, "decade": request.decade, **value.model_dump()} for value in request.valeurs])
+    return {"valeurs": db.get_agro_ew_etp(request.year, request.month, request.decade), "temperature_hygrometrie": []}
 
 
 @app.get("/agro/export/network.xlsx", dependencies=[Depends(require_api_key)])
