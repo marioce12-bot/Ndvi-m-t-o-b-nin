@@ -9,3 +9,4 @@ pydantic-settings
 firebase-admin
 cloudinary
 psutil
+openpyxl>=3.1,<4
