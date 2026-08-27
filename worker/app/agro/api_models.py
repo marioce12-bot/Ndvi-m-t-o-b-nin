@@ -52,3 +52,12 @@ class EwEtpRequest(BaseModel):
     month: int = Field(ge=1, le=12)
     decade: int = Field(ge=1, le=3)
     valeurs: list[EwEtpValue]
+
+
+class StationRequest(BaseModel):
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    department: str = Field(min_length=1)
+    locality: str = Field(min_length=1)
+    principal: bool = False
+    etp_station_id: Optional[str] = None

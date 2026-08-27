@@ -38,6 +38,11 @@ def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def upsert_agro_station(value: dict[str, object]) -> None:
+    station_id = str(value.pop("id"))
+    get_client().collection("agroStations").document(station_id).set(value, merge=True)
+
+
 def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = None) -> list[dict[str, object]]:
     query = get_client().collection("agroRainDaily").where("year", "==", year).where("month", "==", month).where("decade", "==", decade)
     if station_id: query = query.where("station_id", "==", station_id)

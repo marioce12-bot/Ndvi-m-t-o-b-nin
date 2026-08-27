@@ -16,7 +16,6 @@ const pentades = [
 ];
 
 type GalleryMap = { id: string | number; product: Product; label: string; date: string; tone: string; value?: string; imageUrl?: string; thumbnailUrl?: string };
-const fallbackAgroStations = ["Cotonou", "Bohicon", "Savè", "Parakou", "Natitingou", "Kandi"].map((name) => ({ id: name.toLowerCase(), name, department: "", principal: true }));
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
@@ -95,7 +94,7 @@ function Dashboard({ user }: { user: User }) {
   const [agroMessage, setAgroMessage] = useState("");
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
-  useEffect(() => { if (!showAgro) return; fetch("/agro/stations").then((r) => r.json()).then((data) => { const stations = data.stations?.length ? data.stations : fallbackAgroStations; const principals = stations.filter((s: { principal?: boolean }) => s.principal); setAgroStations(stations); setAgroStation(principals[0]?.id ?? stations[0]?.id ?? ""); }).catch(() => { setAgroStations(fallbackAgroStations); setAgroStation(fallbackAgroStations[0].id); setAgroMessage("Référentiel local des stations principales utilisé"); }); }, [showAgro]);
+  useEffect(() => { if (!showAgro) return; fetch("/agro/stations").then((r) => r.json()).then((data) => { const stations = data.stations ?? []; const principals = stations.filter((s: { principal?: boolean }) => s.principal); setAgroStations(stations); setAgroStation(principals[0]?.id ?? stations[0]?.id ?? ""); }).catch(() => setAgroMessage("Impossible de charger les stations enregistrées")); }, [showAgro]);
   const agroFetch = async (path: string, init?: RequestInit) => { const response = await fetch(path, init); const data = await response.json(); if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro"); return data; };
   const saveRain = async () => { await agroFetch("/agro/pluies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: rainRows }) }); setAgroMessage("Pluies enregistrées"); };
   const saveObservations = async () => { await agroFetch("/agro/observations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), station_id: agroStation, valeurs: agroRows }) }); setAgroMessage("Observations enregistrées"); };

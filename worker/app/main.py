@@ -20,7 +20,7 @@ from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
 from .agro.models import Station
-from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest
+from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.calculations import rain_statistics
 from fastapi.responses import StreamingResponse
 
@@ -58,6 +58,12 @@ def _validate_period(year: int, month: int, decade: int) -> None:
 @app.get("/agro/stations", dependencies=[Depends(require_api_key)])
 def agro_stations(principale: bool | None = None) -> dict[str, object]:
     return {"stations": db.list_agro_stations(principale)}
+
+
+@app.post("/agro/stations", dependencies=[Depends(require_api_key)])
+def save_agro_station(request: StationRequest) -> dict[str, object]:
+    db.upsert_agro_station(request.model_dump())
+    return {"station": next((station for station in db.list_agro_stations() if station["id"] == request.id), {"id": request.id, **request.model_dump(exclude={"id"})})}
 
 
 @app.get("/agro/pluies", dependencies=[Depends(require_api_key)])
