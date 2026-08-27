@@ -72,6 +72,16 @@ class AgroCalculationTests(unittest.TestCase):
         come = next(station for station in stations if station.name == "Comè")
         self.assertEqual(come.etp_station_id, "cotonou")
 
+    def test_table_two_and_three_station_order(self) -> None:
+        grouped = grouped_stations(canonical_stations())
+        table_two = [(department, [station.name for station in stations]) for block, department, stations in grouped if block == "Tableau 2"]
+        table_three = [(department, [station.name for station in stations]) for block, department, stations in grouped if block == "Tableau 3"]
+        self.assertEqual([department for department, _ in table_two], ["Collines", "Couffo", "Mono", "Zou"])
+        self.assertEqual(table_two[0][1][0], "Agouna")
+        self.assertEqual([department for department, _ in table_three], ["Atlantique", "Littoral", "Oueme", "Plateau"])
+        self.assertEqual(table_three[0][1][0], "Allada")
+        self.assertEqual(table_three[1][1][0], "Cotonou")
+
 
 if __name__ == "__main__":
     unittest.main()

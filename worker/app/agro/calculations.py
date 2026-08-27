@@ -24,7 +24,7 @@ def season_contains(station: Station, month: int) -> bool:
 TABLEAU_BLOCKS = (
     ("Tableau 1", ("Alibori", "Atacora", "Borgou", "Donga")),
     ("Tableau 2", ("Collines", "Couffo", "Mono", "Zou")),
-    ("Tableau 3", ("Atlantique", "Littoral", "Ouémé", "Plateau")),
+    ("Tableau 3", ("Atlantique", "Littoral", "Oueme", "Plateau")),
 )
 VALID_DEPARTMENTS = {department.upper() for _, departments in TABLEAU_BLOCKS for department in departments}
 
