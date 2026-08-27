@@ -1,0 +1,1 @@
+"""Agrometeorological bulletin domain module."""
