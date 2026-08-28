@@ -4,6 +4,7 @@ import hmac
 import logging
 import shutil
 import tempfile
+from datetime import date
 from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query
@@ -19,7 +20,8 @@ from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
-from .agro.models import Station
+from .agro.calculations import build_summary
+from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.calculations import rain_statistics
 from fastapi.responses import StreamingResponse
@@ -28,6 +30,150 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
+
+
+def _avg(values: list[float | None]) -> float | None:
+    filtered = [v for v in values if v is not None]
+    if not filtered:
+        return None
+    return sum(filtered) / len(filtered)
+
+
+def _build_principal_stations() -> list[Station]:
+    db.ensure_principal_stations()
+    docs = db.list_agro_stations(principale=True)
+    stations: list[Station] = []
+    for item in docs:
+        stations.append(
+            Station(
+                id=str(item["id"]),
+                name=str(item.get("name") or ""),
+                department=str(item.get("department") or ""),
+                locality=str(item.get("locality") or ""),
+                principal=bool(item.get("principal")),
+                etp_station_id=item.get("etp_station_id"),
+            )
+        )
+    return stations
+
+
+def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, object]]:
+    return {str(item.get("station_id")): item for item in db.get_agro_ew_etp(year, month, decade)}
+
+
+def _build_station_daily_agro(year: int, month: int, decade: int, station_id: str) -> list[DailyAgro]:
+    observations = db.list_agro_observations(year, month, decade, station_id)
+    daily: list[DailyAgro] = []
+    for row in observations:
+        jour = int(row.get("jour"))
+        daily.append(
+            DailyAgro(
+                station_id=station_id,
+                observed_on=date(year, month, jour),
+                rain_mm=row.get("pluie"),
+                tmin=row.get("temp_min"),
+                tmax=row.get("temp_max"),
+                soil10=row.get("temp_10cm"),
+                soil50=row.get("temp_50cm"),
+                wind_mean=row.get("vent_moyen"),
+                wind_max=row.get("vent_max"),
+                sunshine=row.get("insolation"),
+                humidity_min=row.get("humidite_min"),
+                humidity_max=row.get("humidite_max"),
+                vapor_pressure=row.get("tension_vapeur"),
+                pan_evaporation=row.get("evapo_bac_a"),
+            )
+        )
+    return daily
+
+
+def _build_climate_for_principal_stations(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
+    stations = _build_principal_stations()
+    ew_etp_map = _get_ew_etp_map(year, month, decade)
+    climate: dict[str, dict[str, object]] = {}
+
+    for station in stations:
+        daily_agro = _build_station_daily_agro(year, month, decade, station.id)
+        sunshine_present = any(day.sunshine is not None for day in daily_agro)
+
+        ew_doc = ew_etp_map.get(station.id, {})
+        base_values = {k: v for k, v in ew_doc.items() if k not in {"id", "station_id"}}
+        ew = ew_doc.get("ew")
+        etp = ew_doc.get("etp")
+
+        h10_val = ew_doc.get("h10")
+        ra_val = ew_doc.get("ra")
+        ang_a_val = ew_doc.get("angstrom_a")
+        ang_b_val = ew_doc.get("angstrom_b")
+
+        ra_ok = isinstance(ra_val, (int, float)) and isinstance(ang_a_val, (int, float)) and isinstance(ang_b_val, (int, float))
+        ang_a = float(ang_a_val) if isinstance(ang_a_val, (int, float)) else 0.0
+        ang_b = float(ang_b_val) if isinstance(ang_b_val, (int, float)) else 0.0
+        ra: float | None = float(ra_val) if ra_ok else None
+        h10: float | None = float(h10_val) if isinstance(h10_val, (int, float)) else None
+
+        if not sunshine_present:
+            radiation_fields = {"h10": None, "insolation_fraction": None, "global_radiation": None}
+        else:
+            astronomical = AstronomicalConstant(station.id, str(decade), h10=h10, ra=ra, angstrom_a=ang_a, angstrom_b=ang_b)
+            editable = EditableDecadeValues(station.id, year, month, decade, ew=ew, etp=etp)
+            summary = build_summary(
+                station=station,
+                year=year,
+                month=month,
+                decade=decade,
+                current_rain=(),
+                history_rain=(),
+                rainfall_normal=None,
+                editable=editable,
+                astronomical=astronomical,
+                agro_days=daily_agro,
+            )
+            radiation_fields = {
+                "h10": summary.h10,
+                "insolation_fraction": summary.insolation_fraction,
+                "global_radiation": summary.global_radiation,
+            }
+
+        # Start from whatever is already persisted in agroEwEtp, then enforce
+        # radiation fields computed from module-2 observations when available.
+        climate_values: dict[str, object] = {
+            **base_values,
+            **radiation_fields,
+            "ew": ew,
+            "etp": etp,
+            "tmin": base_values.get("tmin") if base_values.get("tmin") is not None else _avg([day.tmin for day in daily_agro]),
+            "tmax": base_values.get("tmax") if base_values.get("tmax") is not None else _avg([day.tmax for day in daily_agro]),
+            "tmean": base_values.get("tmean") if base_values.get("tmean") is not None else _avg([day.tmean for day in daily_agro]),
+            "soil10": base_values.get("soil10") if base_values.get("soil10") is not None else _avg([day.soil10 for day in daily_agro]),
+            "soil50": base_values.get("soil50") if base_values.get("soil50") is not None else _avg([day.soil50 for day in daily_agro]),
+            "humidity_min": base_values.get("humidity_min") if base_values.get("humidity_min") is not None else _avg([day.humidity_min for day in daily_agro]),
+            "humidity_max": base_values.get("humidity_max") if base_values.get("humidity_max") is not None else _avg([day.humidity_max for day in daily_agro]),
+            "humidity_mean": base_values.get("humidity_mean") if base_values.get("humidity_mean") is not None else _avg([day.humidity_mean for day in daily_agro]),
+            "vapor_pressure": base_values.get("vapor_pressure") if base_values.get("vapor_pressure") is not None else _avg([day.vapor_pressure for day in daily_agro]),
+            "deficit": base_values.get("deficit")
+            if base_values.get("deficit") is not None
+            else (
+                (ew - _avg([day.vapor_pressure for day in daily_agro]))
+                if (ew is not None and _avg([day.vapor_pressure for day in daily_agro]) is not None)
+                else None
+            ),
+            "sunshine_total": sum(day.sunshine for day in daily_agro if day.sunshine is not None) if sunshine_present else None,
+            "wind_mean": base_values.get("wind_mean") if base_values.get("wind_mean") is not None else _avg([day.wind_mean for day in daily_agro]),
+            "wind_max": base_values.get("wind_max") if base_values.get("wind_max") is not None else _avg([day.wind_max for day in daily_agro]),
+            "pan_evaporation": base_values.get("pan_evaporation") if base_values.get("pan_evaporation") is not None else _avg([day.pan_evaporation for day in daily_agro]),
+        }
+
+        rain_docs = db.list_agro_rain(year, month, decade, station.id)
+        rain_amounts = [float(r.get("hauteur_mm")) for r in rain_docs if r.get("hauteur_mm") is not None]
+        if rain_amounts and etp is not None:
+            climate_values["water_balance"] = sum(rain_amounts) - float(etp)
+        else:
+            climate_values["water_balance"] = None
+
+        climate[station.id] = climate_values
+
+    return stations, climate
 
 
 class GenerateRequest(BaseModel):
@@ -101,14 +247,49 @@ def save_agro_observations(request: AgroRequest) -> dict[str, object]:
 @app.get("/agro/ew-etp", dependencies=[Depends(require_api_key)])
 def agro_ew_etp(year: int, month: int, decade: int) -> dict[str, object]:
     _validate_period(year, month, decade)
-    return {"valeurs": db.get_agro_ew_etp(year, month, decade), "calculs": []}
+    _, climate = _build_climate_for_principal_stations(year, month, decade)
+    calculs = [
+        {
+            "station_id": station_id,
+            "h10": values.get("h10"),
+            "insolation_fraction": values.get("insolation_fraction"),
+            "global_radiation": values.get("global_radiation"),
+        }
+        for station_id, values in climate.items()
+    ]
+    computed_numeric = sum(
+        1
+        for item in calculs
+        if isinstance(item.get("h10"), (int, float))
+        and isinstance(item.get("insolation_fraction"), (int, float))
+        and isinstance(item.get("global_radiation"), (int, float))
+    )
+    logger.info(
+        "agro/ew-etp %s-%s dec=%s: calculs=%s fully_computed=%s",
+        year,
+        f"{month:02d}",
+        decade,
+        len(calculs),
+        computed_numeric,
+    )
+    return {"valeurs": db.get_agro_ew_etp(year, month, decade), "calculs": calculs}
 
 
 @app.post("/agro/ew-etp", dependencies=[Depends(require_api_key)])
 def save_agro_ew_etp(request: EwEtpRequest) -> dict[str, object]:
     _validate_period(request.year, request.month, request.decade)
     db.upsert_agro_ew_etp([{ "year": request.year, "month": request.month, "decade": request.decade, **value.model_dump()} for value in request.valeurs])
-    return {"valeurs": db.get_agro_ew_etp(request.year, request.month, request.decade), "temperature_hygrometrie": []}
+    _, climate = _build_climate_for_principal_stations(request.year, request.month, request.decade)
+    calculs = [
+        {
+            "station_id": station_id,
+            "h10": values.get("h10"),
+            "insolation_fraction": values.get("insolation_fraction"),
+            "global_radiation": values.get("global_radiation"),
+        }
+        for station_id, values in climate.items()
+    ]
+    return {"valeurs": db.get_agro_ew_etp(request.year, request.month, request.decade), "temperature_hygrometrie": [], "calculs": calculs}
 
 
 @app.get("/agro/export/network.xlsx", dependencies=[Depends(require_api_key)])
@@ -119,7 +300,23 @@ def agro_network_export(year: int, month: int, decade: int) -> StreamingResponse
 
 @app.get("/agro/export/climate.xlsx", dependencies=[Depends(require_api_key)])
 def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse:
-    stream, filename = build_climate_export(year, month, decade, [], {})
+    stations, climate = _build_climate_for_principal_stations(year, month, decade)
+    computed_numeric = sum(
+        1
+        for values in climate.values()
+        if isinstance(values.get("h10"), (int, float))
+        and isinstance(values.get("insolation_fraction"), (int, float))
+        and isinstance(values.get("global_radiation"), (int, float))
+    )
+    logger.info(
+        "agro/export/climate.xlsx %s-%s dec=%s: stations=%s fully_computed=%s",
+        year,
+        f"{month:02d}",
+        decade,
+        len(list(stations)),
+        computed_numeric,
+    )
+    stream, filename = build_climate_export(year, month, decade, stations, climate)
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 
