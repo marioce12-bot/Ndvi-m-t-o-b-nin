@@ -97,8 +97,37 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => { if (!showAgro) return; fetch("/api/agro/stations").then((r) => r.json()).then((data) => { const stations = data.stations ?? []; const principals = stations.filter((s: { principal?: boolean }) => s.principal); setAgroStations(stations); setAgroStation(principals[0]?.id ?? stations[0]?.id ?? ""); if (!stations.length) setAgroMessage(data.error ?? "Aucune station enregistrée"); }).catch(() => setAgroMessage("Impossible de charger les stations enregistrées")); }, [showAgro]);
   const agroFetch = async (path: string, init?: RequestInit) => { const response = await fetch(`/api/agro${path}`, init); const data = await response.json(); if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro"); return data; };
-  const saveRain = async () => { await agroFetch("/agro/pluies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: rainRows }) }); setAgroMessage("Pluies enregistrées"); };
-  const saveObservations = async () => { await agroFetch("/agro/observations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), station_id: agroStation, valeurs: agroRows }) }); setAgroMessage("Observations enregistrées"); };
+  // Le proxy Next.js monte déjà la route worker sur `/agro/*`.
+  // Donc on ne doit PAS réajouter un préfixe `/agro` ici.
+  const saveRain = async () => {
+    try {
+      await agroFetch("/pluies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: rainRows })
+      });
+      setToast("Pluies enregistrées");
+      setAgroMessage("Pluies enregistrées");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les pluies");
+      setAgroMessage("Impossible d'enregistrer les pluies");
+    }
+  };
+
+  const saveObservations = async () => {
+    try {
+      await agroFetch("/observations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), station_id: agroStation, valeurs: agroRows })
+      });
+      setToast("Observations enregistrées");
+      setAgroMessage("Observations enregistrées");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les observations");
+      setAgroMessage("Impossible d'enregistrer les observations");
+    }
+  };
   const daysInMonth = new Date(Number(agroYear), Number(agroMonth), 0).getDate();
   const decadeNumber = Number(agroDecade);
   const firstDay = decadeNumber === 1 ? 1 : decadeNumber === 2 ? 11 : 21;
