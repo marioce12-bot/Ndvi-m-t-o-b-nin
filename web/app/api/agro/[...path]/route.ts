@@ -7,7 +7,9 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   const workerKey = process.env.WORKER_API_KEY;
   if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker agro non configuré" }, { status: 503 });
   const { path } = await context.params;
-  const target = `${workerUrl.replace(/\/$/, "")}/agro/${path.join("/")}${new URL(request.url).search}`;
+  // Tolère un éventuel préfixe client erroné `/agro/agro/*`.
+  const normalizedPath = path[0] === "agro" ? path.slice(1) : path;
+  const target = `${workerUrl.replace(/\/$/, "")}/agro/${normalizedPath.join("/")}${new URL(request.url).search}`;
   const headers = new Headers(request.headers);
   headers.set("X-API-Key", workerKey);
   headers.delete("host");
