@@ -108,6 +108,16 @@ function Dashboard({ user }: { user: User }) {
       });
       setToast("Pluies enregistrées");
       setAgroMessage("Pluies enregistrées");
+
+      // Rafraîchit l'état UI basé sur les valeurs calculées.
+      const [rain, climate] = await Promise.all([
+        agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
+        agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)
+      ]);
+      setExportAvailability({
+        network: (rain.valeurs ?? []).length > 0,
+        climate: (climate.valeurs ?? []).length > 0
+      });
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les pluies");
       setAgroMessage("Impossible d'enregistrer les pluies");
@@ -123,6 +133,16 @@ function Dashboard({ user }: { user: User }) {
       });
       setToast("Observations enregistrées");
       setAgroMessage("Observations enregistrées");
+
+      // Les observations impactent les exports climatiques; on rafraîchit le statut.
+      const [rain, climate] = await Promise.all([
+        agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
+        agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)
+      ]);
+      setExportAvailability({
+        network: (rain.valeurs ?? []).length > 0,
+        climate: (climate.valeurs ?? []).length > 0
+      });
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les observations");
       setAgroMessage("Impossible d'enregistrer les observations");
