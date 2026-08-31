@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
-
 type User = { id: string; email?: string | null };
-
-async function accessToken() {
-  const { data } = await supabase?.auth.getSession() ?? { data: { session: null } };
-  return data.session?.access_token ?? "";
-}
 
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
@@ -89,15 +82,13 @@ function AuthScreen() {
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     try {
-      if (!supabase) throw new Error("Supabase indisponible");
-      if (mode === "reset") await supabase.auth.resetPasswordForEmail(email);
-      else if (mode === "signup") await supabase.auth.signUp({ email, password });
-      else await supabase.auth.signInWithPassword({ email, password });
+      const response = await fetch("/api/platform-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+      if (!response.ok) throw new Error("ACCESS_DENIED");
       if (mode === "reset") setMessage("Un lien de réinitialisation a été envoyé.");
     } catch { setMessage("Email ou mot de passe invalide. Vérifiez vos informations."); }
     finally { setBusy(false); }
   }
-  return <main className="auth-shell"><div className="auth-card"><div className="brand-symbol"><span>ND</span><i /></div><span className="section-kicker">MÉTÉO BÉNIN · eVIIRS 375 m</span><h1>{mode === "login" ? "Votre espace cartes" : mode === "signup" ? "Créer un compte" : "Mot de passe oublié"}</h1><p>Accédez à vos générations et à votre archive personnelle.</p><form onSubmit={submit}><label htmlFor="auth-email">Adresse email<input id="auth-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></label>{mode !== "reset" && <label htmlFor="auth-password">Mot de passe<input id="auth-password" type="password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6 caractères minimum" autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>}<button className="auth-submit" disabled={busy}>{busy ? "Veuillez patienter…" : mode === "login" ? "Se connecter" : mode === "signup" ? "Créer mon compte" : "Envoyer le lien"}</button></form>{message && <div className="auth-message">{message}</div>}<div className="auth-links">{mode === "login" && <><button onClick={() => setMode("reset")}>Mot de passe oublié ?</button><button onClick={() => setMode("signup")}>Créer un compte</button></>}{mode !== "login" && <button onClick={() => setMode("login")}>Retour à la connexion</button>}</div></div></main>;
+  return <main className="auth-shell"><div className="auth-card"><div className="brand-symbol"><span>ND</span><i /></div><span className="section-kicker">MÉTÉO BÉNIN · ACCÈS PRIVÉ</span><h1>Accès à la plateforme</h1><p>Cette plateforme est réservée à un usage personnel.</p><form onSubmit={submit}><label htmlFor="auth-password">Mot de passe<input id="auth-password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mot de passe de la plateforme" autoComplete="current-password" /></label><button className="auth-submit" disabled={busy}>{busy ? "Vérification…" : "Se connecter"}</button></form>{message && <div className="auth-message">Mot de passe incorrect.</div>}</div></main>;
 }
 
 function AgroPanel({
@@ -275,7 +266,7 @@ function Dashboard({ user }: { user: User }) {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await fetch("/api/jobs", { headers: { Authorization: `Bearer ${await accessToken()}` }, cache: "no-store" });
+        const response = await fetch("/api/jobs", { cache: "no-store" });
         const data = await response.json();
         if (!cancelled && response.ok) setMaps((data.jobs ?? []).map((item: { id: string; product: Product; label?: string; pentadeId: string; completedAt?: { _seconds?: number }; imageUrl?: string; thumbnailUrl?: string }) => ({ id: item.id, product: item.product, label: item.label ?? item.pentadeId, date: item.completedAt?._seconds ? new Date(item.completedAt._seconds * 1000).toLocaleDateString("fr-FR") : "Récemment", tone: item.product === "anomaly" ? "olive" : "forest", imageUrl: item.imageUrl, thumbnailUrl: item.thumbnailUrl })));
       } catch { if (!cancelled) setToast("Galerie Firestore indisponible"); }
@@ -286,7 +277,7 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     if (!jobId) return;
     let cancelled = false;
-    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await accessToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
+    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
     load(); const timer = window.setInterval(load, 4000); return () => { cancelled = true; window.clearInterval(timer); };
   }, [jobId]);
 
@@ -302,7 +293,7 @@ function Dashboard({ user }: { user: User }) {
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setJobId(id); setJobMap(null); setStatus("pending"); setError("");
     try {
-      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await accessToken()}` }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
+      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "La génération a échoué");
     } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Erreur de génération"); setStatus("error"); }
@@ -316,7 +307,7 @@ function Dashboard({ user }: { user: User }) {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="settings-text-button" onClick={() => setShowAgro(true)}>Paramètres agrométéo</button><button className="logout-button" onClick={() => { void supabase?.auth.signOut(); }}>Déconnexion</button></div>
+      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">Accès privé</span><button className="settings-text-button" onClick={() => setShowAgro(true)}>Paramètres agrométéo</button><button className="logout-button" onClick={() => { void fetch("/api/platform-login", { method: "DELETE" }).then(() => window.location.reload()); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
@@ -347,10 +338,7 @@ function Dashboard({ user }: { user: User }) {
 export default function HomePage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   useEffect(() => {
-    if (!supabase) { setUser(null); return; }
-    void supabase.auth.getUser().then(({ data }) => setUser(data.user ? { id: data.user.id, email: data.user.email } : null));
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ? { id: session.user.id, email: session.user.email } : null));
-    return () => data.subscription.unsubscribe();
+    fetch("/api/platform-session", { cache: "no-store" }).then((response) => setUser(response.ok ? { id: "platform", email: "" } : null)).catch(() => setUser(null));
   }, []);
   if (user === undefined) return <main className="auth-shell"><div className="auth-card"><span className="spinner" /></div></main>;
   return user ? <Dashboard user={user} /> : <AuthScreen />;
