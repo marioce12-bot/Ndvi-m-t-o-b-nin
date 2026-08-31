@@ -33,7 +33,7 @@ def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int,
         cell.fill = PatternFill("solid", fgColor="196B3A")
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = width
-    sheet.freeze_panes = f"B{header_row + 1}"
+    sheet.freeze_panes = None
 
 
 def build_network_export(year: int, month: int, decade: int, stations: Iterable[Station], summaries: dict[str, object]) -> tuple[BytesIO, str]:
@@ -60,10 +60,14 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
             members = [station for station in stations if station.department == department]
             if not members:
                 continue
+            department_row = sheet.max_row + 1
             sheet.append([department])
+            for cell in sheet[department_row][:12]:
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill("solid", fgColor="4E8B5D")
             for station in members:
                 summary = summaries.get(station.id, {})
-                sheet.append([station.name, station.longitude, station.latitude, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
         _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 20, 18, 24, 18, 16])
     return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 

@@ -75,6 +75,11 @@ def _build_principal_stations() -> list[Station]:
     return stations
 
 
+def _station_coordinates(station: Station) -> tuple[float | None, float | None]:
+    values = COORDINATES.get(station.id) or COORDINATES.get(station.name) or {}
+    return values.get("longitude"), values.get("latitude")
+
+
 def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, object]]:
     return {str(item.get("station_id")): item for item in db.get_agro_ew_etp(year, month, decade)}
 
@@ -104,6 +109,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         normal_decade = normal.get("decade")
         normal_year = normal.get("annual")
         normal_season = normal.get("season")
+        longitude, latitude = _station_coordinates(station)
         summaries[station.id] = {
             "rain_days": rain_days,
             "heavy_rain_days": heavy_rain_days,
@@ -113,6 +119,9 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
             "year_deviation": year_total - normal_year if isinstance(normal_year, (int, float)) else None,
             "season_deviation": season_total - normal_season if season_total is not None and isinstance(normal_season, (int, float)) else None,
+            "water_balance": total - float(etp) if total is not None and isinstance(etp, (int, float)) else None,
+            "longitude": longitude,
+            "latitude": latitude,
         }
     return stations, summaries
 
