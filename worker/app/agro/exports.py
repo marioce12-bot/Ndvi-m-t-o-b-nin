@@ -34,6 +34,8 @@ def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int,
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = width
     sheet.freeze_panes = None
+    sheet.sheet_view.showGridLines = True
+    sheet.sheet_view.zoomScale = 90
 
 
 def build_network_export(year: int, month: int, decade: int, stations: Iterable[Station], summaries: dict[str, object]) -> tuple[BytesIO, str]:
@@ -67,8 +69,13 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
                 cell.fill = PatternFill("solid", fgColor="4E8B5D")
             for station in members:
                 summary = summaries.get(station.id, {})
-                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("normal_percentage"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
-        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 18, 20, 18, 24, 18, 16])
+                row_number = sheet.max_row + 1
+                normal = summary.get("normal_decade")
+                etp = summary.get("etp")
+                daily = list(summary.get("daily_values", []))[:10]
+                daily += [None] * (10 - len(daily))
+                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), f'=COUNTIF(N{row_number}:W{row_number},">0")', f'=COUNTIF(N{row_number}:W{row_number},">20")', f'=SUM(N{row_number}:W{row_number})', f'=F{row_number}-{normal}' if isinstance(normal, (int, float)) else summary.get("decade_deviation"), f'=IFERROR(F{row_number}/{normal},"")' if isinstance(normal, (int, float)) and normal else summary.get("normal_percentage"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), f'=F{row_number}-{etp}' if isinstance(etp, (int, float)) else summary.get("water_balance")] + daily)
+        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 18, 20, 18, 24, 18, 16] + [10] * 10)
     return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 
@@ -92,6 +99,31 @@ def build_climate_export(year: int, month: int, decade: int, stations: Iterable[
     _style_table(sheet, 4, [22, 22, 22, 24, 16, 16, 16, 16, 25])
     sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
     return _download(workbook, f"DONNEES_CLIMATIQUES_{year}_{month:02d}_D{decade}.xlsx")
+
+
+def build_observations_export(year: int, month: int, decade: int, station: Station, rows: list[dict[str, object]]) -> tuple[BytesIO, str]:
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Renseignements agro"
+    sheet.merge_cells("A1:J1")
+    sheet["A1"] = "RENSEIGNEMENTS AGROMETEOROLOGIQUES"
+    sheet["A1"].font = Font(bold=True, size=15, color="FFFFFF")
+    sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
+    sheet["A1"].alignment = Alignment(horizontal="center")
+    sheet.merge_cells("A2:J2")
+    sheet["A2"] = f"Station : {station.name} | Période : {decade}ère décade de {MONTHS[month - 1]} {year}"
+    sheet["A2"].alignment = Alignment(horizontal="center")
+    sheet.append([])
+    headers = ["Jour", "Pluie", "Insolation", "Tmin", "Tmax", "T moy", "Hum. min", "Hum. max", "Hum. moy", "Évapo. bac"]
+    sheet.append(headers)
+    for row in sorted(rows, key=lambda item: int(item.get("jour", 0))):
+        tmin, tmax = row.get("temp_min"), row.get("temp_max")
+        hmin, hmax = row.get("humidite_min"), row.get("humidite_max")
+        row_number = sheet.max_row + 1
+        sheet.append([row.get("jour"), row.get("pluie"), row.get("insolation"), tmin, tmax, f"=AVERAGE(D{row_number}:E{row_number})" if tmin is not None and tmax is not None else None, hmin, hmax, f"=0.6*G{row_number}+0.4*H{row_number}" if hmin is not None and hmax is not None else None, row.get("evapo_bac_a")])
+    _style_table(sheet, 4, [12, 14, 16, 12, 12, 12, 14, 14, 14, 16])
+    sheet.auto_filter.ref = f"A4:J{sheet.max_row}"
+    return _download(workbook, f"RENSEIGNEMENTS_AGRO_{station.id}_{year}_{month:02d}_D{decade}.xlsx")
     
     sheet.append([])
     sheet.append(["* L'humidité moyenne (Umoy) est calculée à partir de la température moyenne."])

@@ -21,7 +21,7 @@ from .pentades import list_available
 from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
-from .agro.exports import build_climate_export, build_network_export
+from .agro.exports import build_climate_export, build_network_export, build_observations_export
 from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
 from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
@@ -130,6 +130,9 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             "rain_days": rain_days,
             "heavy_rain_days": heavy_rain_days,
             "rainfall_total": total,
+            "normal_decade": normal_decade,
+            "etp": etp,
+            "daily_values": values,
             "year_total": year_total,
             "season_total": season_total,
             "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
@@ -398,6 +401,17 @@ def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse
         computed_numeric,
     )
     stream, filename = build_climate_export(year, month, decade, stations, climate)
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@app.get("/agro/export/observations.xlsx", dependencies=[Depends(require_api_key)])
+def agro_observations_export(year: int, month: int, decade: int, station_id: str) -> StreamingResponse:
+    _validate_period(year, month, decade)
+    stations = _build_principal_stations()
+    station = next((item for item in stations if item.id == station_id), None)
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station agro introuvable")
+    stream, filename = build_observations_export(year, month, decade, station, db.list_agro_observations(year, month, decade, station_id))
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
