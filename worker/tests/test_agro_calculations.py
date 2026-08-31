@@ -3,7 +3,7 @@ import unittest
 
 from app.agro.calculations import build_summary, grouped_stations, rain_statistics, resolve_etp_station, rolling_totals, season_contains
 from app.agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
-from app.agro.registry import canonical_stations
+from app.agro.registry import H10_BY_STATION, canonical_stations
 
 
 class AgroCalculationTests(unittest.TestCase):
@@ -71,6 +71,30 @@ class AgroCalculationTests(unittest.TestCase):
         self.assertEqual([station.name for station in stations if station.principal], ["Kandi", "Parakou", "Natitingou", "Savè", "Bohicon", "Cotonou"])
         come = next(station for station in stations if station.name == "Comè")
         self.assertEqual(come.etp_station_id, "cotonou")
+
+    def test_h10_constants_for_principal_stations(self) -> None:
+        self.assertEqual(H10_BY_STATION, {
+            "cotonou": 124.0,
+            "bohicon": 125.0,
+            "savè": 125.0,
+            "parakou": 126.0,
+            "natitingou": 126.0,
+            "kandi": 127.0,
+        })
+
+    def test_global_radiation_uses_fraction_without_percent_scale(self) -> None:
+        summary = build_summary(
+            Station("cotonou", "Cotonou", "Littoral", "Cotonou", principal=True),
+            2026,
+            8,
+            1,
+            [],
+            [],
+            astronomical=AstronomicalConstant("cotonou", "1", 124, 3948.8097, 0.29, 0.42),
+            agro_days=[DailyAgro("cotonou", date(2026, 8, 1), sunshine=62)],
+        )
+        self.assertEqual(summary.insolation_fraction, 50)
+        self.assertAlmostEqual(summary.global_radiation, 3948.8097 * (0.29 + 0.42 * 0.5))
 
     def test_table_two_and_three_station_order(self) -> None:
         grouped = grouped_stations(canonical_stations())

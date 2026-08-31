@@ -21,6 +21,7 @@ DEPARTMENTS = {
 
 PRINCIPAL = {"Kandi": "Alibori", "Parakou": "Borgou", "Natitingou": "Atacora", "Savè": "Collines", "Bohicon": "Zou", "Cotonou": "Littoral"}
 ETP_ATTACHMENTS = {"Comè": "Cotonou", "Grand-Popo": "Cotonou", "Sakété": "Cotonou", "Kétou": "Bohicon", "Pobè": "Bohicon"}
+H10_BY_STATION = {"cotonou": 124.0, "bohicon": 125.0, "savè": 125.0, "parakou": 126.0, "natitingou": 126.0, "kandi": 127.0}
 
 
 def station_id(name: str) -> str:

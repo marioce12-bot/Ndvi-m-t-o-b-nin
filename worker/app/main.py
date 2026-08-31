@@ -4,6 +4,7 @@ import hmac
 import logging
 import shutil
 import tempfile
+import time
 from datetime import date
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from .agro.calculations import build_summary
 from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.calculations import rain_statistics
+from .agro.registry import H10_BY_STATION
 from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +42,7 @@ def _avg(values: list[float | None]) -> float | None:
 
 
 def _build_principal_stations() -> list[Station]:
+    started = time.perf_counter()
     db.ensure_principal_stations()
     docs = db.list_agro_stations(principale=True)
     stations: list[Station] = []
@@ -54,6 +57,7 @@ def _build_principal_stations() -> list[Station]:
                 etp_station_id=item.get("etp_station_id"),
             )
         )
+    logger.info("agro stations initialization/list: %.0f ms, stations=%s", (time.perf_counter() - started) * 1000, len(stations))
     return stations
 
 
@@ -88,6 +92,7 @@ def _build_station_daily_agro(year: int, month: int, decade: int, station_id: st
 
 
 def _build_climate_for_principal_stations(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
+    started = time.perf_counter()
     stations = _build_principal_stations()
     ew_etp_map = _get_ew_etp_map(year, month, decade)
     climate: dict[str, dict[str, object]] = {}
@@ -101,21 +106,12 @@ def _build_climate_for_principal_stations(year: int, month: int, decade: int) ->
         ew = ew_doc.get("ew")
         etp = ew_doc.get("etp")
 
-        h10_val = ew_doc.get("h10")
-        ra_val = ew_doc.get("ra")
-        ang_a_val = ew_doc.get("angstrom_a")
-        ang_b_val = ew_doc.get("angstrom_b")
-
-        ra_ok = isinstance(ra_val, (int, float)) and isinstance(ang_a_val, (int, float)) and isinstance(ang_b_val, (int, float))
-        ang_a = float(ang_a_val) if isinstance(ang_a_val, (int, float)) else 0.0
-        ang_b = float(ang_b_val) if isinstance(ang_b_val, (int, float)) else 0.0
-        ra: float | None = float(ra_val) if ra_ok else None
-        h10: float | None = float(h10_val) if isinstance(h10_val, (int, float)) else None
+        h10 = H10_BY_STATION.get(station.id)
 
         if not sunshine_present:
-            radiation_fields = {"h10": None, "insolation_fraction": None, "global_radiation": None}
+            radiation_fields = {"h10": h10, "insolation_fraction": None, "global_radiation": None}
         else:
-            astronomical = AstronomicalConstant(station.id, str(decade), h10=h10, ra=ra, angstrom_a=ang_a, angstrom_b=ang_b)
+            astronomical = AstronomicalConstant(station.id, str(decade), h10=h10, ra=3948.8097, angstrom_a=0.29, angstrom_b=0.42)
             editable = EditableDecadeValues(station.id, year, month, decade, ew=ew, etp=etp)
             summary = build_summary(
                 station=station,
@@ -173,6 +169,7 @@ def _build_climate_for_principal_stations(year: int, month: int, decade: int) ->
 
         climate[station.id] = climate_values
 
+    logger.info("agro climate build %s-%s dec=%s: %.0f ms, stations=%s", year, f"{month:02d}", decade, (time.perf_counter() - started) * 1000, len(stations))
     return stations, climate
 
 

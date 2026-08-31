@@ -7,6 +7,15 @@ import { getFirebaseAuth } from "@/lib/firebase";
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
 
+const RAIN_DEPARTMENT_GROUPS = [
+  { id: "borgou-alibori", label: "Borgou et Alibori", departments: ["Borgou", "Alibori"] },
+  { id: "atacora-donga", label: "Atacora et Donga", departments: ["Atacora", "Donga"] },
+  { id: "mono-couffo", label: "Mono et Couffo", departments: ["Mono", "Couffo"] },
+  { id: "oueme-plateau", label: "Ouémé et Plateau", departments: ["Oueme", "Ouémé", "Plateau"] },
+  { id: "atlantique-littoral", label: "Atlantique et Littoral", departments: ["Atlantique", "Littoral"] },
+  { id: "zou-collines", label: "Zou et Collines", departments: ["Zou", "Collines"] },
+] as const;
+
 const pentades = [
   { id: "2026-P45", label: "11–15 août 2026", detail: "P45 · 2026" },
   { id: "2026-P44", label: "6–10 août 2026", detail: "P44 · 2026" },
@@ -67,6 +76,41 @@ function AuthScreen() {
   return <main className="auth-shell"><div className="auth-card"><div className="brand-symbol"><span>ND</span><i /></div><span className="section-kicker">MÉTÉO BÉNIN · eVIIRS 375 m</span><h1>{mode === "login" ? "Votre espace cartes" : mode === "signup" ? "Créer un compte" : "Mot de passe oublié"}</h1><p>Accédez à vos générations et à votre archive personnelle.</p><form onSubmit={submit}><label htmlFor="auth-email">Adresse email<input id="auth-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" autoComplete="email" /></label>{mode !== "reset" && <label htmlFor="auth-password">Mot de passe<input id="auth-password" type="password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6 caractères minimum" autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>}<button className="auth-submit" disabled={busy}>{busy ? "Veuillez patienter…" : mode === "login" ? "Se connecter" : mode === "signup" ? "Créer mon compte" : "Envoyer le lien"}</button></form>{message && <div className="auth-message">{message}</div>}<div className="auth-links">{mode === "login" && <><button onClick={() => setMode("reset")}>Mot de passe oublié ?</button><button onClick={() => setMode("signup")}>Créer un compte</button></>}{mode !== "login" && <button onClick={() => setMode("login")}>Retour à la connexion</button>}</div></div></main>;
 }
 
+function AgroPanel({
+  agroYear, setAgroYear, agroMonth, setAgroMonth, agroDecade, setAgroDecade, agroView, setAgroView,
+  rainDepartmentGroup, setRainDepartmentGroup, visibleRainStations, days, rainRows, updateRain, saveRain,
+  agroStations, agroStation, setAgroStation, agroRows, updateAgro, saveObservations, ewEtpRows, setEwEtpRows,
+  agroMessage, exportAvailability, agroFetch, setAgroMessage, onClose,
+}: any) {
+  const rainValue = (stationId: string, day: number) => rainRows.find((row: any) => row.station_id === stationId && row.jour === day)?.hauteur_mm;
+  const rainStats = (stationId: string) => {
+    const values = days.map((day: number) => Number(rainValue(stationId, day))).filter((value: number) => Number.isFinite(value));
+    return { gt0: values.filter((value: number) => value > 0).length, gt20: values.filter((value: number) => value > 20).length, max: values.length ? Math.max(...values) : "", total: values.reduce((sum: number, value: number) => sum + value, 0) || "" };
+  };
+  const setEwEtp = (stationId: string, key: "ew" | "etp", value: string) => setEwEtpRows((rows: any[]) => {
+    const current = rows.find((row) => row.station_id === stationId) ?? { station_id: stationId };
+    return [...rows.filter((row) => row.station_id !== stationId), { ...current, [key]: value === "" ? undefined : Number(value) }];
+  });
+  const saveEwEtp = async () => {
+    try {
+      await agroFetch("/ew-etp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: ewEtpRows }) });
+      setAgroMessage("Valeurs ew / ETP enregistrées");
+    } catch { setAgroMessage("Impossible d'enregistrer les valeurs ew / ETP"); }
+  };
+  return <div className="lightbox" role="dialog" aria-modal="true" aria-label="Bulletin agrométéo" onClick={onClose}>
+    <section className="lightbox-panel agro-panel" onClick={(event) => event.stopPropagation()}>
+      <header className="lightbox-head agro-head"><div><span className="section-kicker">SAISIE ET SYNTHÈSE</span><h2>Bulletin agrométéo</h2></div><button className="icon-button" onClick={onClose} aria-label="Fermer"><Icon name="close" /></button></header>
+      <div className="agro-period"><label>Année<select value={agroYear} onChange={(event) => setAgroYear(event.target.value)}>{Array.from({ length: 101 }, (_, index) => 2000 + index).map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label>Mois<select value={agroMonth} onChange={(event) => setAgroMonth(event.target.value)}>{["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"].map((name, index) => <option key={name} value={index + 1}>{name}</option>)}</select></label><label>Décade<select value={agroDecade} onChange={(event) => setAgroDecade(event.target.value)}><option value="1">1ère décade</option><option value="2">2ème décade</option><option value="3">3ème décade</option></select></label></div>
+      <nav className="agro-nav" aria-label="Sections du bulletin"><button className={agroView === "rain" ? "selected" : ""} onClick={() => setAgroView("rain")}>Saisie pluviométrie</button><button className={agroView === "observations" ? "selected" : ""} onClick={() => setAgroView("observations")}>Renseignements agro</button><button className={agroView === "ewetp" ? "selected" : ""} onClick={() => setAgroView("ewetp")}>ew / ETP</button><button className={agroView === "exports" ? "selected" : ""} onClick={() => setAgroView("exports")}>Exports</button></nav>
+      {agroView === "rain" && <section className="agro-section"><div className="agro-section-header"><div><h3>Saisie pluviométrique</h3><p>Choisissez une paire de départements pour saisir les pluies quotidiennes.</p></div><label className="agro-rain-group">Départements<select value={rainDepartmentGroup} onChange={(event) => setRainDepartmentGroup(event.target.value)}>{RAIN_DEPARTMENT_GROUPS.map((group) => <option key={group.id} value={group.id}>{group.label}</option>)}</select></label></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th>{days.map((day) => <th key={day}>J{day}</th>)}<th>NbJP&gt;0</th><th>NbJP&gt;20</th><th>Max</th><th>Total</th></tr></thead><tbody>{visibleRainStations.map((station: any) => { const stats = rainStats(station.id); return <tr key={station.id}><th scope="row">{station.name}<small>{station.department}</small></th>{days.map((day) => <td key={day}><input aria-label={`${station.name}, jour ${day}`} type="number" min="0" step="0.1" value={rainValue(station.id, day) ?? ""} onChange={(event) => updateRain(station.id, day, event.target.value)} /></td>)}<td>{stats.gt0}</td><td>{stats.gt20}</td><td>{stats.max}</td><td>{stats.total}</td></tr>; })}</tbody></table></div><button className="agro-save-button" onClick={saveRain}>Enregistrer les pluies</button></section>}
+      {agroView === "observations" && <section className="agro-section"><div className="agro-section-header"><div><h3>Renseignements agrométéorologiques</h3><p>Saisissez les observations quotidiennes de la station choisie.</p></div><label className="agro-station-select">Station<select value={agroStation} onChange={(event) => setAgroStation(event.target.value)}>{agroStations.map((station: any) => <option key={station.id} value={station.id}>{station.name} · {station.department}</option>)}</select></label></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Jour</th><th>Pluie</th><th>Insolation</th><th>Tmin</th><th>Tmax</th><th>Hum. min</th><th>Hum. max</th><th>Évapo. bac</th></tr></thead><tbody>{days.map((day) => { const row = agroRows.find((item: any) => item.jour === day) ?? {}; return <tr key={day}><th scope="row">J{day}</th>{[["pluie", "Pluie"], ["insolation", "Insolation"], ["temp_min", "Température minimale"], ["temp_max", "Température maximale"], ["humidite_min", "Humidité minimale"], ["humidite_max", "Humidité maximale"], ["evapo_bac_a", "Évaporation bac"]].map(([key, label]) => <td key={key}><input aria-label={`${label}, jour ${day}`} type="number" step="0.1" value={row[key] ?? ""} onChange={(event) => updateAgro(day, key, event.target.value)} /></td>)}</tr>; })}</tbody></table></div><button className="agro-save-button" onClick={saveObservations}>Enregistrer les renseignements</button></section>}
+      {agroView === "ewetp" && <section className="agro-section"><div className="agro-section-header"><div><h3>Évaporation et évapotranspiration</h3><p>H×10, fraction d’insolation et rayonnement global sont calculés automatiquement.</p></div></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th><th>Fract. insol.</th><th>Ray. global</th><th>H×10</th><th>ew</th><th>ETP</th></tr></thead><tbody>{agroStations.filter((station: any) => station.principal).map((station: any) => { const row = ewEtpRows.find((item: any) => item.station_id === station.id) ?? {}; return <tr key={station.id}><th scope="row">{station.name}</th><td>Calculé</td><td>Calculé</td><td>Automatique</td><td><input aria-label={`ew ${station.name}`} type="number" step="0.1" value={row.ew ?? ""} onChange={(event) => setEwEtp(station.id, "ew", event.target.value)} /></td><td><input aria-label={`ETP ${station.name}`} type="number" step="0.1" value={row.etp ?? ""} onChange={(event) => setEwEtp(station.id, "etp", event.target.value)} /></td></tr>; })}</tbody></table></div><button className="agro-save-button" onClick={saveEwEtp}>Enregistrer ew / ETP</button></section>}
+      {agroView === "exports" && <section className="agro-section agro-export-actions"><h3>Exports du bulletin</h3><p>Téléchargez les tableaux disponibles pour la période sélectionnée.</p><a className={`agro-export-link${exportAvailability.network ? "" : " disabled-export"}`} href={`/api/agro/export/network.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`}>Exporter le réseau pluviométrique</a><a className={`agro-export-link${exportAvailability.climate ? "" : " disabled-export"}`} href={`/api/agro/export/climate.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`}>Exporter les données climatiques</a></section>}
+      {agroMessage && <p className="agro-message" role="status">{agroMessage}</p>}
+    </section>
+  </div>;
+}
+
 function Dashboard({ user }: { user: User }) {
   const [product, setProduct] = useState<Product>("anomaly");
   const [pentade, setPentade] = useState(pentades[0].id);
@@ -86,6 +130,7 @@ function Dashboard({ user }: { user: User }) {
   const [agroMonth, setAgroMonth] = useState("8");
   const [agroDecade, setAgroDecade] = useState("1");
   const [agroView, setAgroView] = useState<"rain" | "observations" | "ewetp" | "exports">("rain");
+  const [rainDepartmentGroup, setRainDepartmentGroup] = useState(RAIN_DEPARTMENT_GROUPS[0].id);
   const [agroStations, setAgroStations] = useState<Array<{ id: string; name: string; department: string; principal?: boolean }>>([]);
   const [agroStation, setAgroStation] = useState("");
   const [rainRows, setRainRows] = useState<Array<{ station_id: string; jour: number; hauteur_mm?: number }>>([]);
@@ -95,8 +140,23 @@ function Dashboard({ user }: { user: User }) {
   const [exportAvailability, setExportAvailability] = useState({ network: false, climate: false });
   useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
-  useEffect(() => { if (!showAgro) return; fetch("/api/agro/stations").then((r) => r.json()).then((data) => { const stations = data.stations ?? []; const principals = stations.filter((s: { principal?: boolean }) => s.principal); setAgroStations(stations); setAgroStation(principals[0]?.id ?? stations[0]?.id ?? ""); if (!stations.length) setAgroMessage(data.error ?? "Aucune station enregistrée"); }).catch(() => setAgroMessage("Impossible de charger les stations enregistrées")); }, [showAgro]);
-  const agroFetch = async (path: string, init?: RequestInit) => { const response = await fetch(`/api/agro${path}`, init); const data = await response.json(); if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro"); return data; };
+  useEffect(() => {
+    if (!showAgro || agroStations.length) return;
+    const started = performance.now();
+    fetch("/api/agro/stations").then(async (r) => {
+      const data = await r.json();
+      console.info(`[agro] stations: ${Math.round(performance.now() - started)} ms`, { ok: r.ok, count: data.stations?.length ?? 0 });
+      return data;
+    }).then((data) => { const stations = data.stations ?? []; const principals = stations.filter((s: { principal?: boolean }) => s.principal); setAgroStations(stations); setAgroStation(principals[0]?.id ?? stations[0]?.id ?? ""); if (!stations.length) setAgroMessage(data.error ?? "Aucune station enregistrée"); }).catch((error) => { console.error("[agro] stations failed", error); setAgroMessage("Impossible de charger les stations enregistrées"); });
+  }, [showAgro, agroStations.length]);
+  const agroFetch = async (path: string, init?: RequestInit) => {
+    const started = performance.now();
+    const response = await fetch(`/api/agro${path}`, init);
+    const data = await response.json();
+    console.info(`[agro] ${path}: ${Math.round(performance.now() - started)} ms`, { ok: response.ok });
+    if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro");
+    return data;
+  };
   // Le proxy Next.js monte déjà la route worker sur `/agro/*`.
   // Donc on ne doit PAS réajouter un préfixe `/agro` ici.
   const saveRain = async () => {
@@ -153,7 +213,13 @@ function Dashboard({ user }: { user: User }) {
   const firstDay = decadeNumber === 1 ? 1 : decadeNumber === 2 ? 11 : 21;
   const lastDay = decadeNumber === 1 ? 10 : decadeNumber === 2 ? 20 : daysInMonth;
   const days = Array.from({ length: lastDay - firstDay + 1 }, (_, index) => firstDay + index);
-  useEffect(() => { if (!showAgro) return; Promise.all([agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`), agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)]).then(([rain, climate]) => setExportAvailability({ network: (rain.valeurs ?? []).length > 0, climate: (climate.valeurs ?? []).length > 0 })).catch(() => setExportAvailability({ network: false, climate: false })); }, [showAgro, agroYear, agroMonth, agroDecade]);
+  useEffect(() => {
+    if (!showAgro || (agroView !== "exports" && agroView !== "ewetp")) return;
+    Promise.all([
+      agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
+      agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)
+    ]).then(([rain, climate]) => setExportAvailability({ network: (rain.valeurs ?? []).length > 0, climate: (climate.valeurs ?? []).length > 0 })).catch(() => setExportAvailability({ network: false, climate: false }));
+  }, [showAgro, agroView, agroYear, agroMonth, agroDecade]);
   const updateRain = (station_id: string, jour: number, value: string) => setRainRows((rows) => [...rows.filter((row) => !(row.station_id === station_id && row.jour === jour)), ...(value === "" ? [] : [{ station_id, jour, hauteur_mm: Number(value) }])]);
   const updateAgro = (jour: number, key: string, value: string) => setAgroRows((rows) => { const current = rows.find((row) => row.jour === jour) ?? { jour }; const next = { ...current, [key]: value === "" ? undefined : Number(value) }; return [...rows.filter((row) => row.jour !== jour), next]; });
   useEffect(() => {
@@ -186,6 +252,10 @@ function Dashboard({ user }: { user: User }) {
   }, [jobId]);
 
   const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
+  const visibleRainStations = useMemo(() => {
+    const group = RAIN_DEPARTMENT_GROUPS.find((item) => item.id === rainDepartmentGroup) ?? RAIN_DEPARTMENT_GROUPS[0];
+    return agroStations.filter((station) => group.departments.includes(station.department as never));
+  }, [agroStations, rainDepartmentGroup]);
   const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
   const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? jobMap;
 
@@ -230,6 +300,7 @@ function Dashboard({ user }: { user: User }) {
 
     <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
     {showAgro && <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setShowAgro(false)}><div className="lightbox-panel agro-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><h2>Bulletin agrométéo</h2><button className="icon-button" onClick={() => setShowAgro(false)} aria-label="Fermer"><Icon name="close" /></button></div><div className="agro-period"><label>Année<select value={agroYear} onChange={(event) => setAgroYear(event.target.value)}>{Array.from({ length: 101 }, (_, index) => 2000 + index).map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label>Mois<select value={agroMonth} onChange={(event) => setAgroMonth(event.target.value)}>{["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"].map((name, index) => <option key={name} value={index + 1}>{name}</option>)}</select></label><label>Décade<select value={agroDecade} onChange={(event) => setAgroDecade(event.target.value)}><option value="1">1ère décade</option><option value="2">2ème décade</option><option value="3">3ème décade</option></select></label></div><nav className="agro-nav"><button className={agroView === "rain" ? "selected" : ""} onClick={() => setAgroView("rain")}>Saisie pluviométrie</button><button className={agroView === "observations" ? "selected" : ""} onClick={() => setAgroView("observations")}>Renseignements agro</button><button className={agroView === "ewetp" ? "selected" : ""} onClick={() => setAgroView("ewetp")}>ew / ETP</button><button className={agroView === "exports" ? "selected" : ""} onClick={() => setAgroView("exports")}>Exports</button></nav>{agroView === "rain" && <><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th>{days.map((day) => <th key={day}>J{day}</th>)}<th>NbJP&gt;0</th><th>NbJP&gt;20</th><th>Max</th><th>Total</th></tr></thead><tbody>{agroStations.map((station) => { const values=days.map((day)=>rainRows.find((row)=>row.station_id===station.id&&row.jour===day)?.hauteur_mm); const valid=values.filter((value):value is number=>value!==undefined); return <tr key={station.id}><td>{station.name}</td>{days.map((day)=><td key={day}><input type="number" value={rainRows.find((row)=>row.station_id===station.id&&row.jour===day)?.hauteur_mm??""} onChange={(event)=>updateRain(station.id,day,event.target.value)}/></td>)}<td>{valid.filter((value)=>value>0).length}</td><td>{valid.filter((value)=>value>20).length}</td><td>{valid.length?Math.max(...valid):""}</td><td>{valid.length?valid.reduce((a,b)=>a+b,0):""}</td></tr>})}</tbody></table></div><button className="primary-small" onClick={()=>void saveRain()}>Enregistrer les pluies</button></>}{agroView === "observations" && <><label>Station<select value={agroStation} onChange={(event)=>setAgroStation(event.target.value)}>{agroStations.filter((station)=>station.principal).map((station)=><option key={station.id} value={station.id}>{station.name}</option>)}</select></label><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Jour</th><th>Pluie</th><th>T min</th><th>T max</th><th>T moy</th><th>Hum min</th><th>Hum max</th><th>Hum moy</th><th>Insolation</th><th>ETP Bac A</th></tr></thead><tbody>{days.map((day)=>{const row=agroRows.find((item)=>item.jour===day)??{jour:day}; return <tr key={day}><td>{day}</td>{["pluie","temp_min","temp_max","humidite_min","humidite_max","insolation","evapo_bac_a"].map((key)=><td key={key}><input type="number" value={row[key]??""} onChange={(event)=>updateAgro(day,key,event.target.value)}/></td>)}<td>{row.temp_min!==undefined&&row.temp_max!==undefined?(Number(row.temp_min)+Number(row.temp_max))/2:""}</td><td>{row.humidite_min!==undefined&&row.humidite_max!==undefined?0.6*Number(row.humidite_min)+0.4*Number(row.humidite_max):""}</td></tr>})}</tbody></table></div><button className="primary-small" onClick={()=>void saveObservations()}>Enregistrer les observations</button></>}{agroView === "ewetp" && <div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th><th>Fract. Insol.</th><th>Ray. Global</th><th>H×10</th><th>ew</th><th>ETP</th></tr></thead><tbody>{agroStations.filter((station)=>station.principal).map((station)=><tr key={station.id}><td>{station.name}</td><td></td><td></td><td></td><td><input type="number"/></td><td><input type="number"/></td></tr>)}</tbody></table></div>}{agroView === "exports" && <div className="agro-export-actions"><a aria-disabled={!exportAvailability.network} className={`primary-small ${!exportAvailability.network ? "disabled-export" : ""}`} href={exportAvailability.network ? `/api/agro/export/network.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}` : undefined} title={!exportAvailability.network ? "Aucune donnée saisie pour cette décade" : undefined}>Exporter Réseau pluviométrique</a><a aria-disabled={!exportAvailability.climate} className={`primary-small ${!exportAvailability.climate ? "disabled-export" : ""}`} href={exportAvailability.climate ? `/api/agro/export/climate.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}` : undefined} title={!exportAvailability.climate ? "Aucune donnée saisie pour cette décade" : undefined}>Exporter Données climatiques</a></div>}{agroMessage&&<p className="settings-intro">{agroMessage}</p>}</div></div>}
+    {showAgro && <AgroPanel agroYear={agroYear} setAgroYear={setAgroYear} agroMonth={agroMonth} setAgroMonth={setAgroMonth} agroDecade={agroDecade} setAgroDecade={setAgroDecade} agroView={agroView} setAgroView={setAgroView} rainDepartmentGroup={rainDepartmentGroup} setRainDepartmentGroup={setRainDepartmentGroup} visibleRainStations={visibleRainStations} days={days} rainRows={rainRows} updateRain={updateRain} saveRain={saveRain} agroStations={agroStations} agroStation={agroStation} setAgroStation={setAgroStation} agroRows={agroRows} updateAgro={updateAgro} saveObservations={saveObservations} ewEtpRows={ewEtpRows} setEwEtpRows={setEwEtpRows} agroMessage={agroMessage} exportAvailability={exportAvailability} agroFetch={agroFetch} setAgroMessage={setAgroMessage} onClose={() => setShowAgro(false)} />}
     {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl && <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
     {toast && <div className="toast">✓ {toast}</div>}
   </main>;
