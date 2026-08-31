@@ -63,6 +63,18 @@ def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = 
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
+    query = get_client().collection("agroRainDaily").where("year", "==", year)
+    end_month = month
+    end_day = 10 if decade == 1 else 20 if decade == 2 else 31
+    return [
+        {"id": doc.id, **doc.to_dict()}
+        for doc in query.stream()
+        if int(doc.to_dict().get("month", 0)) < end_month
+        or (int(doc.to_dict().get("month", 0)) == end_month and int(doc.to_dict().get("jour", 0)) <= end_day)
+    ]
+
+
 def upsert_agro_rain(payloads: list[dict[str, object]]) -> None:
     batch = get_client().batch()
     collection = get_client().collection("agroRainDaily")

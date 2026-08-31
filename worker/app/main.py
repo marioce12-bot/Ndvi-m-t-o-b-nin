@@ -22,7 +22,7 @@ from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
-from .agro.calculations import build_summary, rain_statistics, rolling_totals
+from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
 from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.registry import H10_BY_STATION, canonical_stations
@@ -76,7 +76,7 @@ def _build_principal_stations() -> list[Station]:
 
 
 def _station_coordinates(station: Station) -> tuple[float | None, float | None]:
-    values = COORDINATES.get(station.id) or COORDINATES.get(station.name) or {}
+    values = COORDINATES.get(station.id) or COORDINATES.get(station.name) or COORDINATES.get(station.name.casefold()) or {}
     return values.get("longitude"), values.get("latitude")
 
 
@@ -87,21 +87,28 @@ def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, o
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
     stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
+    historical_rain = db.list_agro_rain_until(year, month, decade)
     ew_etp = _get_ew_etp_map(year, month, decade)
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
+    history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
     for row in current_rain:
         station_id = str(row.get("station_id"))
         if station_id in by_station:
             by_station[station_id].append(row.get("hauteur_mm"))
+    for row in historical_rain:
+        station_id = str(row.get("station_id"))
+        if station_id in history_by_station and row.get("hauteur_mm") is not None:
+            history_by_station[station_id].append(DailyRain(station_id, date(int(row["year"]), int(row["month"]), int(row["jour"])), row.get("hauteur_mm")))
     summaries: dict[str, dict[str, object]] = {}
     for station in stations:
         values = by_station[station.id]
         rain_days, heavy_rain_days, maximum, total = rain_statistics(values)
         current_end = date(year, month, 10 if decade == 1 else 20 if decade == 2 else 31)
-        year_total, season_total = rolling_totals(station, current_end, ())
-        if total is not None:
+        historical = history_by_station[station.id]
+        year_total, season_total = rolling_totals(station, current_end, historical)
+        if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
-            season_total = (season_total or 0) + total if season_total is not None else None
+            season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
         etp = ew_etp.get(station.id, {}).get("etp")
         normal = NORMALS.get(station.id, {}).get(_decade_code(month, decade), {})
         if not normal and month == 6:
