@@ -15,6 +15,8 @@ class Station:
     locality: str
     principal: bool = False
     etp_station_id: Optional[str] = None
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
 
 
 @dataclass(frozen=True)

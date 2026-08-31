@@ -17,7 +17,7 @@ class AgroExportTests(unittest.TestCase):
         workbook = openpyxl.load_workbook(stream)
         self.assertEqual(filename, "DONNEES_PLUVIOMETRIQUES_2026_08_D1.xlsx")
         self.assertEqual(workbook.sheetnames, ["Réseau pluviométrique"])
-        self.assertEqual(workbook.active["A1"].value, "V-b - DONNEES PLUVIOMETRIQUES")
+        self.assertIn("RESEAU PLUVIOMETRIQUE", str(workbook.active["A3"].value))
         self.assertEqual(workbook.active["A4"].value, "STATIONS")
 
     def test_climate_export_keeps_missing_values_blank(self) -> None:

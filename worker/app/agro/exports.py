@@ -12,7 +12,7 @@ from .calculations import grouped_stations, resolve_etp_station
 from .models import DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
 
 MONTHS = ("JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE")
-NETWORK_HEADERS = ["STATIONS", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale"]
+NETWORK_HEADERS = ["STATIONS", "LONGITUDE", "LATITUDE", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale", "Bilan hydrique"]
 
 
 def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]:
@@ -40,21 +40,31 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Réseau pluviométrique"
-    sheet.merge_cells("A1:I1")
-    sheet["A1"] = "V-b - DONNEES PLUVIOMETRIQUES"
-    sheet["A1"].font = Font(bold=True, size=15, color="FFFFFF")
-    sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
-    sheet["A1"].alignment = Alignment(horizontal="center")
-    sheet.merge_cells("A2:I2")
-    sheet["A2"] = f"Période : {decade}ère décade de {MONTHS[month - 1].title()} {year}"
-    sheet["A2"].alignment = Alignment(horizontal="center")
-    sheet.append([])
-    sheet.append(NETWORK_HEADERS)
-    for station in stations:
-        summary = summaries.get(station.id, {})
-        sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation")])
-    _style_table(sheet, 4, [24, 14, 14, 18, 18, 20, 18, 24, 18])
-    sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
+    groups = (("TABLEAU 1", ("Alibori", "Atacora", "Borgou", "Donga")), ("TABLEAU 2", ("Collines", "Couffo", "Mono", "Zou")), ("TABLEAU 3", ("Atlantique", "Littoral", "Oueme", "Plateau")))
+    stations = list(stations)
+    for table_number, departments in groups:
+        if sheet.max_row > 1:
+            sheet.append([])
+        start = sheet.max_row + 1
+        sheet.merge_cells(start_row=start, start_column=1, end_row=start, end_column=12)
+        sheet.cell(start, 1, f"ANNEE : {year} | MOIS : {MONTHS[month - 1]} | DECADE : {decade} | {table_number}")
+        sheet.cell(start, 1).font = Font(bold=True, size=13, color="FFFFFF")
+        sheet.cell(start, 1).fill = PatternFill("solid", fgColor="0D472B")
+        sheet.cell(start, 1).alignment = Alignment(horizontal="center")
+        sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=12)
+        sheet.cell(start + 1, 1, "RESEAU PLUVIOMETRIQUE - DEPARTEMENTS : " + ", ".join(departments))
+        sheet.cell(start + 1, 1).font = Font(bold=True)
+        sheet.append(NETWORK_HEADERS)
+        header_row = sheet.max_row
+        for department in departments:
+            members = [station for station in stations if station.department == department]
+            if not members:
+                continue
+            sheet.append([department])
+            for station in members:
+                summary = summaries.get(station.id, {})
+                sheet.append([station.name, station.longitude, station.latitude, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 20, 18, 24, 18, 16])
     return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 
