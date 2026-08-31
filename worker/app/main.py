@@ -84,6 +84,10 @@ def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, o
     return {str(item.get("station_id")): item for item in db.get_agro_ew_etp(year, month, decade)}
 
 
+def _lookup_by_station(values: dict[str, dict[str, object]], station: Station) -> dict[str, object]:
+    return values.get(station.id) or values.get(station.name.casefold()) or values.get(station.name.lower()) or {}
+
+
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
     stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
@@ -113,8 +117,9 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
-        etp = ew_etp.get(station.id, {}).get("etp")
-        normal = NORMALS.get(station.id, {}).get(_decade_code(month, decade), {})
+        etp = _lookup_by_station(ew_etp, station).get("etp")
+        normal_values = NORMALS.get(station.id) or NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
+        normal = normal_values.get(_decade_code(month, decade), {})
         if not normal and month == 6:
             normal = NORMALS.get(station.id, {}).get(f"ju{decade}", {})
         normal_decade = normal.get("decade")
@@ -174,7 +179,7 @@ def _build_climate_for_principal_stations(year: int, month: int, decade: int) ->
         daily_agro = _build_station_daily_agro(year, month, decade, station.id)
         sunshine_present = any(day.sunshine is not None for day in daily_agro)
 
-        ew_doc = ew_etp_map.get(station.id, {})
+        ew_doc = _lookup_by_station(ew_etp_map, station)
         base_values = {k: v for k, v in ew_doc.items() if k not in {"id", "station_id"}}
         ew = ew_doc.get("ew")
         etp = ew_doc.get("etp")
