@@ -38,6 +38,10 @@ def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]
     return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
 
 
+def list_all_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
+    return list_agro_stations(principale)
+
+
 def ensure_principal_stations() -> None:
     from .agro.registry import station_documents
     client = get_client()

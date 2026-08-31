@@ -12,7 +12,7 @@ from .calculations import grouped_stations, resolve_etp_station
 from .models import DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
 
 MONTHS = ("JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE")
-NETWORK_HEADERS = ["STATIONS", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Cumul décade", "Écart normale décade", "% de la normale", "Cumul année civile", "Écart normale année", "Cumul saison", "Écart normale saison", "Bilan hydrique"]
+NETWORK_HEADERS = ["STATIONS", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale"]
 
 
 def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]:
@@ -27,7 +27,8 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
     sheet = workbook.active
     sheet.title = "Réseau pluviométrique"
     sheet.append(["ANNEE", year, "MOIS", MONTHS[month - 1], "DECADE", decade])
-    sheet.append(["RESEAU PLUVIOMETRIQUE"])
+    sheet.append(["V-b - DONNEES PLUVIOMETRIQUES"])
+    sheet.append(["REPARTITION", "", "CUMUL OBSERVE (mm et /10)"])
     station_map = {station.id: station for station in stations}
     grouped = grouped_stations(stations)
     block_departments = {}
@@ -41,10 +42,7 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.append(NETWORK_HEADERS)
         for station in members:
             summary = summaries.get(station.id, {})
-            total = summary.get("rainfall_total")
-            normal = summary.get("normal_decade")
-            percentage = total / normal if total is not None and normal else None
-            sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), total, summary.get("decade_deviation"), percentage, summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+            sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation")])
     for row in sheet.iter_rows():
         for cell in row:
             if cell.column == 6 and isinstance(cell.value, (int, float)): cell.number_format = "0.0%"

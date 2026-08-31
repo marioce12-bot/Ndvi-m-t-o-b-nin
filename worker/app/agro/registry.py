@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from .models import Station
 
+CUSTOM_DEPARTMENT = "Stations personnalisées"
+
 DEPARTMENTS = {
     "Alibori": ["Alfakoara", "Banikoara", "Bodjecali", "Founougo", "Guéné", "Kandi", "Karimama", "Malanville", "Ségbana"],
     "Borgou": ["Alafiarou", "Bembèrèkè", "Bétérou", "Ina", "Kalalé", "Nikki", "Okpara", "Parakou", "Tchaourou", "Alafiarou Nouveau", "Tourou", "Sanson", "Tchaourou-Centre"],

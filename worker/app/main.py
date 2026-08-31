@@ -5,6 +5,7 @@ import logging
 import shutil
 import tempfile
 import time
+import json
 from datetime import date
 from pathlib import Path
 
@@ -21,15 +22,20 @@ from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
-from .agro.calculations import build_summary
+from .agro.calculations import build_summary, rain_statistics, rolling_totals
 from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
-from .agro.calculations import rain_statistics
 from .agro.registry import H10_BY_STATION
 from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+NORMALS = json.loads((Path(__file__).parents[1] / "data" / "rainfall_normals.json").read_text(encoding="utf-8")) if (Path(__file__).parents[1] / "data" / "rainfall_normals.json").exists() else {}
+
+
+def _decade_code(month: int, decade: int) -> str:
+    prefixes = {1: "j", 2: "f", 3: "ma", 4: "av", 5: "ma", 6: "ju", 7: "jl", 8: "a", 9: "s", 10: "o", 11: "n", 12: "d"}
+    return f"{prefixes[month]}{decade}"
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
 
@@ -63,6 +69,44 @@ def _build_principal_stations() -> list[Station]:
 
 def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, object]]:
     return {str(item.get("station_id")): item for item in db.get_agro_ew_etp(year, month, decade)}
+
+
+def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
+    stations = _build_principal_stations()
+    current_rain = db.list_agro_rain(year, month, decade)
+    ew_etp = _get_ew_etp_map(year, month, decade)
+    by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
+    for row in current_rain:
+        station_id = str(row.get("station_id"))
+        if station_id in by_station:
+            by_station[station_id].append(row.get("hauteur_mm"))
+    summaries: dict[str, dict[str, object]] = {}
+    for station in stations:
+        values = by_station[station.id]
+        rain_days, heavy_rain_days, maximum, total = rain_statistics(values)
+        current_end = date(year, month, 10 if decade == 1 else 20 if decade == 2 else 31)
+        year_total, season_total = rolling_totals(station, current_end, ())
+        if total is not None:
+            year_total += total
+            season_total = (season_total or 0) + total if season_total is not None else None
+        etp = ew_etp.get(station.id, {}).get("etp")
+        normal = NORMALS.get(station.id, {}).get(_decade_code(month, decade), {})
+        if not normal and month == 6:
+            normal = NORMALS.get(station.id, {}).get(f"ju{decade}", {})
+        normal_decade = normal.get("decade")
+        normal_year = normal.get("annual")
+        normal_season = normal.get("season")
+        summaries[station.id] = {
+            "rain_days": rain_days,
+            "heavy_rain_days": heavy_rain_days,
+            "rainfall_total": total,
+            "year_total": year_total,
+            "season_total": season_total,
+            "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
+            "year_deviation": year_total - normal_year if isinstance(normal_year, (int, float)) else None,
+            "season_deviation": season_total - normal_season if season_total is not None and isinstance(normal_season, (int, float)) else None,
+        }
+    return stations, summaries
 
 
 def _build_station_daily_agro(year: int, month: int, decade: int, station_id: str) -> list[DailyAgro]:
@@ -291,8 +335,10 @@ def save_agro_ew_etp(request: EwEtpRequest) -> dict[str, object]:
 
 @app.get("/agro/export/network.xlsx", dependencies=[Depends(require_api_key)])
 def agro_network_export(year: int, month: int, decade: int) -> StreamingResponse:
-    stream, filename = build_network_export(year, month, decade, [], {})
-    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={filename}"})
+    _validate_period(year, month, decade)
+    stations, summaries = _build_rain_export_summaries(year, month, decade)
+    stream, filename = build_network_export(year, month, decade, stations, summaries)
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.get("/agro/export/climate.xlsx", dependencies=[Depends(require_api_key)])
@@ -314,7 +360,7 @@ def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse
         computed_numeric,
     )
     stream, filename = build_climate_export(year, month, decade, stations, climate)
-    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={filename}"})
+    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.post("/cron/run", status_code=202, dependencies=[Depends(require_api_key)])
