@@ -10,7 +10,7 @@ export async function GET(_request: Request, context: { params: Promise<{ jobId:
     const user = await verifyRequestUser(_request);
     const { data, error } = await getSupabaseAdmin().from("jobs").select("*").eq("id", jobId).maybeSingle();
     if (error) throw error;
-    if (!data) return NextResponse.json({ error: "Job introuvable" }, { status: 404 });
+    if (!data) return NextResponse.json({ error: "Job introuvable", jobId }, { status: 404 });
     if (user.id !== "platform" && data.owner_id !== user.id) return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
     return NextResponse.json({
       id: data.id, product: data.product, pentadeId: data.pentade_id, label: data.label ?? data.pentade_id,

@@ -23,7 +23,7 @@ from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export
 from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
-from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
+from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.registry import H10_BY_STATION, canonical_stations
 
