@@ -87,7 +87,11 @@ def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, o
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
     stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
-    historical_rain = db.list_agro_rain_until(year, month, decade)
+    try:
+        historical_rain = db.list_agro_rain_until(year, month, decade)
+    except Exception:
+        logger.exception("Unable to load historical rainfall; exporting current decade only")
+        historical_rain = list(current_rain)
     ew_etp = _get_ew_etp_map(year, month, decade)
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
     history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
@@ -246,7 +250,7 @@ class GenerateRequest(BaseModel):
     jobId: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_-]+$")
     pentadeId: str = Field(pattern=r"^20\d{2}-P(?:0[1-9]|[1-6]\d|7[0-2])$")
     product: str = Field(pattern=r"^(ndvi|anomaly)$")
-    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=254)
+    email: str = Field(default="platform@local", pattern=r"^[^@\s]+@[^@\s]+(?:\.[^@\s]+)?$", max_length=254)
     ownerId: str = Field(min_length=1, max_length=128)
     force: bool = False
 
@@ -360,10 +364,14 @@ def save_agro_ew_etp(request: EwEtpRequest) -> dict[str, object]:
 
 @app.get("/agro/export/network.xlsx", dependencies=[Depends(require_api_key)])
 def agro_network_export(year: int, month: int, decade: int) -> StreamingResponse:
-    _validate_period(year, month, decade)
-    stations, summaries = _build_rain_export_summaries(year, month, decade)
-    stream, filename = build_network_export(year, month, decade, stations, summaries)
-    return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    try:
+        _validate_period(year, month, decade)
+        stations, summaries = _build_rain_export_summaries(year, month, decade)
+        stream, filename = build_network_export(year, month, decade, stations, summaries)
+        return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    except Exception as error:
+        logger.exception("agro network export failed")
+        raise HTTPException(status_code=500, detail=f"Export pluviométrique impossible: {error}") from error
 
 
 @app.get("/agro/export/climate.xlsx", dependencies=[Depends(require_api_key)])

@@ -63,7 +63,7 @@ def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = 
 
 def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
     end_day = 10 if decade == 1 else 20 if decade == 2 else 31
-    rows = _rows(get_client().table("agro_rain_daily").select("*").eq("year", year).execute())
+    rows = _rows(get_client().table("agro_rain_daily").select("*").eq("year", year).eq("month", month).execute())
     return [row for row in rows if int(row.get("month", 0)) < month or (int(row.get("month", 0)) == month and int(row.get("jour", 0)) <= end_day)]
 
 
