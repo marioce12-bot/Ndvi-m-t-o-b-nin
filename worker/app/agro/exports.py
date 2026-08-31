@@ -12,7 +12,7 @@ from .calculations import grouped_stations, resolve_etp_station
 from .models import DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
 
 MONTHS = ("JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE")
-NETWORK_HEADERS = ["STATIONS", "LONGITUDE", "LATITUDE", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale", "Bilan hydrique"]
+NETWORK_HEADERS = ["STATIONS", "LONGITUDE", "LATITUDE", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "% de la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale", "Bilan hydrique"]
 
 
 def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]:
@@ -67,8 +67,8 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
                 cell.fill = PatternFill("solid", fgColor="4E8B5D")
             for station in members:
                 summary = summaries.get(station.id, {})
-                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
-        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 20, 18, 24, 18, 16])
+                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("normal_percentage"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), summary.get("water_balance")])
+        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 18, 20, 18, 24, 18, 16])
     return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 
@@ -92,17 +92,7 @@ def build_climate_export(year: int, month: int, decade: int, stations: Iterable[
     _style_table(sheet, 4, [22, 22, 22, 24, 16, 16, 16, 16, 25])
     sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
     return _download(workbook, f"DONNEES_CLIMATIQUES_{year}_{month:02d}_D{decade}.xlsx")
-    sheet.append(["STATIONS", "Fract. Insol (%)", "Ray. Global (j/cm²)", "ew", "ETP", "H×10", "Tmin", "Tmax", "Tmoy", "Sol +10", "Sol +50", "Hum min", "Hum max", "Hum moy", "Vapeur", "Déficit"])
-    for station in stations:
-        values = climate.get(station.id, {})
-        sheet.append([station.name] + [values.get(key) for key in ("insolation_fraction", "global_radiation", "ew", "etp", "h10", "tmin", "tmax", "tmean", "soil10", "soil50", "humidity_min", "humidity_max", "humidity_mean", "vapor_pressure", "deficit")])
-        sheet.append(["Ecart/Normale"] + [values.get(f"{key}_deviation") for key in ("tmin", "tmax", "tmean", "humidity_min", "humidity_max", "humidity_mean")])
-    sheet.append([])
-    sheet.append(["TABLEAU V-a - DONNEES CLIMATIQUES COMPLEMENTAIRES"])
-    sheet.append(["STATIONS", "Durée Insolation h/10", "Fraction Insolation %", "Rayonnement Global", "Vent moyen", "Vent maxi", "EVAPO. Bac", "ETP Penman", "Bilan hydrique potentiel"])
-    for station in stations:
-        values = climate.get(station.id, {})
-        sheet.append([station.name] + [values.get(key) for key in ("sunshine_total", "insolation_fraction", "global_radiation", "wind_mean", "wind_max", "pan_evaporation", "etp", "water_balance")])
+    
     sheet.append([])
     sheet.append(["* L'humidité moyenne (Umoy) est calculée à partir de la température moyenne."])
     sheet.append(["* Déficit de saturation = ew - tension de vapeur moyenne."])

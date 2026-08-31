@@ -124,6 +124,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             "year_total": year_total,
             "season_total": season_total,
             "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
+            "normal_percentage": (total / normal_decade) if total is not None and isinstance(normal_decade, (int, float)) and normal_decade else None,
             "year_deviation": year_total - normal_year if isinstance(normal_year, (int, float)) else None,
             "season_deviation": season_total - normal_season if season_total is not None and isinstance(normal_season, (int, float)) else None,
             "water_balance": total - float(etp) if total is not None and isinstance(etp, (int, float)) else None,
