@@ -15,7 +15,10 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   headers.delete("host");
   const response = await fetch(target, { method: request.method, headers, body: ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer(), cache: "no-store" });
   const body = await response.arrayBuffer();
-  return new NextResponse(body, { status: response.status, headers: { "Content-Type": response.headers.get("content-type") ?? "application/json" } });
+  const responseHeaders = new Headers({ "Content-Type": response.headers.get("content-type") ?? "application/json" });
+  const contentDisposition = response.headers.get("content-disposition");
+  if (contentDisposition) responseHeaders.set("Content-Disposition", contentDisposition);
+  return new NextResponse(body, { status: response.status, headers: responseHeaders });
 }
 
 export function GET(request: Request, context: { params: Promise<{ path: string[] }> }) { return proxy(request, context); }

@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Iterable
 
 import openpyxl
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 from .calculations import grouped_stations, resolve_etp_station
 from .models import DailyAgro, DailyRain, EditableDecadeValues, RainfallNormal, Station
@@ -22,46 +22,62 @@ def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]
     return stream, filename
 
 
+def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int, widths: list[int]) -> None:
+    border = Border(*(Side(style="thin", color="9BB7A2") for _ in range(4)))
+    for row in sheet.iter_rows(min_row=header_row, max_row=sheet.max_row, min_col=1, max_col=len(widths)):
+        for cell in row:
+            cell.border = border
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for cell in sheet[header_row]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="196B3A")
+    for index, width in enumerate(widths, start=1):
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = width
+    sheet.freeze_panes = f"B{header_row + 1}"
+
+
 def build_network_export(year: int, month: int, decade: int, stations: Iterable[Station], summaries: dict[str, object]) -> tuple[BytesIO, str]:
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Réseau pluviométrique"
-    sheet.append(["ANNEE", year, "MOIS", MONTHS[month - 1], "DECADE", decade])
-    sheet.append(["V-b - DONNEES PLUVIOMETRIQUES"])
-    sheet.append(["REPARTITION", "", "CUMUL OBSERVE (mm et /10)"])
-    station_map = {station.id: station for station in stations}
-    grouped = grouped_stations(stations)
-    block_departments = {}
-    for block, department, _ in grouped:
-        block_departments.setdefault(block, []).append(department)
-    for block, department, members in grouped:
-        if not members:
-            continue
-        sheet.append([block, f"DEPARTEMENTS : {', '.join(block_departments[block])}"])
-        sheet.append([f"DEPARTEMENT : {department}"])
-        sheet.append(NETWORK_HEADERS)
-        for station in members:
-            summary = summaries.get(station.id, {})
-            sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation")])
-    for row in sheet.iter_rows():
-        for cell in row:
-            if cell.column == 6 and isinstance(cell.value, (int, float)): cell.number_format = "0.0%"
+    sheet.merge_cells("A1:I1")
+    sheet["A1"] = "V-b - DONNEES PLUVIOMETRIQUES"
+    sheet["A1"].font = Font(bold=True, size=15, color="FFFFFF")
+    sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
+    sheet["A1"].alignment = Alignment(horizontal="center")
+    sheet.merge_cells("A2:I2")
+    sheet["A2"] = f"Période : {decade}ère décade de {MONTHS[month - 1].title()} {year}"
+    sheet["A2"].alignment = Alignment(horizontal="center")
     sheet.append([])
-    sheet.append(["Notes : Nord : saison du 1er avril au 31 octobre. Sud : du 1er mars au 31 juillet puis du 1er septembre au 30 novembre."])
-    sheet.append(["- : donnée manquante. Bilan hydrique = pluie de la décade - ETP de rattachement."])
-    for cell in sheet[2]: cell.font = Font(bold=True, size=14)
-    for row in sheet.iter_rows():
-        if row and row[0].value in NETWORK_HEADERS: 
-            for cell in row: cell.font = Font(bold=True); cell.fill = PatternFill("solid", fgColor="D9EAD3")
-    return _download(workbook, f"RESA-{decade}_{MONTHS[month - 1]}_{year}.xlsx")
+    sheet.append(NETWORK_HEADERS)
+    for station in stations:
+        summary = summaries.get(station.id, {})
+        sheet.append([station.name, summary.get("rain_days"), summary.get("heavy_rain_days"), summary.get("rainfall_total"), summary.get("decade_deviation"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation")])
+    _style_table(sheet, 4, [24, 14, 14, 18, 18, 20, 18, 24, 18])
+    sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
+    return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 
 def build_climate_export(year: int, month: int, decade: int, stations: Iterable[Station], climate: dict[str, dict[str, object]]) -> tuple[BytesIO, str]:
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Données climatiques"
-    sheet.append(["ANNEE", year, "MOIS", MONTHS[month - 1], "DECADE", decade])
-    sheet.append(["TABLEAU IV - DONNEES CLIMATIQUES (Moyennes sur décade)"])
+    sheet.merge_cells("A1:I1")
+    sheet["A1"] = "V-a - DONNEES CLIMATIQUES COMPLEMENTAIRES"
+    sheet["A1"].font = Font(bold=True, size=15, color="FFFFFF")
+    sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
+    sheet["A1"].alignment = Alignment(horizontal="center")
+    sheet.merge_cells("A2:I2")
+    sheet["A2"] = f"Période : {decade}ère décade de {MONTHS[month - 1].title()} {year}"
+    sheet["A2"].alignment = Alignment(horizontal="center")
+    sheet.append([])
+    sheet.append(["STATIONS", "Durée Insolation h./10", "Fraction Insolation %", "Rayonn. Global j/cm²", "Vent moyen", "Vent maxi.", "EVAPO. Bac", "ETP Penman", "Bilan hydrique potentiel"])
+    for station in stations:
+        values = climate.get(station.id, {})
+        sheet.append([station.name] + [values.get(key) for key in ("sunshine_total", "insolation_fraction", "global_radiation", "wind_mean", "wind_max", "pan_evaporation", "etp", "water_balance")])
+    _style_table(sheet, 4, [22, 22, 22, 24, 16, 16, 16, 16, 25])
+    sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
+    return _download(workbook, f"DONNEES_CLIMATIQUES_{year}_{month:02d}_D{decade}.xlsx")
     sheet.append(["STATIONS", "Fract. Insol (%)", "Ray. Global (j/cm²)", "ew", "ETP", "H×10", "Tmin", "Tmax", "Tmoy", "Sol +10", "Sol +50", "Hum min", "Hum max", "Hum moy", "Vapeur", "Déficit"])
     for station in stations:
         values = climate.get(station.id, {})
