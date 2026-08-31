@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server";
-import { getAdminDb, verifyRequestUser } from "@/lib/firebase-admin";
+import { getSupabaseAdmin, verifyRequestUser } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
     const user = await verifyRequestUser(request);
-    const snapshot = await getAdminDb().collection("jobs").where("ownerId", "==", user.uid).where("status", "==", "done").limit(100).get();
-    const jobs = snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as Array<{ id: string; completedAt?: { toMillis?: () => number } }>;
-    jobs.sort((left, right) => {
-      const leftTime = left.completedAt?.toMillis?.() ?? 0;
-      const rightTime = right.completedAt?.toMillis?.() ?? 0;
-      return rightTime - leftTime;
-    }).slice(0, 24);
+    const { data, error } = await getSupabaseAdmin().from("jobs").select("*").eq("owner_id", user.id).eq("status", "done").order("completed_at", { ascending: false }).limit(24);
+    if (error) throw error;
+    const jobs = (data ?? []).map((item) => ({ id: item.id, product: item.product, pentadeId: item.pentade_id, label: item.label, imageUrl: item.image_url, thumbnailUrl: item.thumbnail_url, completedAt: item.completed_at ? { _seconds: Math.floor(new Date(item.completed_at).getTime() / 1000) } : undefined }));
     return NextResponse.json({ jobs });
   } catch (error) {
     console.error("Jobs route error", error);
-    return NextResponse.json({ error: error instanceof Error && error.message === "AUTH_REQUIRED" ? "Authentification requise" : "Firestore indisponible", jobs: [] }, { status: error instanceof Error && error.message === "AUTH_REQUIRED" ? 401 : 503 });
+    return NextResponse.json({ error: error instanceof Error && error.message === "AUTH_REQUIRED" ? "Authentification requise" : "Supabase indisponible", jobs: [] }, { status: error instanceof Error && error.message === "AUTH_REQUIRED" ? 401 : 503 });
   }
 }

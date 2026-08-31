@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminDb, verifyRequestUser } from "@/lib/firebase-admin";
+import { getSupabaseAdmin, verifyRequestUser } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,25 +8,16 @@ export async function GET(_request: Request, context: { params: Promise<{ jobId:
   try {
     const { jobId } = await context.params;
     const user = await verifyRequestUser(_request);
-    const snapshot = await getAdminDb().collection("jobs").doc(jobId).get();
-    if (!snapshot.exists) return NextResponse.json({ error: "Job introuvable" }, { status: 404 });
-    const data = snapshot.data();
-    if (data?.ownerId !== user.uid) return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
+    const { data, error } = await getSupabaseAdmin().from("jobs").select("*").eq("id", jobId).maybeSingle();
+    if (error) throw error;
+    if (!data) return NextResponse.json({ error: "Job introuvable" }, { status: 404 });
+    if (data.owner_id !== user.id) return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
     return NextResponse.json({
-      id: snapshot.id,
-      product: data?.product ?? null,
-      pentadeId: data?.pentadeId ?? null,
-      label: data?.label ?? data?.pentadeId ?? null,
-      status: data?.status ?? "unknown",
-      progress: Number(data?.progress ?? 0),
-      step: data?.step ?? "",
-      url: data?.imageUrl ?? data?.url ?? null,
-      imageUrl: data?.imageUrl ?? null,
-      thumbnailUrl: data?.thumbnailUrl ?? null,
-      error: data?.error ?? null,
+      id: data.id, product: data.product, pentadeId: data.pentade_id, label: data.label ?? data.pentade_id,
+      status: data.status, progress: Number(data.progress ?? 0), step: data.step ?? "", url: data.image_url, imageUrl: data.image_url, thumbnailUrl: data.thumbnail_url, error: data.error,
     });
   } catch (error) {
     console.error("Job route error", error);
-    return NextResponse.json({ error: error instanceof Error && error.message === "AUTH_REQUIRED" ? "Authentification requise" : "Firestore indisponible" }, { status: error instanceof Error && error.message === "AUTH_REQUIRED" ? 401 : 503 });
+    return NextResponse.json({ error: error instanceof Error && error.message === "AUTH_REQUIRED" ? "Authentification requise" : "Supabase indisponible" }, { status: error instanceof Error && error.message === "AUTH_REQUIRED" ? 401 : 503 });
   }
 }

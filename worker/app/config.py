@@ -7,7 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     api_key: str = ""
-    firebase_service_account_json: str = ""
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""
     cloudinary_api_secret: str = ""

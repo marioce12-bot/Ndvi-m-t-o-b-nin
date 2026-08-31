@@ -1,13 +1,11 @@
-"""Firestore job persistence."""
+"""Supabase persistence adapter used by the worker."""
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
 from functools import lru_cache
+from datetime import datetime, timezone
 
-import firebase_admin
-from firebase_admin import auth, credentials, firestore
+from supabase import create_client
 
 from .config import get_settings
 
@@ -15,27 +13,28 @@ from .config import get_settings
 @lru_cache
 def get_client():
     settings = get_settings()
-    if not settings.firebase_service_account_json:
-        raise RuntimeError("FIREBASE_SERVICE_ACCOUNT_JSON est absent")
-    if not firebase_admin._apps:
-        data = json.loads(settings.firebase_service_account_json)
-        firebase_admin.initialize_app(credentials.Certificate(data))
-    return firestore.client()
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        raise RuntimeError("SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY sont absents")
+    return create_client(settings.supabase_url, settings.supabase_service_role_key)
 
 
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _rows(response) -> list[dict[str, object]]:
+    return list(response.data or [])
 
 
 def get_job(job_id: str):
-    return get_client().collection("jobs").document(job_id).get()
+    return get_client().table("jobs").select("*").eq("id", job_id).maybe_single().execute()
 
 
 def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
-    query = get_client().collection("agroStations")
+    query = get_client().table("agro_stations").select("*")
     if principale is not None:
-        query = query.where("principal", "==", principale)
-    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+        query = query.eq("principal", principale)
+    return _rows(query.execute())
 
 
 def list_all_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
@@ -44,102 +43,82 @@ def list_all_agro_stations(principale: bool | None = None) -> list[dict[str, obj
 
 def ensure_principal_stations() -> None:
     from .agro.registry import station_documents
-    client = get_client()
-    batch = client.batch()
-    for station in station_documents():
-        reference = client.collection("agroStations").document(str(station["id"]))
-        batch.set(reference, {key: value for key, value in station.items() if key != "id"}, merge=True)
-    batch.commit()
+    values = [{**station, "created_at": _now()} for station in station_documents()]
+    if values:
+        get_client().table("agro_stations").upsert(values, on_conflict="id").execute()
 
 
 def upsert_agro_station(value: dict[str, object]) -> None:
-    station_id = str(value.pop("id"))
-    get_client().collection("agroStations").document(station_id).set(value, merge=True)
+    payload = dict(value)
+    payload["created_at"] = _now()
+    get_client().table("agro_stations").upsert(payload, on_conflict="id").execute()
 
 
 def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = None) -> list[dict[str, object]]:
-    query = get_client().collection("agroRainDaily").where("year", "==", year).where("month", "==", month).where("decade", "==", decade)
-    if station_id: query = query.where("station_id", "==", station_id)
-    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+    query = get_client().table("agro_rain_daily").select("*").eq("year", year).eq("month", month).eq("decade", decade)
+    if station_id:
+        query = query.eq("station_id", station_id)
+    return _rows(query.execute())
 
 
 def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
-    query = get_client().collection("agroRainDaily").where("year", "==", year)
-    end_month = month
     end_day = 10 if decade == 1 else 20 if decade == 2 else 31
-    return [
-        {"id": doc.id, **doc.to_dict()}
-        for doc in query.stream()
-        if int(doc.to_dict().get("month", 0)) < end_month
-        or (int(doc.to_dict().get("month", 0)) == end_month and int(doc.to_dict().get("jour", 0)) <= end_day)
-    ]
+    rows = _rows(get_client().table("agro_rain_daily").select("*").eq("year", year).execute())
+    return [row for row in rows if int(row.get("month", 0)) < month or (int(row.get("month", 0)) == month and int(row.get("jour", 0)) <= end_day)]
 
 
 def upsert_agro_rain(payloads: list[dict[str, object]]) -> None:
-    batch = get_client().batch()
-    collection = get_client().collection("agroRainDaily")
-    for value in payloads:
-        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}-{value['jour']}"
-        batch.set(collection.document(doc_id), value, merge=True)
-    batch.commit()
+    if payloads:
+        rows = [{**value, "id": f"{value['station_id']}-{value['year']}-{int(value['month']):02d}-{value['decade']}-{value['jour']}"} for value in payloads]
+        get_client().table("agro_rain_daily").upsert(rows, on_conflict="station_id,year,month,decade,jour").execute()
 
 
 def list_agro_observations(year: int, month: int, decade: int, station_id: str) -> list[dict[str, object]]:
-    query = get_client().collection("agroObservations").where("year", "==", year).where("month", "==", month).where("decade", "==", decade).where("station_id", "==", station_id)
-    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+    return _rows(get_client().table("agro_observations").select("*").eq("year", year).eq("month", month).eq("decade", decade).eq("station_id", station_id).execute())
 
 
 def upsert_agro_observations(payloads: list[dict[str, object]]) -> None:
-    batch = get_client().batch()
-    collection = get_client().collection("agroObservations")
-    for value in payloads:
-        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}-{value['jour']}"
-        batch.set(collection.document(doc_id), value, merge=True)
-    batch.commit()
+    if payloads:
+        rows = [{**value, "id": f"{value['station_id']}-{value['year']}-{int(value['month']):02d}-{value['decade']}-{value['jour']}"} for value in payloads]
+        get_client().table("agro_observations").upsert(rows, on_conflict="station_id,year,month,decade,jour").execute()
 
 
 def get_agro_ew_etp(year: int, month: int, decade: int) -> list[dict[str, object]]:
-    query = get_client().collection("agroEwEtp").where("year", "==", year).where("month", "==", month).where("decade", "==", decade)
-    return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+    return _rows(get_client().table("agro_ew_etp").select("*").eq("year", year).eq("month", month).eq("decade", decade).execute())
 
 
 def upsert_agro_ew_etp(payloads: list[dict[str, object]]) -> None:
-    batch = get_client().batch()
-    collection = get_client().collection("agroEwEtp")
-    for value in payloads:
-        doc_id = f"{value['station_id']}-{value['year']}-{value['month']:02d}-{value['decade']}"
-        batch.set(collection.document(doc_id), value, merge=True)
-    batch.commit()
+    if payloads:
+        rows = [{**value, "id": f"{value['station_id']}-{value['year']}-{int(value['month']):02d}-{value['decade']}"} for value in payloads]
+        get_client().table("agro_ew_etp").upsert(rows, on_conflict="station_id,year,month,decade").execute()
 
 
 def list_users() -> list[tuple[str, str]]:
-    """Return registered Firebase users that have an email address."""
-    return [(user.uid, user.email) for user in auth.list_users().iterate_all() if user.email]
+    users = get_client().auth.admin.list_users().users
+    return [(user.id, user.email) for user in users if user.email]
 
 
 def save_pentades(product: str, pentades: list[dict[str, object]]) -> None:
-    get_client().collection("pentadeCatalog").document(product).set({"pentades": pentades, "updatedAt": _now()})
+    get_client().table("pentade_catalog").upsert({"product": product, "pentades": pentades, "updated_at": _now()}, on_conflict="product").execute()
 
 
 def find_done_job(product: str, pentade_id: str, owner_id: str):
-    query = get_client().collection("jobs").where("product", "==", product).where("pentadeId", "==", pentade_id).where("ownerId", "==", owner_id).where("status", "==", "done").limit(1)
-    return next(iter(query.stream()), None)
+    response = get_client().table("jobs").select("*").eq("product", product).eq("pentade_id", pentade_id).eq("owner_id", owner_id).eq("status", "done").limit(1).execute()
+    return response.data[0] if response.data else None
 
 
 def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str, owner_id: str) -> None:
-    get_client().collection("jobs").document(job_id).set({
-        "product": product, "pentadeId": pentade_id, "label": label, "email": email, "ownerId": owner_id, "status": "pending", "progress": 0, "step": "En attente",
-        "imageUrl": None, "thumbnailUrl": None, "error": None, "createdAt": _now(),
-        "startedAt": None, "completedAt": None,
-    })
+    get_client().table("jobs").upsert({"id": job_id, "owner_id": owner_id, "product": product, "pentade_id": pentade_id, "label": label, "email": email, "status": "pending", "progress": 0, "step": "En attente", "created_at": _now()}, on_conflict="id").execute()
 
 
 def update_job(job_id: str, **fields) -> None:
-    get_client().collection("jobs").document(job_id).update(fields)
+    mapping = {"imageUrl": "image_url", "thumbnailUrl": "thumbnail_url", "ownerId": "owner_id", "pentadeId": "pentade_id", "startedAt": "started_at", "completedAt": "completed_at"}
+    payload = {mapping.get(key, key): value.isoformat() if isinstance(value, datetime) else value for key, value in fields.items()}
+    get_client().table("jobs").update(payload).eq("id", job_id).execute()
 
 
 def mark_processing(job_id: str) -> None:
-    update_job(job_id, status="processing", progress=0, step="Préparation du traitement", startedAt=_now(), error=None)
+    update_job(job_id, status="processing", progress=0, step="Préparation du traitement", startedAt=datetime.now(timezone.utc), error=None)
 
 
 def update_progress(job_id: str, progress: int, step: str) -> None:
@@ -147,8 +126,8 @@ def update_progress(job_id: str, progress: int, step: str) -> None:
 
 
 def mark_done(job_id: str, image_url: str, thumbnail_url: str) -> None:
-    update_job(job_id, status="done", progress=100, step="Carte prête", imageUrl=image_url, thumbnailUrl=thumbnail_url, completedAt=_now(), error=None)
+    update_job(job_id, status="done", progress=100, step="Carte prête", imageUrl=image_url, thumbnailUrl=thumbnail_url, completedAt=datetime.now(timezone.utc), error=None)
 
 
 def mark_error(job_id: str, message: str) -> None:
-    update_job(job_id, status="error", step="Échec du traitement", error=message[:500], completedAt=_now())
+    update_job(job_id, status="error", step="Échec du traitement", error=message[:500], completedAt=datetime.now(timezone.utc))

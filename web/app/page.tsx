@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, type User } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
+
+type User = { id: string; email?: string | null };
+
+async function accessToken() {
+  const { data } = await supabase?.auth.getSession() ?? { data: { session: null } };
+  return data.session?.access_token ?? "";
+}
 
 type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
@@ -83,11 +89,10 @@ function AuthScreen() {
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     try {
-      const auth = getFirebaseAuth();
-      if (!auth) throw new Error("Auth indisponible");
-      if (mode === "reset") await sendPasswordResetEmail(auth, email);
-      else if (mode === "signup") await createUserWithEmailAndPassword(auth, email, password);
-      else await signInWithEmailAndPassword(auth, email, password);
+      if (!supabase) throw new Error("Supabase indisponible");
+      if (mode === "reset") await supabase.auth.resetPasswordForEmail(email);
+      else if (mode === "signup") await supabase.auth.signUp({ email, password });
+      else await supabase.auth.signInWithPassword({ email, password });
       if (mode === "reset") setMessage("Un lien de réinitialisation a été envoyé.");
     } catch { setMessage("Email ou mot de passe invalide. Vérifiez vos informations."); }
     finally { setBusy(false); }
@@ -270,7 +275,7 @@ function Dashboard({ user }: { user: User }) {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await fetch("/api/jobs", { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" });
+        const response = await fetch("/api/jobs", { headers: { Authorization: `Bearer ${await accessToken()}` }, cache: "no-store" });
         const data = await response.json();
         if (!cancelled && response.ok) setMaps((data.jobs ?? []).map((item: { id: string; product: Product; label?: string; pentadeId: string; completedAt?: { _seconds?: number }; imageUrl?: string; thumbnailUrl?: string }) => ({ id: item.id, product: item.product, label: item.label ?? item.pentadeId, date: item.completedAt?._seconds ? new Date(item.completedAt._seconds * 1000).toLocaleDateString("fr-FR") : "Récemment", tone: item.product === "anomaly" ? "olive" : "forest", imageUrl: item.imageUrl, thumbnailUrl: item.thumbnailUrl })));
       } catch { if (!cancelled) setToast("Galerie Firestore indisponible"); }
@@ -281,7 +286,7 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     if (!jobId) return;
     let cancelled = false;
-    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await user.getIdToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
+    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${await accessToken()}` }, cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
     load(); const timer = window.setInterval(load, 4000); return () => { cancelled = true; window.clearInterval(timer); };
   }, [jobId]);
 
@@ -297,7 +302,7 @@ function Dashboard({ user }: { user: User }) {
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setJobId(id); setJobMap(null); setStatus("pending"); setError("");
     try {
-      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
+      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await accessToken()}` }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "La génération a échoué");
     } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Erreur de génération"); setStatus("error"); }
@@ -311,7 +316,7 @@ function Dashboard({ user }: { user: User }) {
         <div className="brand-symbol"><span>ND</span><i /></div>
         <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
       </div>
-      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="settings-text-button" onClick={() => setShowAgro(true)}>Paramètres agrométéo</button><button className="logout-button" onClick={() => { const auth = getFirebaseAuth(); if (auth) void signOut(auth); }}>Déconnexion</button></div>
+      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">{user.email}</span><button className="settings-text-button" onClick={() => setShowAgro(true)}>Paramètres agrométéo</button><button className="logout-button" onClick={() => { void supabase?.auth.signOut(); }}>Déconnexion</button></div>
     </header>
 
     <section className="hero-row">
@@ -341,7 +346,12 @@ function Dashboard({ user }: { user: User }) {
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  useEffect(() => { const auth = getFirebaseAuth(); return auth ? onAuthStateChanged(auth, setUser) : undefined; }, []);
+  useEffect(() => {
+    if (!supabase) { setUser(null); return; }
+    void supabase.auth.getUser().then(({ data }) => setUser(data.user ? { id: data.user.id, email: data.user.email } : null));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ? { id: session.user.id, email: session.user.email } : null));
+    return () => data.subscription.unsubscribe();
+  }, []);
   if (user === undefined) return <main className="auth-shell"><div className="auth-card"><span className="spinner" /></div></main>;
   return user ? <Dashboard user={user} /> : <AuthScreen />;
 }

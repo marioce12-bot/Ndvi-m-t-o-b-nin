@@ -6,7 +6,7 @@ numpy
 matplotlib
 requests
 pydantic-settings
-firebase-admin
+supabase
 cloudinary
 psutil
 openpyxl>=3.1,<4
