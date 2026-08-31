@@ -28,3 +28,8 @@ export function hasPlatformSession(cookieValue?: string) {
   const expected = Buffer.from(sessionValue());
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
+
+export function hasPlatformCookie(request: Request) {
+  const cookie = request.headers.get("cookie")?.split(";").map((value) => value.trim()).find((value) => value.startsWith(`${PLATFORM_COOKIE}=`))?.slice(PLATFORM_COOKIE.length + 1);
+  return hasPlatformSession(cookie);
+}

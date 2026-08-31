@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const workerUrl = process.env.WORKER_URL;
     const workerKey = process.env.WORKER_API_KEY;
     if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker non configure" }, { status: 503 });
-    const { error: insertError } = await getSupabaseAdmin().from("jobs").upsert({ id: jobId, owner_id: user.id, product, pentade_id: pentadeId, email, status: "pending", image_url: null, thumbnail_url: null, error: null, started_at: null, completed_at: null });
+    const { error: insertError } = await getSupabaseAdmin().from("jobs").upsert({ id: jobId, owner_id: user.id === "platform" ? null : user.id, product, pentade_id: pentadeId, email, status: "pending", image_url: null, thumbnail_url: null, error: null, started_at: null, completed_at: null });
     if (insertError) throw insertError;
     const response = await fetch(`${workerUrl.replace(/\/$/, "")}/generate`, { method: "POST", headers: { "X-API-Key": workerKey, "Content-Type": "application/json" }, body: JSON.stringify({ jobId, pentadeId, product, email, ownerId: user.id, force }) });
     const body = await response.json();

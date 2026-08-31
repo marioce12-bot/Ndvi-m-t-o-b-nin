@@ -84,6 +84,8 @@ function AuthScreen() {
     try {
       const response = await fetch("/api/platform-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
       if (!response.ok) throw new Error("ACCESS_DENIED");
+      window.location.href = "/";
+      return;
       if (mode === "reset") setMessage("Un lien de réinitialisation a été envoyé.");
     } catch { setMessage("Email ou mot de passe invalide. Vérifiez vos informations."); }
     finally { setBusy(false); }
