@@ -25,7 +25,7 @@ from .agro.exports import build_climate_export, build_network_export
 from .agro.calculations import build_summary, rain_statistics, rolling_totals
 from .agro.models import AstronomicalConstant, DailyAgro, EditableDecadeValues, Station
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
-from .agro.registry import H10_BY_STATION
+from .agro.registry import H10_BY_STATION, canonical_stations
 
 COORDINATES = {}
 try:
@@ -80,7 +80,7 @@ def _get_ew_etp_map(year: int, month: int, decade: int) -> dict[str, dict[str, o
 
 
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
-    stations = [station for station in _build_principal_stations()]
+    stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
     ew_etp = _get_ew_etp_map(year, month, decade)
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
