@@ -23,7 +23,8 @@ export async function POST(request: Request) {
     const { error: insertError } = await getSupabaseAdmin().from("jobs").upsert({ id: jobId, owner_id: user.id === "platform" ? null : user.id, product, pentade_id: pentadeId, email: jobEmail, status: "pending", image_url: null, thumbnail_url: null, error: null, started_at: null, completed_at: null });
     if (insertError) throw insertError;
     console.info("Platform generation job created", { jobId, pentadeId, product });
-    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/generate`, { method: "POST", headers: { "X-API-Key": workerKey, "Content-Type": "application/json" }, body: JSON.stringify({ jobId, pentadeId, product, email: jobEmail, ownerId: user.id, force }) });
+    const workerOwnerId = user.id === "platform" ? null : user.id;
+    const response = await fetch(`${workerUrl.replace(/\/$/, "")}/generate`, { method: "POST", headers: { "X-API-Key": workerKey, "Content-Type": "application/json" }, body: JSON.stringify({ jobId, pentadeId, product, email: jobEmail, ownerId: workerOwnerId, force }) });
     const rawBody = await response.text();
     let body: unknown;
     try { body = JSON.parse(rawBody); } catch { body = { error: rawBody || "Réponse worker invalide" }; }

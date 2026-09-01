@@ -262,7 +262,7 @@ class GenerateRequest(BaseModel):
     pentadeId: str = Field(pattern=r"^20\d{2}-P(?:0[1-9]|[1-6]\d|7[0-2])$")
     product: str = Field(pattern=r"^(ndvi|anomaly)$")
     email: str = Field(default="platform@local", pattern=r"^[^@\s]+@[^@\s]+(?:\.[^@\s]+)?$", max_length=254)
-    ownerId: str = Field(min_length=1, max_length=128)
+    ownerId: str | None = Field(default=None, max_length=128)
     force: bool = False
 
 

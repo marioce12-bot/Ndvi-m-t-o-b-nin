@@ -102,12 +102,14 @@ def save_pentades(product: str, pentades: list[dict[str, object]]) -> None:
     get_client().table("pentade_catalog").upsert({"product": product, "pentades": pentades, "updated_at": _now()}, on_conflict="product").execute()
 
 
-def find_done_job(product: str, pentade_id: str, owner_id: str):
-    response = get_client().table("jobs").select("*").eq("product", product).eq("pentade_id", pentade_id).eq("owner_id", owner_id).eq("status", "done").limit(1).execute()
+def find_done_job(product: str, pentade_id: str, owner_id: str | None):
+    query = get_client().table("jobs").select("*").eq("product", product).eq("pentade_id", pentade_id).eq("status", "done")
+    query = query.is_("owner_id", "null") if owner_id is None else query.eq("owner_id", owner_id)
+    response = query.limit(1).execute()
     return response.data[0] if response.data else None
 
 
-def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str, owner_id: str) -> None:
+def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str, owner_id: str | None) -> None:
     get_client().table("jobs").upsert({"id": job_id, "owner_id": owner_id, "product": product, "pentade_id": pentade_id, "label": label, "email": email, "status": "pending", "progress": 0, "step": "En attente", "created_at": _now()}, on_conflict="id").execute()
 
 
