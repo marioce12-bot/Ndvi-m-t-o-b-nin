@@ -1110,7 +1110,7 @@ function Dashboard({ user }: { user: User }) {
   const [agroMonth, setAgroMonth] = useState("8");
   const [agroDecade, setAgroDecade] = useState("1");
   const [agroView, setAgroView] = useState<
-    "rain" | "observations" | "ewetp" | "exports"
+    "rain" | "observations" | "ewetp" | "stations" | "exports"
   >("rain");
   const [rainDepartmentGroup, setRainDepartmentGroup] = useState(
     RAIN_DEPARTMENT_GROUPS[0].id,
@@ -1151,7 +1151,12 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     void fetch("/api/agro/stations", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data) => {
       if (!data?.stations) return;
-      setAgroStations((current) => current.map((station) => ({ ...station, ...(data.stations.find((remote: any) => remote.id === station.id) ?? {}) })));
+      setAgroStations((current) => {
+        const remoteById = new Map(data.stations.map((station: any) => [station.id, station]));
+        const merged = current.map((station) => ({ ...station, ...(remoteById.get(station.id) ?? {}) }));
+        const known = new Set(merged.map((station) => station.id));
+        return [...merged, ...data.stations.filter((station: any) => !known.has(station.id))];
+      });
     }).catch(() => undefined);
   }, []);
   useEffect(() => {
