@@ -1149,6 +1149,12 @@ function Dashboard({ user }: { user: User }) {
   });
   const [stationDialogOpen, setStationDialogOpen] = useState(false);
   useEffect(() => {
+    void fetch("/api/agro/stations", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data) => {
+      if (!data?.stations) return;
+      setAgroStations((current) => current.map((station) => ({ ...station, ...(data.stations.find((remote: any) => remote.id === station.id) ?? {}) })));
+    }).catch(() => undefined);
+  }, []);
+  useEffect(() => {
     document.title =
       status === "processing" || status === "pending"
         ? "⏳ Génération… · Cartes NDVI Bénin"
