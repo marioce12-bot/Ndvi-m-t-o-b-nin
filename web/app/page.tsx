@@ -576,6 +576,22 @@ function AgroPanel({
                 </select>
               </label>
             </div>
+            <div className="agro-station-filter">
+              <label className="agro-station-select">
+                Département
+                <select
+                  value={stationDepartmentFilter}
+                  onChange={(event) => setStationDepartmentFilter(event.target.value)}
+                >
+                  <option value="">Tous les départements</option>
+                  {Object.keys(AGRO_DEPARTMENTS).map((department) => (
+                    <option key={department} value={department}>
+                      {department}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <div className="agro-table-wrap">
               <table className="agro-table">
                 <thead>
