@@ -1,0 +1,452 @@
+{
+  "abomey": {
+    "department": "Zou",
+    "latitude": 7.2,
+    "longitude": 2,
+    "name": "Abomey"
+  },
+  "adjohoun": {
+    "department": "Oueme",
+    "latitude": 6.7,
+    "longitude": 2.4,
+    "name": "Adjohoun"
+  },
+  "agbangnizoun": {
+    "department": "Zou",
+    "latitude": 7.1,
+    "longitude": 2,
+    "name": "Agbangnizoun"
+  },
+  "agouna": {
+    "department": "Collines",
+    "latitude": 7.6,
+    "longitude": 1.7,
+    "name": "Agouna"
+  },
+  "alafiarou": {
+    "department": "Borgou",
+    "latitude": 9,
+    "longitude": 2.4,
+    "name": "Alafiarou"
+  },
+  "alfakoara": {
+    "department": "Alibori",
+    "latitude": 11.5,
+    "longitude": 3,
+    "name": "Alfakoara"
+  },
+  "allada": {
+    "department": "Atlantique",
+    "latitude": 6.6,
+    "longitude": 2.1,
+    "name": "Allada"
+  },
+  "aplahoué": {
+    "department": "Couffo",
+    "latitude": 6.9,
+    "longitude": 1.6,
+    "name": "Aplahoué"
+  },
+  "athiémé": {
+    "department": "Mono",
+    "latitude": 6.6,
+    "longitude": 1.6,
+    "name": "Athiémé"
+  },
+  "avrankou": {
+    "department": "Oueme",
+    "latitude": 6.5,
+    "longitude": 2.6,
+    "name": "Avrankou"
+  },
+  "banikoara": {
+    "department": "Alibori",
+    "latitude": 11.3,
+    "longitude": 2.4,
+    "name": "Banikoara"
+  },
+  "bantè": {
+    "department": "Collines",
+    "latitude": 8.4,
+    "longitude": 1.9,
+    "name": "Bantè"
+  },
+  "bassila": {
+    "department": "Donga",
+    "latitude": 9,
+    "longitude": 1.7,
+    "name": "Bassila"
+  },
+  "bembèrèkè": {
+    "department": "Borgou",
+    "latitude": 10.2,
+    "longitude": 2.6,
+    "name": "Bembèrèkè"
+  },
+  "birni": {
+    "department": "Atacora",
+    "latitude": 9.9,
+    "longitude": 1.5,
+    "name": "Birni"
+  },
+  "bodjecali": {
+    "department": "Alibori",
+    "latitude": 11.8,
+    "longitude": 3.4,
+    "name": "Bodjecali"
+  },
+  "bohicon": {
+    "department": "Zou",
+    "latitude": 7.2,
+    "longitude": 2.1,
+    "name": "Bohicon"
+  },
+  "bonou": {
+    "department": "Oueme",
+    "latitude": 6.9,
+    "longitude": 2.5,
+    "name": "Bonou"
+  },
+  "bopa": {
+    "department": "Mono",
+    "latitude": 6.5,
+    "longitude": 1.9,
+    "name": "Bopa"
+  },
+  "boukoumbé": {
+    "department": "Atacora",
+    "latitude": 10.1,
+    "longitude": 1.1,
+    "name": "Boukoumbé"
+  },
+  "bétérou": {
+    "department": "Borgou",
+    "latitude": 9.2,
+    "longitude": 2.2,
+    "name": "Bétérou"
+  },
+  "comè": {
+    "department": "Mono",
+    "latitude": 6.4,
+    "longitude": 1.8,
+    "name": "Comè"
+  },
+  "copargo": {
+    "department": "Donga",
+    "latitude": 9.8,
+    "longitude": 1.5,
+    "name": "Copargo"
+  },
+  "cotonou-aéro": {
+    "department": "Littoral",
+    "latitude": 6.4,
+    "longitude": 2.4,
+    "name": "Cotonou-Aéro"
+  },
+  "dangbo": {
+    "department": "Oueme",
+    "latitude": 6.5,
+    "longitude": 2.5,
+    "name": "Dangbo"
+  },
+  "dassa-zoumè": {
+    "department": "Collines",
+    "latitude": 7.7,
+    "longitude": 2.1,
+    "name": "Dassa-Zoumè"
+  },
+  "dassari": {
+    "department": "Atacora",
+    "latitude": 10.8,
+    "longitude": 1.1,
+    "name": "Dassari"
+  },
+  "djougou": {
+    "department": "Donga",
+    "latitude": 9.6,
+    "longitude": 1.7,
+    "name": "Djougou"
+  },
+  "dogbo-tota": {
+    "department": "Couffo",
+    "latitude": 6.8,
+    "longitude": 1.8,
+    "name": "Dogbo-Tota"
+  },
+  "gouka": {
+    "department": "Collines",
+    "latitude": 8.1,
+    "longitude": 1.9,
+    "name": "Gouka"
+  },
+  "grand-popo": {
+    "department": "Mono",
+    "latitude": 6.3,
+    "longitude": 2.4,
+    "name": "Grand-Popo"
+  },
+  "guéné": {
+    "department": "Alibori",
+    "latitude": 11.7,
+    "longitude": 3.2,
+    "name": "Guéné"
+  },
+  "houin-agamè": {
+    "department": "Mono",
+    "latitude": 6.7,
+    "longitude": 2.6,
+    "name": "Houin-Agamè"
+  },
+  "ina": {
+    "department": "Borgou",
+    "latitude": 10,
+    "longitude": 2.7,
+    "name": "Ina"
+  },
+  "kalalé": {
+    "department": "Borgou",
+    "latitude": 10.3,
+    "longitude": 3.4,
+    "name": "Kalalé"
+  },
+  "kandi": {
+    "department": "Alibori",
+    "latitude": 11.1,
+    "longitude": 2.9,
+    "name": "Kandi"
+  },
+  "karimama": {
+    "department": "Alibori",
+    "latitude": 12,
+    "longitude": 3.1,
+    "name": "Karimama"
+  },
+  "kokoro": {
+    "department": "Collines",
+    "latitude": 8.4,
+    "longitude": 2.6,
+    "name": "Kokoro"
+  },
+  "kouandé": {
+    "department": "Atacora",
+    "latitude": 10.3,
+    "longitude": 1.6,
+    "name": "Kouandé"
+  },
+  "kpataba": {
+    "department": "Collines",
+    "latitude": 8.1,
+    "longitude": 2,
+    "name": "Kpataba"
+  },
+  "kérou": {
+    "department": "Atacora",
+    "latitude": 10.8,
+    "longitude": 2.1,
+    "name": "Kérou"
+  },
+  "kétou": {
+    "department": "Plateau",
+    "latitude": 7.3,
+    "longitude": 2.6,
+    "name": "Kétou"
+  },
+  "lokossa": {
+    "department": "Mono",
+    "latitude": 6.6,
+    "longitude": 1.7,
+    "name": "Lokossa"
+  },
+  "lonkly": {
+    "department": "Couffo",
+    "latitude": 7.2,
+    "longitude": 1.7,
+    "name": "Lonkly"
+  },
+  "malanville": {
+    "department": "Alibori",
+    "latitude": 11.8,
+    "longitude": 3.4,
+    "name": "Malanville"
+  },
+  "matéri": {
+    "department": "Atacora",
+    "latitude": 10.7,
+    "longitude": 1.1,
+    "name": "Matéri"
+  },
+  "natitingou": {
+    "department": "Atacora",
+    "latitude": 10.3,
+    "longitude": 1.4,
+    "name": "Natitingou"
+  },
+  "niaouli": {
+    "department": "Atlantique",
+    "latitude": 6.7,
+    "longitude": 2.1,
+    "name": "Niaouli"
+  },
+  "nikki": {
+    "department": "Borgou",
+    "latitude": 9.9,
+    "longitude": 3.2,
+    "name": "Nikki"
+  },
+  "okpara": {
+    "department": "Borgou",
+    "latitude": 9.5,
+    "longitude": 2.7,
+    "name": "Okpara"
+  },
+  "ouando": {
+    "department": "Oueme",
+    "latitude": 6.6,
+    "longitude": 2.6,
+    "name": "Ouando"
+  },
+  "ouessè": {
+    "department": "Collines",
+    "latitude": 8.5,
+    "longitude": 2.3,
+    "name": "Ouessè"
+  },
+  "ouidah-nord": {
+    "department": "Atlantique",
+    "latitude": 6.4,
+    "longitude": 2,
+    "name": "Ouidah-Nord"
+  },
+  "ouidah-ville": {
+    "department": "Atlantique",
+    "latitude": 6.5,
+    "longitude": 2,
+    "name": "Ouidah-Ville"
+  },
+  "ouinhi": {
+    "department": "Zou",
+    "latitude": 7,
+    "longitude": 2.5,
+    "name": "Ouinhi"
+  },
+  "parakou": {
+    "department": "Borgou",
+    "latitude": 9.4,
+    "longitude": 2.6,
+    "name": "Parakou"
+  },
+  "partago": {
+    "department": "Donga",
+    "latitude": 9.5,
+    "longitude": 1.9,
+    "name": "Partago"
+  },
+  "pira": {
+    "department": "Collines",
+    "latitude": 8.6,
+    "longitude": 1.7,
+    "name": "Pira"
+  },
+  "pobè": {
+    "department": "Plateau",
+    "latitude": 6.9,
+    "longitude": 2.6,
+    "name": "Pobè"
+  },
+  "porga": {
+    "department": "Atacora",
+    "latitude": 10.9,
+    "longitude": 1,
+    "name": "Porga"
+  },
+  "porto-novo": {
+    "department": "Oueme",
+    "latitude": 6.4,
+    "longitude": 2.6,
+    "name": "Porto-Novo"
+  },
+  "péhunco": {
+    "department": "Atacora",
+    "latitude": 10.3,
+    "longitude": 2,
+    "name": "Péhunco"
+  },
+  "pénessoulou": {
+    "department": "Donga",
+    "latitude": 9.2,
+    "longitude": 1.6,
+    "name": "Pénessoulou"
+  },
+  "sakété": {
+    "department": "Plateau",
+    "latitude": 6.7,
+    "longitude": 2,
+    "name": "Sakété"
+  },
+  "savalou": {
+    "department": "Collines",
+    "latitude": 7.9,
+    "longitude": 2,
+    "name": "Savalou"
+  },
+  "savè": {
+    "department": "Collines",
+    "latitude": 8,
+    "longitude": 2.5,
+    "name": "Savè"
+  },
+  "ségbana": {
+    "department": "Alibori",
+    "latitude": 10.9,
+    "longitude": 3.7,
+    "name": "Ségbana"
+  },
+  "sémèrè": {
+    "department": "Donga",
+    "latitude": 9.5,
+    "longitude": 1.5,
+    "name": "Sémèrè"
+  },
+  "tanguiéta": {
+    "department": "Atacora",
+    "latitude": 10.6,
+    "longitude": 1.2,
+    "name": "Tanguiéta"
+  },
+  "tchaada": {
+    "department": "Oueme",
+    "latitude": 6.6,
+    "longitude": 2.7,
+    "name": "Tchaada"
+  },
+  "tchaourou": {
+    "department": "Borgou",
+    "latitude": 8.9,
+    "longitude": 2.6,
+    "name": "Tchaourou"
+  },
+  "tchetti": {
+    "department": "Collines",
+    "latitude": 7.6,
+    "longitude": 1.7,
+    "name": "Tchetti"
+  },
+  "toui": {
+    "department": "Collines",
+    "latitude": 8.7,
+    "longitude": 2.6,
+    "name": "Toui"
+  },
+  "zagnanado": {
+    "department": "Zou",
+    "latitude": 7.2,
+    "longitude": 2.3,
+    "name": "Zagnanado"
+  },
+  "zakpota": {
+    "department": "Zou",
+    "latitude": 7.2,
+    "longitude": 2.2,
+    "name": "Zakpota"
+  }
+}

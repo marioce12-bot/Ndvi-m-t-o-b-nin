@@ -395,6 +395,8 @@ function AgroPanel({
   newStation,
   setNewStation,
   createStation,
+  stationDialogOpen,
+  setStationDialogOpen,
 }: any) {
   const rainValue = (stationId: string, day: number) =>
     rainRows.find(
@@ -949,7 +951,7 @@ function AgroPanel({
               </div>
               <button
                 className="agro-save-button"
-                onClick={() =>
+                onClick={() => {
                   setNewStation({
                     id: "",
                     name: "",
@@ -957,8 +959,9 @@ function AgroPanel({
                     locality: "",
                     longitude: "",
                     latitude: "",
-                  })
-                }
+                  });
+                  setStationDialogOpen(true);
+                }}
               >
                 + Nouvelle station
               </button>
@@ -969,7 +972,6 @@ function AgroPanel({
                   <tr>
                     <th>Station</th>
                     <th>Département</th>
-                    <th>Localité</th>
                     <th>Longitude</th>
                     <th>Latitude</th>
                     <th>Actions</th>
@@ -980,21 +982,21 @@ function AgroPanel({
                     <tr key={station.id}>
                       <th>{station.name}</th>
                       <td>{station.department}</td>
-                      <td>{station.locality ?? ""}</td>
                       <td>{station.longitude ?? ""}</td>
                       <td>{station.latitude ?? ""}</td>
                       <td>
                         <button
-                          onClick={() =>
+                          onClick={() => {
                             setNewStation({
                               id: station.id,
                               name: station.name,
                               department: station.department,
-                              locality: station.locality ?? "",
+                              locality: "",
                               longitude: String(station.longitude ?? ""),
                               latitude: String(station.latitude ?? ""),
-                            })
-                          }
+                            });
+                            setStationDialogOpen(true);
+                          }}
                         >
                           Modifier
                         </button>
@@ -1021,8 +1023,11 @@ function AgroPanel({
                 </tbody>
               </table>
             </div>
-            {newStation.name && (
-              <div className="station-add">
+            {stationDialogOpen && (
+              <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setStationDialogOpen(false)}>
+                <section className="lightbox-panel station-dialog" onClick={(event) => event.stopPropagation()}>
+                  <div className="lightbox-head"><div><span className="section-kicker">GESTION DES STATIONS</span><h2>{newStation.id ? "Modifier la station" : "Nouvelle station"}</h2></div><button className="icon-button" onClick={() => setStationDialogOpen(false)} aria-label="Fermer"><Icon name="close" /></button></div>
+                <div className="station-add">
                 <input
                   placeholder="Nom station"
                   value={newStation.name}
@@ -1047,16 +1052,6 @@ function AgroPanel({
                   ))}
                 </select>
                 <input
-                  placeholder="Localité"
-                  value={newStation.locality}
-                  onChange={(event) =>
-                    setNewStation({
-                      ...newStation,
-                      locality: event.target.value,
-                    })
-                  }
-                />
-                <input
                   placeholder="Longitude"
                   value={newStation.longitude}
                   onChange={(event) =>
@@ -1079,6 +1074,7 @@ function AgroPanel({
                 <button className="agro-save-button" onClick={createStation}>
                   Enregistrer
                 </button>
+                </div></section>
               </div>
             )}
           </section>
@@ -1151,6 +1147,7 @@ function Dashboard({ user }: { user: User }) {
     longitude: "",
     latitude: "",
   });
+  const [stationDialogOpen, setStationDialogOpen] = useState(false);
   useEffect(() => {
     document.title =
       status === "processing" || status === "pending"
@@ -1175,7 +1172,7 @@ function Dashboard({ user }: { user: User }) {
     return data;
   };
   const createStation = async () => {
-    if (!newStation.name || !newStation.department || !newStation.locality)
+    if (!newStation.name || !newStation.department)
       return;
     try {
       await agroFetch("/stations", {
@@ -1198,7 +1195,8 @@ function Dashboard({ user }: { user: User }) {
           principal: false,
         },
       ]);
-      setAgroMessage("Station ajoutée");
+      setAgroMessage(newStation.id ? "Station modifiée" : "Station ajoutée");
+      setStationDialogOpen(false);
       setNewStation({
         id: "",
         name: "",
@@ -1822,7 +1820,7 @@ function Dashboard({ user }: { user: User }) {
           Plateforme opérationnelle <span className="live-dot" />
         </span>
       </footer>
-      {showAgro && (
+    {showAgro && (
         <AgroPanel
           agroYear={agroYear}
           setAgroYear={setAgroYear}
@@ -1855,7 +1853,9 @@ function Dashboard({ user }: { user: User }) {
           setAgroMessage={setAgroMessage}
           newStation={newStation}
           setNewStation={setNewStation}
-          createStation={createStation}
+      createStation={createStation}
+      stationDialogOpen={stationDialogOpen}
+      setStationDialogOpen={setStationDialogOpen}
           onClose={() => setShowAgro(false)}
         />
       )}
