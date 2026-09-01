@@ -148,6 +148,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
 
 def _build_station_daily_agro(year: int, month: int, decade: int, station_id: str) -> list[DailyAgro]:
     observations = db.list_agro_observations(year, month, decade, station_id)
+    rain_values = {int(row.get("jour")): row.get("hauteur_mm") for row in db.list_agro_rain(year, month, decade, station_id)}
     daily: list[DailyAgro] = []
     for row in observations:
         jour = int(row.get("jour"))
@@ -155,7 +156,7 @@ def _build_station_daily_agro(year: int, month: int, decade: int, station_id: st
             DailyAgro(
                 station_id=station_id,
                 observed_on=date(year, month, jour),
-                rain_mm=row.get("pluie"),
+                rain_mm=row.get("pluie") if row.get("pluie") is not None else rain_values.get(jour),
                 tmin=row.get("temp_min"),
                 tmax=row.get("temp_max"),
                 soil10=row.get("temp_10cm"),

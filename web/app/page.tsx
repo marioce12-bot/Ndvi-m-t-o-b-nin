@@ -242,6 +242,7 @@ function Dashboard({ user }: { user: User }) {
         ]);
         if (cancelled) return;
         setRainRows(rain.valeurs ?? []);
+        if (agroView === "observations") setAgroRows((rows) => rows.map((row) => ({ ...row, pluie: rain.valeurs?.find((value: any) => value.station_id === agroStation && value.jour === row.jour)?.hauteur_mm ?? row.pluie })));
         setEwEtpRows(climate.valeurs ?? []);
         setEwEtpCalculations(climate.calculs ?? []);
         setExportAvailability({ network: (rain.valeurs ?? []).length > 0, climate: (climate.valeurs ?? []).length > 0 });
@@ -251,7 +252,7 @@ function Dashboard({ user }: { user: User }) {
     };
     void loadAgroData();
     return () => { cancelled = true; };
-  }, [agroYear, agroMonth, agroDecade]);
+  }, [agroYear, agroMonth, agroDecade, agroStation, agroView]);
   const updateRain = (station_id: string, jour: number, value: string) => setRainRows((rows) => [...rows.filter((row) => !(row.station_id === station_id && row.jour === jour)), ...(value === "" ? [] : [{ station_id, jour, hauteur_mm: Number(value) }])]);
   const updateAgro = (jour: number, key: string, value: string) => setAgroRows((rows) => { const current = rows.find((row) => row.jour === jour) ?? { jour }; const next = { ...current, [key]: value === "" ? undefined : Number(value) }; return [...rows.filter((row) => row.jour !== jour), next]; });
   useEffect(() => {
