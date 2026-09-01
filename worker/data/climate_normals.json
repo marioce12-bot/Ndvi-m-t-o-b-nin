@@ -1,0 +1,1958 @@
+{
+  "bohicon": {
+    "aou1": {
+      "hmax": 95.717,
+      "hmean": 79.326,
+      "hmin": 68.399,
+      "insolation": 3.1,
+      "tmax": 29.221,
+      "tmean": 25.669,
+      "tmin": 22.118
+    },
+    "aou2": {
+      "hmax": 95.79,
+      "hmean": 79.518,
+      "hmin": 68.67,
+      "insolation": 2.9,
+      "tmax": 29.233,
+      "tmean": 25.716,
+      "tmin": 22.2
+    },
+    "aou3": {
+      "hmax": 95.906,
+      "hmean": 79.032,
+      "hmin": 67.782,
+      "insolation": 3.3,
+      "tmax": 29.749,
+      "tmean": 26.063,
+      "tmin": 22.377
+    },
+    "avr1": {
+      "hmax": 94.377,
+      "hmean": 69.127,
+      "hmin": 52.293,
+      "insolation": 7.1,
+      "tmax": 34.824,
+      "tmean": 29.723,
+      "tmin": 24.621
+    },
+    "avr2": {
+      "hmax": 94.92,
+      "hmean": 70.882,
+      "hmin": 54.857,
+      "insolation": 6.8,
+      "tmax": 34.312,
+      "tmean": 29.44,
+      "tmin": 24.569
+    },
+    "avr3": {
+      "hmax": 95.253,
+      "hmean": 72.551,
+      "hmin": 57.417,
+      "insolation": 6.5,
+      "tmax": 33.801,
+      "tmean": 29.068,
+      "tmin": 24.335
+    },
+    "dec1": {
+      "hmax": 94.187,
+      "hmean": 64.511,
+      "hmin": 44.727,
+      "insolation": 7.3,
+      "tmax": 34.69,
+      "tmean": 29.251,
+      "tmin": 23.811
+    },
+    "dec2": {
+      "hmax": 92.96,
+      "hmean": 62.468,
+      "hmin": 42.14,
+      "insolation": 7.2,
+      "tmax": 34.842,
+      "tmean": 29.139,
+      "tmin": 23.437
+    },
+    "dec3": {
+      "hmax": 91.212,
+      "hmean": 58.912,
+      "hmin": 37.379,
+      "insolation": 6.7,
+      "tmax": 34.9,
+      "tmean": 29.008,
+      "tmin": 23.116
+    },
+    "fev1": {
+      "hmax": 90.323,
+      "hmean": 57.325,
+      "hmin": 35.327,
+      "insolation": 7.0,
+      "tmax": 36.258,
+      "tmean": 30.18,
+      "tmin": 24.102
+    },
+    "fev2": {
+      "hmax": 91.777,
+      "hmean": 59.105,
+      "hmin": 37.323,
+      "insolation": 7.2,
+      "tmax": 36.313,
+      "tmean": 30.395,
+      "tmin": 24.477
+    },
+    "fev3": {
+      "hmax": 93.004,
+      "hmean": 61.221,
+      "hmin": 40.032,
+      "insolation": 6.7,
+      "tmax": 36.655,
+      "tmean": 30.803,
+      "tmin": 24.95
+    },
+    "jan1": {
+      "hmax": 84.739,
+      "hmean": 55.2,
+      "hmin": 35.507,
+      "insolation": 5.9,
+      "tmax": 34.483,
+      "tmean": 28.577,
+      "tmin": 22.671
+    },
+    "jan2": {
+      "hmax": 86.477,
+      "hmean": 56.319,
+      "hmin": 36.213,
+      "insolation": 6.4,
+      "tmax": 34.882,
+      "tmean": 28.927,
+      "tmin": 22.973
+    },
+    "jan3": {
+      "hmax": 89.324,
+      "hmean": 57.944,
+      "hmin": 37.024,
+      "insolation": 6.8,
+      "tmax": 35.482,
+      "tmean": 29.499,
+      "tmin": 23.517
+    },
+    "jul1": {
+      "hmax": 96.243,
+      "hmean": 78.297,
+      "hmin": 66.333,
+      "insolation": 4.7,
+      "tmax": 30.453,
+      "tmean": 26.609,
+      "tmin": 22.765
+    },
+    "jul2": {
+      "hmax": 96.26,
+      "hmean": 79.511,
+      "hmin": 68.344,
+      "insolation": 3.8,
+      "tmax": 29.917,
+      "tmean": 26.291,
+      "tmin": 22.665
+    },
+    "jul3": {
+      "hmax": 95.615,
+      "hmean": 79.509,
+      "hmin": 68.772,
+      "insolation": 3.3,
+      "tmax": 29.414,
+      "tmean": 25.9,
+      "tmin": 22.386
+    },
+    "jun1": {
+      "hmax": 96.317,
+      "hmean": 76.471,
+      "hmin": 63.24,
+      "insolation": 6.3,
+      "tmax": 31.829,
+      "tmean": 27.553,
+      "tmin": 23.278
+    },
+    "jun2": {
+      "hmax": 95.98,
+      "hmean": 77.318,
+      "hmin": 64.877,
+      "insolation": 5.7,
+      "tmax": 31.256,
+      "tmean": 27.248,
+      "tmin": 23.24
+    },
+    "jun3": {
+      "hmax": 96.143,
+      "hmean": 77.969,
+      "hmin": 65.853,
+      "insolation": 5.2,
+      "tmax": 30.77,
+      "tmean": 26.884,
+      "tmin": 22.998
+    },
+    "mai1": {
+      "hmax": 95.757,
+      "hmean": 73.701,
+      "hmin": 58.997,
+      "insolation": 6.6,
+      "tmax": 33.364,
+      "tmean": 28.802,
+      "tmin": 24.239
+    },
+    "mai2": {
+      "hmax": 95.967,
+      "hmean": 75.171,
+      "hmin": 61.308,
+      "insolation": 7.2,
+      "tmax": 32.807,
+      "tmean": 28.373,
+      "tmin": 23.938
+    },
+    "mai3": {
+      "hmax": 96.0,
+      "hmean": 75.464,
+      "hmin": 61.773,
+      "insolation": 6.8,
+      "tmax": 32.475,
+      "tmean": 28.106,
+      "tmin": 23.737
+    },
+    "mar1": {
+      "hmax": 92.967,
+      "hmean": 63.539,
+      "hmin": 43.92,
+      "insolation": 6.6,
+      "tmax": 35.989,
+      "tmean": 30.451,
+      "tmin": 24.914
+    },
+    "mar2": {
+      "hmax": 93.74,
+      "hmean": 66.316,
+      "hmin": 48.033,
+      "insolation": 6.4,
+      "tmax": 35.408,
+      "tmean": 30.075,
+      "tmin": 24.743
+    },
+    "mar3": {
+      "hmax": 93.103,
+      "hmean": 66.41,
+      "hmin": 48.615,
+      "insolation": 6.7,
+      "tmax": 35.402,
+      "tmean": 30.122,
+      "tmin": 24.843
+    },
+    "nov1": {
+      "hmax": 96.24,
+      "hmean": 71.178,
+      "hmin": 54.47,
+      "insolation": 7.7,
+      "tmax": 33.325,
+      "tmean": 28.402,
+      "tmin": 23.479
+    },
+    "nov2": {
+      "hmax": 95.83,
+      "hmean": 67.7,
+      "hmin": 48.947,
+      "insolation": 8.1,
+      "tmax": 34.27,
+      "tmean": 29.098,
+      "tmin": 23.925
+    },
+    "nov3": {
+      "hmax": 95.23,
+      "hmean": 66.042,
+      "hmin": 46.583,
+      "insolation": 7.8,
+      "tmax": 34.573,
+      "tmean": 29.217,
+      "tmin": 23.861
+    },
+    "oct1": {
+      "hmax": 96.51,
+      "hmean": 76.836,
+      "hmin": 63.72,
+      "insolation": 5.6,
+      "tmax": 31.383,
+      "tmean": 27.156,
+      "tmin": 22.929
+    },
+    "oct2": {
+      "hmax": 96.503,
+      "hmean": 75.679,
+      "hmin": 61.797,
+      "insolation": 6.4,
+      "tmax": 31.996,
+      "tmean": 27.488,
+      "tmin": 22.979
+    },
+    "oct3": {
+      "hmax": 96.439,
+      "hmean": 74.452,
+      "hmin": 59.794,
+      "insolation": 7.3,
+      "tmax": 32.461,
+      "tmean": 27.813,
+      "tmin": 23.165
+    },
+    "sep1": {
+      "hmax": 95.946,
+      "hmean": 78.287,
+      "hmin": 66.513,
+      "insolation": 3.7,
+      "tmax": 30.174,
+      "tmean": 26.363,
+      "tmin": 22.551
+    },
+    "sep2": {
+      "hmax": 96.173,
+      "hmean": 78.077,
+      "hmin": 66.013,
+      "insolation": 4.2,
+      "tmax": 30.532,
+      "tmean": 26.586,
+      "tmin": 22.64
+    },
+    "sep3": {
+      "hmax": 96.58,
+      "hmean": 77.304,
+      "hmin": 64.453,
+      "insolation": 5.0,
+      "tmax": 31.056,
+      "tmean": 26.9,
+      "tmin": 22.744
+    }
+  },
+  "cotonou": {
+    "aou1": {
+      "hmax": 91.79,
+      "hmean": 81.484,
+      "hmin": 74.613,
+      "insolation": 5.1,
+      "tmax": 28.066,
+      "tmean": 26.07,
+      "tmin": 24.074
+    },
+    "aou2": {
+      "hmax": 92.623,
+      "hmean": 81.927,
+      "hmin": 74.797,
+      "insolation": 4.5,
+      "tmax": 28.143,
+      "tmean": 26.089,
+      "tmin": 24.035
+    },
+    "aou3": {
+      "hmax": 92.63,
+      "hmean": 81.87,
+      "hmin": 74.696,
+      "insolation": 4.7,
+      "tmax": 28.445,
+      "tmean": 26.301,
+      "tmin": 24.157
+    },
+    "avr1": {
+      "hmax": 89.47,
+      "hmean": 77.06,
+      "hmin": 68.787,
+      "insolation": 7.6,
+      "tmax": 32.085,
+      "tmean": 29.322,
+      "tmin": 26.559
+    },
+    "avr2": {
+      "hmax": 89.913,
+      "hmean": 77.506,
+      "hmin": 69.234,
+      "insolation": 7.2,
+      "tmax": 31.977,
+      "tmean": 29.165,
+      "tmin": 26.353
+    },
+    "avr3": {
+      "hmax": 90.497,
+      "hmean": 77.675,
+      "hmin": 69.127,
+      "insolation": 6.7,
+      "tmax": 31.895,
+      "tmean": 29.0,
+      "tmin": 26.104
+    },
+    "dec1": {
+      "hmax": 92.67,
+      "hmean": 75.856,
+      "hmin": 64.647,
+      "insolation": 7.5,
+      "tmax": 31.897,
+      "tmean": 28.637,
+      "tmin": 25.376
+    },
+    "dec2": {
+      "hmax": 93.25,
+      "hmean": 74.63,
+      "hmin": 62.217,
+      "insolation": 7.2,
+      "tmax": 31.92,
+      "tmean": 28.392,
+      "tmin": 24.865
+    },
+    "dec3": {
+      "hmax": 94.1,
+      "hmean": 74.3,
+      "hmin": 61.1,
+      "insolation": 6.6,
+      "tmax": 31.3,
+      "tmean": 27.8,
+      "tmin": 24.3
+    },
+    "fev1": {
+      "hmax": 91.533,
+      "hmean": 73.605,
+      "hmin": 61.653,
+      "insolation": 6.8,
+      "tmax": 32.038,
+      "tmean": 28.808,
+      "tmin": 25.578
+    },
+    "fev2": {
+      "hmax": 90.91,
+      "hmean": 74.29,
+      "hmin": 63.21,
+      "insolation": 7.4,
+      "tmax": 32.23,
+      "tmean": 29.059,
+      "tmin": 25.889
+    },
+    "fev3": {
+      "hmax": 89.593,
+      "hmean": 75.498,
+      "hmin": 66.101,
+      "insolation": 7.1,
+      "tmax": 32.407,
+      "tmean": 29.593,
+      "tmin": 26.779
+    },
+    "jan1": {
+      "hmax": 91.913,
+      "hmean": 69.569,
+      "hmin": 54.673,
+      "insolation": 5.7,
+      "tmax": 31.561,
+      "tmean": 27.719,
+      "tmin": 23.877
+    },
+    "jan2": {
+      "hmax": 92.663,
+      "hmean": 71.657,
+      "hmin": 57.653,
+      "insolation": 5.9,
+      "tmax": 31.472,
+      "tmean": 27.906,
+      "tmin": 24.34
+    },
+    "jan3": {
+      "hmax": 92.639,
+      "hmean": 74.105,
+      "hmin": 61.748,
+      "insolation": 6.7,
+      "tmax": 31.65,
+      "tmean": 28.28,
+      "tmin": 24.91
+    },
+    "jul1": {
+      "hmax": 92.74,
+      "hmean": 82.248,
+      "hmin": 75.253,
+      "insolation": 4.9,
+      "tmax": 28.836,
+      "tmean": 26.667,
+      "tmin": 24.497
+    },
+    "jul2": {
+      "hmax": 92.38,
+      "hmean": 82.314,
+      "hmin": 75.603,
+      "insolation": 4.3,
+      "tmax": 28.557,
+      "tmean": 26.494,
+      "tmin": 24.43
+    },
+    "jul3": {
+      "hmax": 91.888,
+      "hmean": 82.05,
+      "hmin": 75.491,
+      "insolation": 4.6,
+      "tmax": 28.195,
+      "tmean": 26.221,
+      "tmin": 24.248
+    },
+    "jun1": {
+      "hmax": 93.967,
+      "hmean": 81.095,
+      "hmin": 72.513,
+      "insolation": 5.1,
+      "tmax": 30.102,
+      "tmean": 27.271,
+      "tmin": 24.439
+    },
+    "jun2": {
+      "hmax": 93.917,
+      "hmean": 82.041,
+      "hmin": 74.123,
+      "insolation": 4.7,
+      "tmax": 29.683,
+      "tmean": 27.088,
+      "tmin": 24.493
+    },
+    "jun3": {
+      "hmax": 93.467,
+      "hmean": 82.435,
+      "hmin": 75.08,
+      "insolation": 4.8,
+      "tmax": 29.143,
+      "tmean": 26.797,
+      "tmin": 24.451
+    },
+    "mai1": {
+      "hmax": 91.153,
+      "hmean": 77.943,
+      "hmin": 69.137,
+      "insolation": 7.0,
+      "tmax": 31.754,
+      "tmean": 28.827,
+      "tmin": 25.901
+    },
+    "mai2": {
+      "hmax": 92.377,
+      "hmean": 78.819,
+      "hmin": 69.78,
+      "insolation": 6.8,
+      "tmax": 31.37,
+      "tmean": 28.334,
+      "tmin": 25.297
+    },
+    "mai3": {
+      "hmax": 93.361,
+      "hmean": 79.662,
+      "hmin": 70.53,
+      "insolation": 6.3,
+      "tmax": 30.95,
+      "tmean": 27.987,
+      "tmin": 25.025
+    },
+    "mar1": {
+      "hmax": 88.89,
+      "hmean": 75.264,
+      "hmin": 66.18,
+      "insolation": 6.8,
+      "tmax": 32.451,
+      "tmean": 29.607,
+      "tmin": 26.762
+    },
+    "mar2": {
+      "hmax": 88.89,
+      "hmean": 76.108,
+      "hmin": 67.587,
+      "insolation": 6.7,
+      "tmax": 32.267,
+      "tmean": 29.51,
+      "tmin": 26.754
+    },
+    "mar3": {
+      "hmax": 88.576,
+      "hmean": 76.107,
+      "hmin": 67.794,
+      "insolation": 7.0,
+      "tmax": 32.235,
+      "tmean": 29.538,
+      "tmin": 26.842
+    },
+    "nov1": {
+      "hmax": 93.42,
+      "hmean": 78.826,
+      "hmin": 69.097,
+      "insolation": 7.9,
+      "tmax": 31.126,
+      "tmean": 28.049,
+      "tmin": 24.972
+    },
+    "nov2": {
+      "hmax": 93.163,
+      "hmean": 77.959,
+      "hmin": 67.823,
+      "insolation": 8.1,
+      "tmax": 31.68,
+      "tmean": 28.556,
+      "tmin": 25.432
+    },
+    "nov3": {
+      "hmax": 92.613,
+      "hmean": 76.677,
+      "hmin": 66.053,
+      "insolation": 7.9,
+      "tmax": 31.853,
+      "tmean": 28.613,
+      "tmin": 25.372
+    },
+    "oct1": {
+      "hmax": 93.583,
+      "hmean": 81.663,
+      "hmin": 73.717,
+      "insolation": 6.1,
+      "tmax": 29.561,
+      "tmean": 26.999,
+      "tmin": 24.437
+    },
+    "oct2": {
+      "hmax": 93.967,
+      "hmean": 81.113,
+      "hmin": 72.543,
+      "insolation": 6.6,
+      "tmax": 30.07,
+      "tmean": 27.259,
+      "tmin": 24.448
+    },
+    "oct3": {
+      "hmax": 93.448,
+      "hmean": 79.63,
+      "hmin": 70.418,
+      "insolation": 7.3,
+      "tmax": 30.594,
+      "tmean": 27.632,
+      "tmin": 24.67
+    },
+    "sep1": {
+      "hmax": 92.693,
+      "hmean": 82.069,
+      "hmin": 74.987,
+      "insolation": 4.7,
+      "tmax": 28.629,
+      "tmean": 26.474,
+      "tmin": 24.319
+    },
+    "sep2": {
+      "hmax": 92.773,
+      "hmean": 81.645,
+      "hmin": 74.227,
+      "insolation": 5.3,
+      "tmax": 28.954,
+      "tmean": 26.624,
+      "tmin": 24.294
+    },
+    "sep3": {
+      "hmax": 93.23,
+      "hmean": 81.514,
+      "hmin": 73.703,
+      "insolation": 5.7,
+      "tmax": 29.317,
+      "tmean": 26.837,
+      "tmin": 24.356
+    }
+  },
+  "kandi": {
+    "aou1": {
+      "hmax": 95.363,
+      "hmean": 81.592,
+      "hmin": 65.7,
+      "insolation": 6.1,
+      "tmax": 30.359,
+      "tmean": 26.48,
+      "tmin": 22.602
+    },
+    "aou2": {
+      "hmax": 96.183,
+      "hmean": 82.803,
+      "hmin": 67.08,
+      "insolation": 6.1,
+      "tmax": 30.041,
+      "tmean": 26.148,
+      "tmin": 22.255
+    },
+    "aou3": {
+      "hmax": 96.297,
+      "hmean": 82.527,
+      "hmin": 66.561,
+      "insolation": 6.2,
+      "tmax": 30.242,
+      "tmean": 26.272,
+      "tmin": 22.302
+    },
+    "avr1": {
+      "hmax": 65.237,
+      "hmean": 40.857,
+      "hmin": 21.01,
+      "insolation": 8.0,
+      "tmax": 39.843,
+      "tmean": 33.185,
+      "tmin": 26.527
+    },
+    "avr2": {
+      "hmax": 68.563,
+      "hmean": 45.208,
+      "hmin": 25.71,
+      "insolation": 8.2,
+      "tmax": 39.513,
+      "tmean": 33.2,
+      "tmin": 26.887
+    },
+    "avr3": {
+      "hmax": 75.13,
+      "hmean": 52.091,
+      "hmin": 32.257,
+      "insolation": 7.8,
+      "tmax": 38.552,
+      "tmean": 32.541,
+      "tmin": 26.529
+    },
+    "dec1": {
+      "hmax": 56.55,
+      "hmean": 33.828,
+      "hmin": 15.67,
+      "insolation": 9.1,
+      "tmax": 35.156,
+      "tmean": 26.427,
+      "tmin": 17.697
+    },
+    "dec2": {
+      "hmax": 52.31,
+      "hmean": 31.692,
+      "hmin": 15.137,
+      "insolation": 9.1,
+      "tmax": 34.422,
+      "tmean": 25.923,
+      "tmin": 17.424
+    },
+    "dec3": {
+      "hmax": 49.215,
+      "hmean": 29.899,
+      "hmin": 14.373,
+      "insolation": 8.8,
+      "tmax": 33.516,
+      "tmean": 24.812,
+      "tmin": 16.108
+    },
+    "fev1": {
+      "hmax": 39.853,
+      "hmean": 24.004,
+      "hmin": 11.307,
+      "insolation": 8.8,
+      "tmax": 35.815,
+      "tmean": 27.457,
+      "tmin": 19.099
+    },
+    "fev2": {
+      "hmax": 39.81,
+      "hmean": 24.667,
+      "hmin": 12.397,
+      "insolation": 8.5,
+      "tmax": 36.673,
+      "tmean": 28.781,
+      "tmin": 20.889
+    },
+    "fev3": {
+      "hmax": 43.02,
+      "hmean": 26.777,
+      "hmin": 13.589,
+      "insolation": 8.4,
+      "tmax": 37.869,
+      "tmean": 30.001,
+      "tmin": 22.132
+    },
+    "jan1": {
+      "hmax": 46.307,
+      "hmean": 29.124,
+      "hmin": 15.11,
+      "insolation": 8.4,
+      "tmax": 32.559,
+      "tmean": 24.35,
+      "tmin": 16.142
+    },
+    "jan2": {
+      "hmax": 44.783,
+      "hmean": 28.037,
+      "hmin": 14.407,
+      "insolation": 8.6,
+      "tmax": 33.646,
+      "tmean": 25.359,
+      "tmin": 17.072
+    },
+    "jan3": {
+      "hmax": 43.064,
+      "hmean": 26.389,
+      "hmin": 12.939,
+      "insolation": 8.9,
+      "tmax": 34.946,
+      "tmean": 26.43,
+      "tmin": 17.915
+    },
+    "jul1": {
+      "hmax": 93.107,
+      "hmean": 76.825,
+      "hmin": 59.607,
+      "insolation": 7.2,
+      "tmax": 31.706,
+      "tmean": 27.282,
+      "tmin": 22.858
+    },
+    "jul2": {
+      "hmax": 93.907,
+      "hmean": 78.344,
+      "hmin": 61.493,
+      "insolation": 6.9,
+      "tmax": 31.364,
+      "tmean": 27.098,
+      "tmin": 22.831
+    },
+    "jul3": {
+      "hmax": 94.958,
+      "hmean": 80.275,
+      "hmin": 63.869,
+      "insolation": 6.1,
+      "tmax": 30.699,
+      "tmean": 26.66,
+      "tmin": 22.62
+    },
+    "jun1": {
+      "hmax": 87.757,
+      "hmean": 69.43,
+      "hmin": 51.413,
+      "insolation": 8.1,
+      "tmax": 33.926,
+      "tmean": 28.927,
+      "tmin": 23.928
+    },
+    "jun2": {
+      "hmax": 89.467,
+      "hmean": 71.194,
+      "hmin": 53.073,
+      "insolation": 8.2,
+      "tmax": 33.606,
+      "tmean": 28.63,
+      "tmin": 23.654
+    },
+    "jun3": {
+      "hmax": 91.197,
+      "hmean": 73.557,
+      "hmin": 55.677,
+      "insolation": 7.7,
+      "tmax": 32.814,
+      "tmean": 28.079,
+      "tmin": 23.343
+    },
+    "mai1": {
+      "hmax": 79.14,
+      "hmean": 57.082,
+      "hmin": 37.517,
+      "insolation": 8.3,
+      "tmax": 37.532,
+      "tmean": 31.767,
+      "tmin": 26.003
+    },
+    "mai2": {
+      "hmax": 82.34,
+      "hmean": 61.309,
+      "hmin": 42.103,
+      "insolation": 8.4,
+      "tmax": 36.362,
+      "tmean": 30.829,
+      "tmin": 25.297
+    },
+    "mai3": {
+      "hmax": 85.148,
+      "hmean": 65.694,
+      "hmin": 47.209,
+      "insolation": 8.4,
+      "tmax": 35.137,
+      "tmean": 29.892,
+      "tmin": 24.648
+    },
+    "mar1": {
+      "hmax": 45.873,
+      "hmean": 27.807,
+      "hmin": 13.297,
+      "insolation": 7.7,
+      "tmax": 38.804,
+      "tmean": 31.208,
+      "tmin": 23.611
+    },
+    "mar2": {
+      "hmax": 50.69,
+      "hmean": 30.587,
+      "hmin": 14.47,
+      "insolation": 7.5,
+      "tmax": 39.417,
+      "tmean": 32.2,
+      "tmin": 24.984
+    },
+    "mar3": {
+      "hmax": 54.088,
+      "hmean": 32.872,
+      "hmin": 15.815,
+      "insolation": 7.8,
+      "tmax": 39.912,
+      "tmean": 32.865,
+      "tmin": 25.818
+    },
+    "nov1": {
+      "hmax": 81.553,
+      "hmean": 50.473,
+      "hmin": 25.3,
+      "insolation": 9.1,
+      "tmax": 35.858,
+      "tmean": 28.236,
+      "tmin": 20.615
+    },
+    "nov2": {
+      "hmax": 70.467,
+      "hmean": 42.248,
+      "hmin": 19.68,
+      "insolation": 9.3,
+      "tmax": 35.976,
+      "tmean": 27.613,
+      "tmin": 19.249
+    },
+    "nov3": {
+      "hmax": 63.743,
+      "hmean": 37.649,
+      "hmin": 16.893,
+      "insolation": 9.4,
+      "tmax": 35.95,
+      "tmean": 27.105,
+      "tmin": 18.261
+    },
+    "oct1": {
+      "hmax": 94.0,
+      "hmean": 75.896,
+      "hmin": 57.513,
+      "insolation": 7.9,
+      "tmax": 32.85,
+      "tmean": 27.744,
+      "tmin": 22.637
+    },
+    "oct2": {
+      "hmax": 92.19,
+      "hmean": 69.624,
+      "hmin": 48.71,
+      "insolation": 8.6,
+      "tmax": 34.208,
+      "tmean": 28.548,
+      "tmin": 22.887
+    },
+    "oct3": {
+      "hmax": 88.309,
+      "hmean": 60.278,
+      "hmin": 36.394,
+      "insolation": 8.9,
+      "tmax": 35.36,
+      "tmean": 28.817,
+      "tmin": 22.274
+    },
+    "sep1": {
+      "hmax": 96.493,
+      "hmean": 81.922,
+      "hmin": 65.46,
+      "insolation": 6.3,
+      "tmax": 30.555,
+      "tmean": 26.32,
+      "tmin": 22.085
+    },
+    "sep2": {
+      "hmax": 95.88,
+      "hmean": 80.328,
+      "hmin": 63.327,
+      "insolation": 6.6,
+      "tmax": 31.267,
+      "tmean": 26.778,
+      "tmin": 22.288
+    },
+    "sep3": {
+      "hmax": 94.667,
+      "hmean": 77.856,
+      "hmin": 60.197,
+      "insolation": 7.3,
+      "tmax": 32.273,
+      "tmean": 27.334,
+      "tmin": 22.394
+    }
+  },
+  "natitingou": {
+    "aou1": {
+      "hmax": 95.886,
+      "hmean": 83.78,
+      "hmin": 68.845,
+      "insolation": 4.4,
+      "tmax": 29.31,
+      "tmean": 25.371,
+      "tmin": 21.432
+    },
+    "aou2": {
+      "hmax": 96.483,
+      "hmean": 84.712,
+      "hmin": 69.931,
+      "insolation": 4.4,
+      "tmax": 29.148,
+      "tmean": 25.191,
+      "tmin": 21.235
+    },
+    "aou3": {
+      "hmax": 96.553,
+      "hmean": 84.074,
+      "hmin": 68.862,
+      "insolation": 4.9,
+      "tmax": 29.587,
+      "tmean": 25.388,
+      "tmin": 21.188
+    },
+    "avr1": {
+      "hmax": 78.643,
+      "hmean": 56.705,
+      "hmin": 37.25,
+      "insolation": 7.8,
+      "tmax": 37.234,
+      "tmean": 30.756,
+      "tmin": 24.278
+    },
+    "avr2": {
+      "hmax": 81.837,
+      "hmean": 61.108,
+      "hmin": 42.123,
+      "insolation": 8.0,
+      "tmax": 36.544,
+      "tmean": 30.414,
+      "tmin": 24.283
+    },
+    "avr3": {
+      "hmax": 86.227,
+      "hmean": 66.896,
+      "hmin": 48.4,
+      "insolation": 7.5,
+      "tmax": 35.525,
+      "tmean": 29.753,
+      "tmin": 23.982
+    },
+    "dec1": {
+      "hmax": 64.14,
+      "hmean": 41.778,
+      "hmin": 23.23,
+      "insolation": 8.7,
+      "tmax": 35.388,
+      "tmean": 26.624,
+      "tmin": 17.86
+    },
+    "dec2": {
+      "hmax": 55.54,
+      "hmean": 37.159,
+      "hmin": 21.687,
+      "insolation": 8.8,
+      "tmax": 35.29,
+      "tmean": 26.709,
+      "tmin": 18.129
+    },
+    "dec3": {
+      "hmax": 50.552,
+      "hmean": 33.99,
+      "hmin": 20.009,
+      "insolation": 8.5,
+      "tmax": 34.85,
+      "tmean": 26.192,
+      "tmin": 17.533
+    },
+    "fev1": {
+      "hmax": 44.677,
+      "hmean": 30.321,
+      "hmin": 18.133,
+      "insolation": 8.7,
+      "tmax": 36.527,
+      "tmean": 28.172,
+      "tmin": 19.818
+    },
+    "fev2": {
+      "hmax": 49.167,
+      "hmean": 33.657,
+      "hmin": 20.418,
+      "insolation": 8.5,
+      "tmax": 36.781,
+      "tmean": 28.821,
+      "tmin": 20.862
+    },
+    "fev3": {
+      "hmax": 52.336,
+      "hmean": 35.086,
+      "hmin": 20.548,
+      "insolation": 8.2,
+      "tmax": 37.554,
+      "tmean": 29.713,
+      "tmin": 21.871
+    },
+    "jan1": {
+      "hmax": 45.863,
+      "hmean": 31.861,
+      "hmin": 19.79,
+      "insolation": 8.4,
+      "tmax": 34.105,
+      "tmean": 25.929,
+      "tmin": 17.752
+    },
+    "jan2": {
+      "hmax": 46.38,
+      "hmean": 32.255,
+      "hmin": 20.07,
+      "insolation": 8.5,
+      "tmax": 34.805,
+      "tmean": 26.501,
+      "tmin": 18.196
+    },
+    "jan3": {
+      "hmax": 45.842,
+      "hmean": 31.589,
+      "hmin": 19.37,
+      "insolation": 8.8,
+      "tmax": 35.676,
+      "tmean": 27.401,
+      "tmin": 19.126
+    },
+    "jul1": {
+      "hmax": 95.09,
+      "hmean": 81.115,
+      "hmin": 65.123,
+      "insolation": 6.0,
+      "tmax": 30.474,
+      "tmean": 26.079,
+      "tmin": 21.683
+    },
+    "jul2": {
+      "hmax": 95.46,
+      "hmean": 82.225,
+      "hmin": 66.647,
+      "insolation": 5.4,
+      "tmax": 30.043,
+      "tmean": 25.775,
+      "tmin": 21.506
+    },
+    "jul3": {
+      "hmax": 95.991,
+      "hmean": 83.9,
+      "hmin": 68.967,
+      "insolation": 4.6,
+      "tmax": 29.398,
+      "tmean": 25.397,
+      "tmin": 21.396
+    },
+    "jun1": {
+      "hmax": 92.907,
+      "hmean": 76.571,
+      "hmin": 59.337,
+      "insolation": 7.4,
+      "tmax": 32.373,
+      "tmean": 27.274,
+      "tmin": 22.175
+    },
+    "jun2": {
+      "hmax": 93.4,
+      "hmean": 77.17,
+      "hmin": 59.96,
+      "insolation": 7.2,
+      "tmax": 32.059,
+      "tmean": 27.097,
+      "tmin": 22.134
+    },
+    "jun3": {
+      "hmax": 94.48,
+      "hmean": 79.581,
+      "hmin": 63.083,
+      "insolation": 6.3,
+      "tmax": 31.155,
+      "tmean": 26.453,
+      "tmin": 21.751
+    },
+    "mai1": {
+      "hmax": 88.286,
+      "hmean": 69.625,
+      "hmin": 51.366,
+      "insolation": 7.8,
+      "tmax": 34.743,
+      "tmean": 29.162,
+      "tmin": 23.58
+    },
+    "mai2": {
+      "hmax": 90.293,
+      "hmean": 72.032,
+      "hmin": 53.852,
+      "insolation": 8.0,
+      "tmax": 34.05,
+      "tmean": 28.64,
+      "tmin": 23.23
+    },
+    "mai3": {
+      "hmax": 91.079,
+      "hmean": 73.748,
+      "hmin": 56.063,
+      "insolation": 7.6,
+      "tmax": 33.319,
+      "tmean": 28.046,
+      "tmin": 22.773
+    },
+    "mar1": {
+      "hmax": 58.83,
+      "hmean": 39.805,
+      "hmin": 23.683,
+      "insolation": 7.9,
+      "tmax": 37.947,
+      "tmean": 30.317,
+      "tmin": 22.688
+    },
+    "mar2": {
+      "hmax": 64.303,
+      "hmean": 44.452,
+      "hmin": 27.397,
+      "insolation": 7.7,
+      "tmax": 37.973,
+      "tmean": 30.823,
+      "tmin": 23.674
+    },
+    "mar3": {
+      "hmax": 69.279,
+      "hmean": 48.37,
+      "hmin": 30.282,
+      "insolation": 7.7,
+      "tmax": 38.064,
+      "tmean": 31.12,
+      "tmin": 24.175
+    },
+    "nov1": {
+      "hmax": 87.047,
+      "hmean": 59.866,
+      "hmin": 36.593,
+      "insolation": 8.6,
+      "tmax": 34.61,
+      "tmean": 26.971,
+      "tmin": 19.333
+    },
+    "nov2": {
+      "hmax": 78.807,
+      "hmean": 51.889,
+      "hmin": 29.433,
+      "insolation": 9.1,
+      "tmax": 35.313,
+      "tmean": 26.914,
+      "tmin": 18.515
+    },
+    "nov3": {
+      "hmax": 70.28,
+      "hmean": 45.411,
+      "hmin": 24.867,
+      "insolation": 9.1,
+      "tmax": 35.796,
+      "tmean": 26.966,
+      "tmin": 18.137
+    },
+    "oct1": {
+      "hmax": 95.783,
+      "hmean": 79.187,
+      "hmin": 61.567,
+      "insolation": 6.4,
+      "tmax": 31.85,
+      "tmean": 26.475,
+      "tmin": 21.099
+    },
+    "oct2": {
+      "hmax": 95.317,
+      "hmean": 76.014,
+      "hmin": 56.807,
+      "insolation": 7.3,
+      "tmax": 32.817,
+      "tmean": 26.986,
+      "tmin": 21.155
+    },
+    "oct3": {
+      "hmax": 92.564,
+      "hmean": 69.001,
+      "hmin": 47.458,
+      "insolation": 8.1,
+      "tmax": 33.814,
+      "tmean": 27.19,
+      "tmin": 20.565
+    },
+    "sep1": {
+      "hmax": 96.52,
+      "hmean": 83.159,
+      "hmin": 67.42,
+      "insolation": 5.1,
+      "tmax": 30.009,
+      "tmean": 25.507,
+      "tmin": 21.005
+    },
+    "sep2": {
+      "hmax": 96.3,
+      "hmean": 82.35,
+      "hmin": 66.277,
+      "insolation": 5.5,
+      "tmax": 30.626,
+      "tmean": 25.862,
+      "tmin": 21.098
+    },
+    "sep3": {
+      "hmax": 95.947,
+      "hmean": 79.909,
+      "hmin": 62.61,
+      "insolation": 6.2,
+      "tmax": 31.615,
+      "tmean": 26.316,
+      "tmin": 21.017
+    }
+  },
+  "parakou": {
+    "aou1": {
+      "hmax": 95.35,
+      "hmean": 82.618,
+      "hmin": 67.35,
+      "insolation": 3.8,
+      "tmax": 28.763,
+      "tmean": 25.154,
+      "tmin": 21.544
+    },
+    "aou2": {
+      "hmax": 95.47,
+      "hmean": 83.16,
+      "hmin": 68.137,
+      "insolation": 3.9,
+      "tmax": 28.592,
+      "tmean": 25.019,
+      "tmin": 21.446
+    },
+    "aou3": {
+      "hmax": 95.62,
+      "hmean": 82.348,
+      "hmin": 66.736,
+      "insolation": 4.2,
+      "tmax": 29.031,
+      "tmean": 25.264,
+      "tmin": 21.497
+    },
+    "avr1": {
+      "hmax": 85.708,
+      "hmean": 58.784,
+      "hmin": 35.773,
+      "insolation": 7.8,
+      "tmax": 36.489,
+      "tmean": 30.186,
+      "tmin": 23.883
+    },
+    "avr2": {
+      "hmax": 86.917,
+      "hmean": 62.477,
+      "hmin": 40.86,
+      "insolation": 7.9,
+      "tmax": 35.601,
+      "tmean": 29.684,
+      "tmin": 23.767
+    },
+    "avr3": {
+      "hmax": 89.02,
+      "hmean": 66.577,
+      "hmin": 45.99,
+      "insolation": 7.3,
+      "tmax": 34.67,
+      "tmean": 29.166,
+      "tmin": 23.663
+    },
+    "dec1": {
+      "hmax": 71.06,
+      "hmean": 44.796,
+      "hmin": 23.353,
+      "insolation": 8.2,
+      "tmax": 34.936,
+      "tmean": 27.735,
+      "tmin": 20.535
+    },
+    "dec2": {
+      "hmax": 59.84,
+      "hmean": 37.636,
+      "hmin": 19.527,
+      "insolation": 8.3,
+      "tmax": 34.877,
+      "tmean": 27.488,
+      "tmin": 20.099
+    },
+    "dec3": {
+      "hmax": 49.282,
+      "hmean": 31.324,
+      "hmin": 16.606,
+      "insolation": 8.0,
+      "tmax": 34.729,
+      "tmean": 27.054,
+      "tmin": 19.379
+    },
+    "fev1": {
+      "hmax": 53.817,
+      "hmean": 32.547,
+      "hmin": 15.48,
+      "insolation": 8.2,
+      "tmax": 36.409,
+      "tmean": 29.018,
+      "tmin": 21.627
+    },
+    "fev2": {
+      "hmax": 58.687,
+      "hmean": 35.748,
+      "hmin": 17.29,
+      "insolation": 8.4,
+      "tmax": 36.769,
+      "tmean": 29.512,
+      "tmin": 22.256
+    },
+    "fev3": {
+      "hmax": 67.657,
+      "hmean": 41.101,
+      "hmin": 19.754,
+      "insolation": 8.1,
+      "tmax": 37.483,
+      "tmean": 30.361,
+      "tmin": 23.238
+    },
+    "jan1": {
+      "hmax": 45.613,
+      "hmean": 29.471,
+      "hmin": 16.137,
+      "insolation": 7.8,
+      "tmax": 34.25,
+      "tmean": 26.661,
+      "tmin": 19.071
+    },
+    "jan2": {
+      "hmax": 50.427,
+      "hmean": 31.992,
+      "hmin": 16.897,
+      "insolation": 7.9,
+      "tmax": 34.895,
+      "tmean": 27.326,
+      "tmin": 19.758
+    },
+    "jan3": {
+      "hmax": 53.209,
+      "hmean": 32.684,
+      "hmin": 16.112,
+      "insolation": 8.3,
+      "tmax": 35.742,
+      "tmean": 28.263,
+      "tmin": 20.784
+    },
+    "jul1": {
+      "hmax": 94.29,
+      "hmean": 78.85,
+      "hmin": 62.043,
+      "insolation": 5.3,
+      "tmax": 30.15,
+      "tmean": 26.037,
+      "tmin": 21.923
+    },
+    "jul2": {
+      "hmax": 94.743,
+      "hmean": 80.016,
+      "hmin": 63.6,
+      "insolation": 4.8,
+      "tmax": 29.702,
+      "tmean": 25.737,
+      "tmin": 21.772
+    },
+    "jul3": {
+      "hmax": 94.921,
+      "hmean": 81.439,
+      "hmin": 65.757,
+      "insolation": 4.0,
+      "tmax": 29.149,
+      "tmean": 25.432,
+      "tmin": 21.715
+    },
+    "jun1": {
+      "hmax": 93.45,
+      "hmean": 75.356,
+      "hmin": 57.023,
+      "insolation": 6.9,
+      "tmax": 31.75,
+      "tmean": 26.952,
+      "tmin": 22.153
+    },
+    "jun2": {
+      "hmax": 93.647,
+      "hmean": 76.498,
+      "hmin": 58.717,
+      "insolation": 6.4,
+      "tmax": 31.303,
+      "tmean": 26.739,
+      "tmin": 22.175
+    },
+    "jun3": {
+      "hmax": 94.13,
+      "hmean": 77.601,
+      "hmin": 60.153,
+      "insolation": 5.9,
+      "tmax": 30.66,
+      "tmean": 26.343,
+      "tmin": 22.026
+    },
+    "mai1": {
+      "hmax": 90.557,
+      "hmean": 69.791,
+      "hmin": 50.087,
+      "insolation": 7.5,
+      "tmax": 33.868,
+      "tmean": 28.547,
+      "tmin": 23.226
+    },
+    "mai2": {
+      "hmax": 91.293,
+      "hmean": 71.116,
+      "hmin": 51.707,
+      "insolation": 7.8,
+      "tmax": 33.415,
+      "tmean": 28.226,
+      "tmin": 23.038
+    },
+    "mai3": {
+      "hmax": 92.164,
+      "hmean": 73.028,
+      "hmin": 54.173,
+      "insolation": 7.4,
+      "tmax": 32.684,
+      "tmean": 27.657,
+      "tmin": 22.63
+    },
+    "mar1": {
+      "hmax": 71.503,
+      "hmean": 44.774,
+      "hmin": 23.017,
+      "insolation": 7.5,
+      "tmax": 37.518,
+      "tmean": 30.623,
+      "tmin": 23.728
+    },
+    "mar2": {
+      "hmax": 77.903,
+      "hmean": 50.384,
+      "hmin": 27.64,
+      "insolation": 7.3,
+      "tmax": 37.281,
+      "tmean": 30.603,
+      "tmin": 23.926
+    },
+    "mar3": {
+      "hmax": 79.924,
+      "hmean": 51.979,
+      "hmin": 28.818,
+      "insolation": 7.6,
+      "tmax": 37.384,
+      "tmean": 30.799,
+      "tmin": 24.214
+    },
+    "nov1": {
+      "hmax": 88.313,
+      "hmean": 60.729,
+      "hmin": 37.113,
+      "insolation": 8.0,
+      "tmax": 33.956,
+      "tmean": 27.834,
+      "tmin": 21.712
+    },
+    "nov2": {
+      "hmax": 83.0,
+      "hmean": 53.404,
+      "hmin": 29.007,
+      "insolation": 8.5,
+      "tmax": 34.713,
+      "tmean": 28.036,
+      "tmin": 21.359
+    },
+    "nov3": {
+      "hmax": 79.343,
+      "hmean": 49.388,
+      "hmin": 25.067,
+      "insolation": 8.4,
+      "tmax": 35.133,
+      "tmean": 28.083,
+      "tmin": 21.033
+    },
+    "oct1": {
+      "hmax": 95.203,
+      "hmean": 78.967,
+      "hmin": 61.609,
+      "insolation": 6.1,
+      "tmax": 30.808,
+      "tmean": 26.138,
+      "tmin": 21.467
+    },
+    "oct2": {
+      "hmax": 94.437,
+      "hmean": 76.088,
+      "hmin": 57.523,
+      "insolation": 6.9,
+      "tmax": 31.792,
+      "tmean": 26.789,
+      "tmin": 21.785
+    },
+    "oct3": {
+      "hmax": 93.167,
+      "hmean": 70.401,
+      "hmin": 49.288,
+      "insolation": 7.2,
+      "tmax": 32.663,
+      "tmean": 27.282,
+      "tmin": 21.901
+    },
+    "sep1": {
+      "hmax": 95.583,
+      "hmean": 81.385,
+      "hmin": 65.22,
+      "insolation": 4.6,
+      "tmax": 29.416,
+      "tmean": 25.412,
+      "tmin": 21.407
+    },
+    "sep2": {
+      "hmax": 95.633,
+      "hmean": 80.752,
+      "hmin": 64.173,
+      "insolation": 4.9,
+      "tmax": 29.894,
+      "tmean": 25.651,
+      "tmin": 21.408
+    },
+    "sep3": {
+      "hmax": 95.28,
+      "hmean": 79.338,
+      "hmin": 62.15,
+      "insolation": 5.6,
+      "tmax": 30.578,
+      "tmean": 25.947,
+      "tmin": 21.316
+    }
+  },
+  "save": {
+    "aou1": {
+      "hmax": 94.69,
+      "hmean": 78.67,
+      "hmin": 67.99,
+      "insolation": 2.9,
+      "tmax": 29.344,
+      "tmean": 25.532,
+      "tmin": 21.72
+    },
+    "aou2": {
+      "hmax": 95.117,
+      "hmean": 79.303,
+      "hmin": 68.76,
+      "insolation": 2.8,
+      "tmax": 29.26,
+      "tmean": 25.495,
+      "tmin": 21.73
+    },
+    "aou3": {
+      "hmax": 95.103,
+      "hmean": 78.336,
+      "hmin": 67.158,
+      "insolation": 3.4,
+      "tmax": 29.838,
+      "tmean": 25.855,
+      "tmin": 21.873
+    },
+    "avr1": {
+      "hmax": 91.297,
+      "hmean": 64.303,
+      "hmin": 46.307,
+      "insolation": 7.3,
+      "tmax": 35.681,
+      "tmean": 29.828,
+      "tmin": 23.975
+    },
+    "avr2": {
+      "hmax": 92.15,
+      "hmean": 66.204,
+      "hmin": 48.907,
+      "insolation": 7.4,
+      "tmax": 35.148,
+      "tmean": 29.558,
+      "tmin": 23.968
+    },
+    "avr3": {
+      "hmax": 92.967,
+      "hmean": 68.637,
+      "hmin": 52.417,
+      "insolation": 6.6,
+      "tmax": 34.477,
+      "tmean": 29.098,
+      "tmin": 23.718
+    },
+    "dec1": {
+      "hmax": 87.063,
+      "hmean": 55.853,
+      "hmin": 35.047,
+      "insolation": 7.3,
+      "tmax": 35.493,
+      "tmean": 28.971,
+      "tmin": 22.449
+    },
+    "dec2": {
+      "hmax": 82.803,
+      "hmean": 52.233,
+      "hmin": 31.853,
+      "insolation": 7.5,
+      "tmax": 35.638,
+      "tmean": 28.818,
+      "tmin": 21.998
+    },
+    "dec3": {
+      "hmax": 75.833,
+      "hmean": 46.879,
+      "hmin": 27.576,
+      "insolation": 7.0,
+      "tmax": 35.762,
+      "tmean": 28.576,
+      "tmin": 21.391
+    },
+    "fev1": {
+      "hmax": 79.15,
+      "hmean": 47.948,
+      "hmin": 27.147,
+      "insolation": 7.3,
+      "tmax": 37.238,
+      "tmean": 30.225,
+      "tmin": 23.213
+    },
+    "fev2": {
+      "hmax": 81.983,
+      "hmean": 49.755,
+      "hmin": 28.27,
+      "insolation": 7.6,
+      "tmax": 37.518,
+      "tmean": 30.618,
+      "tmin": 23.718
+    },
+    "fev3": {
+      "hmax": 85.944,
+      "hmean": 52.513,
+      "hmin": 30.226,
+      "insolation": 7.3,
+      "tmax": 37.763,
+      "tmean": 31.061,
+      "tmin": 24.359
+    },
+    "jan1": {
+      "hmax": 69.77,
+      "hmean": 44.011,
+      "hmin": 26.839,
+      "insolation": 6.6,
+      "tmax": 35.452,
+      "tmean": 28.3,
+      "tmin": 21.148
+    },
+    "jan2": {
+      "hmax": 74.02,
+      "hmean": 46.148,
+      "hmin": 27.567,
+      "insolation": 6.6,
+      "tmax": 35.786,
+      "tmean": 28.803,
+      "tmin": 21.82
+    },
+    "jan3": {
+      "hmax": 78.787,
+      "hmean": 48.009,
+      "hmin": 27.489,
+      "insolation": 7.3,
+      "tmax": 36.513,
+      "tmean": 29.506,
+      "tmin": 22.498
+    },
+    "jul1": {
+      "hmax": 94.56,
+      "hmean": 76.04,
+      "hmin": 63.693,
+      "insolation": 4.7,
+      "tmax": 30.783,
+      "tmean": 26.602,
+      "tmin": 22.421
+    },
+    "jul2": {
+      "hmax": 94.653,
+      "hmean": 77.247,
+      "hmin": 65.643,
+      "insolation": 3.6,
+      "tmax": 30.289,
+      "tmean": 26.297,
+      "tmin": 22.304
+    },
+    "jul3": {
+      "hmax": 94.806,
+      "hmean": 78.266,
+      "hmin": 67.24,
+      "insolation": 3.1,
+      "tmax": 29.671,
+      "tmean": 25.864,
+      "tmin": 22.058
+    },
+    "jun1": {
+      "hmax": 94.337,
+      "hmean": 73.089,
+      "hmin": 58.923,
+      "insolation": 6.5,
+      "tmax": 32.374,
+      "tmean": 27.569,
+      "tmin": 22.765
+    },
+    "jun2": {
+      "hmax": 94.493,
+      "hmean": 73.949,
+      "hmin": 60.253,
+      "insolation": 6.1,
+      "tmax": 31.889,
+      "tmean": 27.319,
+      "tmin": 22.749
+    },
+    "jun3": {
+      "hmax": 94.53,
+      "hmean": 75.32,
+      "hmin": 62.513,
+      "insolation": 5.4,
+      "tmax": 31.308,
+      "tmean": 26.922,
+      "tmin": 22.536
+    },
+    "mai1": {
+      "hmax": 93.267,
+      "hmean": 69.643,
+      "hmin": 53.893,
+      "insolation": 7.3,
+      "tmax": 34.227,
+      "tmean": 28.887,
+      "tmin": 23.547
+    },
+    "mai2": {
+      "hmax": 93.93,
+      "hmean": 71.068,
+      "hmin": 55.826,
+      "insolation": 7.2,
+      "tmax": 33.645,
+      "tmean": 28.508,
+      "tmin": 23.37
+    },
+    "mai3": {
+      "hmax": 94.139,
+      "hmean": 72.178,
+      "hmin": 57.536,
+      "insolation": 7.1,
+      "tmax": 33.009,
+      "tmean": 28.086,
+      "tmin": 23.163
+    },
+    "mar1": {
+      "hmax": 86.347,
+      "hmean": 54.837,
+      "hmin": 33.83,
+      "insolation": 7.0,
+      "tmax": 37.373,
+      "tmean": 30.835,
+      "tmin": 24.298
+    },
+    "mar2": {
+      "hmax": 89.22,
+      "hmean": 59.03,
+      "hmin": 38.903,
+      "insolation": 6.9,
+      "tmax": 36.789,
+      "tmean": 30.524,
+      "tmin": 24.26
+    },
+    "mar3": {
+      "hmax": 89.133,
+      "hmean": 59.917,
+      "hmin": 40.439,
+      "insolation": 7.1,
+      "tmax": 36.704,
+      "tmean": 30.532,
+      "tmin": 24.361
+    },
+    "nov1": {
+      "hmax": 93.53,
+      "hmean": 66.804,
+      "hmin": 48.987,
+      "insolation": 7.3,
+      "tmax": 34.05,
+      "tmean": 28.388,
+      "tmin": 22.725
+    },
+    "nov2": {
+      "hmax": 91.96,
+      "hmean": 62.004,
+      "hmin": 42.033,
+      "insolation": 7.6,
+      "tmax": 34.95,
+      "tmean": 28.94,
+      "tmin": 22.93
+    },
+    "nov3": {
+      "hmax": 90.62,
+      "hmean": 59.466,
+      "hmin": 38.697,
+      "insolation": 7.6,
+      "tmax": 35.393,
+      "tmean": 29.078,
+      "tmin": 22.763
+    },
+    "oct1": {
+      "hmax": 95.22,
+      "hmean": 75.606,
+      "hmin": 62.53,
+      "insolation": 5.5,
+      "tmax": 31.584,
+      "tmean": 26.895,
+      "tmin": 22.207
+    },
+    "oct2": {
+      "hmax": 94.913,
+      "hmean": 74.387,
+      "hmin": 60.703,
+      "insolation": 6.0,
+      "tmax": 32.134,
+      "tmean": 27.22,
+      "tmin": 22.306
+    },
+    "oct3": {
+      "hmax": 94.303,
+      "hmean": 71.325,
+      "hmin": 56.006,
+      "insolation": 6.7,
+      "tmax": 32.95,
+      "tmean": 27.752,
+      "tmin": 22.554
+    },
+    "sep1": {
+      "hmax": 95.2,
+      "hmean": 77.7,
+      "hmin": 66.033,
+      "insolation": 3.7,
+      "tmax": 30.123,
+      "tmean": 26.102,
+      "tmin": 22.082
+    },
+    "sep2": {
+      "hmax": 95.213,
+      "hmean": 77.109,
+      "hmin": 65.04,
+      "insolation": 4.2,
+      "tmax": 30.667,
+      "tmean": 26.398,
+      "tmin": 22.13
+    },
+    "sep3": {
+      "hmax": 95.317,
+      "hmean": 76.133,
+      "hmin": 63.343,
+      "insolation": 4.6,
+      "tmax": 31.081,
+      "tmean": 26.566,
+      "tmin": 22.05
+    }
+  }
+}

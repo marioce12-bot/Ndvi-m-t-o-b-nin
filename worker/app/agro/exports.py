@@ -98,6 +98,19 @@ def build_climate_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.append([station.name] + [values.get(key) for key in ("sunshine_total", "insolation_fraction", "global_radiation", "wind_mean", "wind_max", "pan_evaporation", "etp", "water_balance")])
     _style_table(sheet, 4, [22, 22, 22, 24, 16, 16, 16, 16, 25])
     sheet.auto_filter.ref = f"A4:I{sheet.max_row}"
+    normals_sheet = workbook.create_sheet("Tableau IV")
+    normals_sheet.merge_cells("A1:J1")
+    normals_sheet["A1"] = "TABLEAU IV - DONNEES CLIMATIQUES (Moyennes sur décade)"
+    normals_sheet["A1"].font = Font(bold=True, size=14, color="FFFFFF")
+    normals_sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
+    normals_sheet.append(["STATIONS", "Tmin", "Tmax", "Tmoy", "+10cm", "+50cm", "Hum. min", "Hum. max", "Hum. moy", "Tension Vapeur", "Déficit"])
+    for station in stations:
+        values = climate.get(station.id, {})
+        normal = values.get("normal") or {}
+        current = [values.get(key) for key in ("tmin", "tmax", "tmean", "soil10", "soil50", "humidity_min", "humidity_max", "humidity_mean", "vapor_pressure", "deficit")]
+        normals_sheet.append([station.name] + [value if value is not None else None for value in current])
+        normals_sheet.append(["Ecart/Normale"] + [current[index] - normal[key] if isinstance(current[index], (int, float)) and isinstance(normal.get(key), (int, float)) else None for index, key in enumerate(("tmin", "tmax", "tmean", "soil10", "soil50", "hmin", "hmax", "hmean", "vapor_pressure", "deficit"))])
+    _style_table(normals_sheet, 2, [22, 14, 14, 14, 14, 14, 14, 14, 14, 18, 14])
     return _download(workbook, f"DONNEES_CLIMATIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 

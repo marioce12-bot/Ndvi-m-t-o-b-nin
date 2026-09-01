@@ -24,6 +24,7 @@ from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export, build_observations_export
 from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
 from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
+from .agro.normals import get_climate_normal
 from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
 from .agro.registry import H10_BY_STATION, canonical_stations
 
@@ -239,7 +240,8 @@ def _build_climate_for_principal_stations(year: int, month: int, decade: int) ->
             "sunshine_total": sum(day.sunshine for day in daily_agro if day.sunshine is not None) if sunshine_present else None,
             "wind_mean": base_values.get("wind_mean") if base_values.get("wind_mean") is not None else _avg([day.wind_mean for day in daily_agro]),
             "wind_max": base_values.get("wind_max") if base_values.get("wind_max") is not None else _avg([day.wind_max for day in daily_agro]),
-            "pan_evaporation": base_values.get("pan_evaporation") if base_values.get("pan_evaporation") is not None else _avg([day.pan_evaporation for day in daily_agro]),
+            "pan_evaporation": base_values.get("pan_evaporation") if base_values.get("pan_evaporation") is not None else sum(day.pan_evaporation for day in daily_agro if day.pan_evaporation is not None),
+            "normal": get_climate_normal(station.id, year, month, decade),
         }
 
         rain_docs = db.list_agro_rain(year, month, decade, station.id)
