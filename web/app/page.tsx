@@ -7,32 +7,183 @@ type Product = "anomaly" | "ndvi";
 type Filter = "all" | Product;
 
 const RAIN_DEPARTMENT_GROUPS = [
-  { id: "borgou-alibori", label: "Borgou et Alibori", departments: ["Borgou", "Alibori"] },
-  { id: "atacora-donga", label: "Atacora et Donga", departments: ["Atacora", "Donga"] },
-  { id: "mono-couffo", label: "Mono et Couffo", departments: ["Mono", "Couffo"] },
-  { id: "oueme-plateau", label: "Ouémé et Plateau", departments: ["Oueme", "Ouémé", "Plateau"] },
-  { id: "atlantique-littoral", label: "Atlantique et Littoral", departments: ["Atlantique", "Littoral"] },
-  { id: "zou-collines", label: "Zou et Collines", departments: ["Zou", "Collines"] },
+  {
+    id: "borgou-alibori",
+    label: "Borgou et Alibori",
+    departments: ["Borgou", "Alibori"],
+  },
+  {
+    id: "atacora-donga",
+    label: "Atacora et Donga",
+    departments: ["Atacora", "Donga"],
+  },
+  {
+    id: "mono-couffo",
+    label: "Mono et Couffo",
+    departments: ["Mono", "Couffo"],
+  },
+  {
+    id: "oueme-plateau",
+    label: "Ouémé et Plateau",
+    departments: ["Oueme", "Ouémé", "Plateau"],
+  },
+  {
+    id: "atlantique-littoral",
+    label: "Atlantique et Littoral",
+    departments: ["Atlantique", "Littoral"],
+  },
+  {
+    id: "zou-collines",
+    label: "Zou et Collines",
+    departments: ["Zou", "Collines"],
+  },
 ] as const;
 
 const AGRO_DEPARTMENTS: Record<string, string[]> = {
-  Alibori: ["Alfakoara", "Banikoara", "Bodjecali", "Founougo", "Guéné", "Kandi", "Karimama", "Malanville", "Ségbana"],
-  Borgou: ["Alafiarou", "Bembèrèkè", "Bétérou", "Ina", "Kalalé", "Nikki", "Okpara", "Parakou", "Tchaourou", "Alafiarou Nouveau", "Tourou", "Sanson", "Tchaourou-Centre"],
-  Atacora: ["Birni", "Boukoumbé", "Dassari", "Kérou", "Kouandé", "Matéri", "Natitingou", "Porga", "Tanguiéta", "Péhunco"],
+  Alibori: [
+    "Alfakoara",
+    "Banikoara",
+    "Bodjecali",
+    "Founougo",
+    "Guéné",
+    "Kandi",
+    "Karimama",
+    "Malanville",
+    "Ségbana",
+  ],
+  Borgou: [
+    "Alafiarou",
+    "Bembèrèkè",
+    "Bétérou",
+    "Ina",
+    "Kalalé",
+    "Nikki",
+    "Okpara",
+    "Parakou",
+    "Tchaourou",
+    "Alafiarou Nouveau",
+    "Tourou",
+    "Sanson",
+    "Tchaourou-Centre",
+  ],
+  Atacora: [
+    "Birni",
+    "Boukoumbé",
+    "Dassari",
+    "Kérou",
+    "Kouandé",
+    "Matéri",
+    "Natitingou",
+    "Porga",
+    "Tanguiéta",
+    "Péhunco",
+  ],
   Donga: ["Bassila", "Djougou", "Copargo", "Partago", "Pénessoulou", "Sémèrè"],
-  Collines: ["Agouna", "Aklampa", "Bantè", "Dassa-Zoumè", "Gouka", "Kpataba", "Kokoro", "Ouessè", "Pira", "Savalou", "Savè", "Tchetti", "Toui", "Glazoué", "Atchakpa", "Igbo-Iroko", "Sokponta", "Agouagon", "Monkpa", "Ouessè Nouveau", "Gobaix", "Djidja-centre"],
-  Zou: ["Abomey", "Agbangnizoun", "Bohicon", "Ouinhi", "Zagnanado", "Zakpota", "Sagon", "Damè"],
+  Collines: [
+    "Agouna",
+    "Aklampa",
+    "Bantè",
+    "Dassa-Zoumè",
+    "Gouka",
+    "Kpataba",
+    "Kokoro",
+    "Ouessè",
+    "Pira",
+    "Savalou",
+    "Savè",
+    "Tchetti",
+    "Toui",
+    "Glazoué",
+    "Atchakpa",
+    "Igbo-Iroko",
+    "Sokponta",
+    "Agouagon",
+    "Monkpa",
+    "Ouessè Nouveau",
+    "Gobaix",
+    "Djidja-centre",
+  ],
+  Zou: [
+    "Abomey",
+    "Agbangnizoun",
+    "Bohicon",
+    "Ouinhi",
+    "Zagnanado",
+    "Zakpota",
+    "Sagon",
+    "Damè",
+  ],
   Couffo: ["Aplahoué", "Dogbo-Tota", "Klouékanmey", "Lonkly", "Atomey", "Voly"],
-  Mono: ["Athiémé", "Bopa", "Comè", "Grand-Popo", "Houin-Agamè", "Kpinnou", "Lokossa", "Adohoun", "Dédékpoè", "Labavè", "Sèhomi"],
-  Atlantique: ["Allada", "Niaouli", "Ouidah-Nord", "Ouidah-Ville", "Sékou", "Toffo", "Soava Ounmè"],
-  Littoral: ["Cotonou", "Agonkanmey", "Cotonou-Aéro", "Cotonou-Commiss.", "Cotonou-Ville", "Cotonou-Port", "Cotonou-Akpakpa"],
-  Oueme: ["Adjohoun", "Avrankou", "Bonou", "Dangbo", "Ouando", "Porto-Novo", "Sèmè-Cocotier", "Tchaada"],
+  Mono: [
+    "Athiémé",
+    "Bopa",
+    "Comè",
+    "Grand-Popo",
+    "Houin-Agamè",
+    "Kpinnou",
+    "Lokossa",
+    "Adohoun",
+    "Dédékpoè",
+    "Labavè",
+    "Sèhomi",
+  ],
+  Atlantique: [
+    "Allada",
+    "Niaouli",
+    "Ouidah-Nord",
+    "Ouidah-Ville",
+    "Sékou",
+    "Toffo",
+    "Soava Ounmè",
+  ],
+  Littoral: [
+    "Cotonou",
+    "Agonkanmey",
+    "Cotonou-Aéro",
+    "Cotonou-Commiss.",
+    "Cotonou-Ville",
+    "Cotonou-Port",
+    "Cotonou-Akpakpa",
+  ],
+  Oueme: [
+    "Adjohoun",
+    "Avrankou",
+    "Bonou",
+    "Dangbo",
+    "Ouando",
+    "Porto-Novo",
+    "Sèmè-Cocotier",
+    "Tchaada",
+  ],
   Plateau: ["Kétou", "Pobè", "Sakété", "Effehoute", "Kétou-Centre"],
 };
-const PRINCIPAL_STATIONS = new Set(["Kandi", "Parakou", "Natitingou", "Savè", "Bohicon", "Cotonou"]);
-const H10_BY_STATION: Record<string, number> = { cotonou: 124, bohicon: 125, "savè": 125, parakou: 126, natitingou: 126, kandi: 127 };
-const stationId = (name: string) => name.toLocaleLowerCase("fr-FR").replace(/ /g, "-").replace(/\./g, "");
-const STATIC_AGRO_STATIONS = Object.entries(AGRO_DEPARTMENTS).flatMap(([department, names]) => names.map((name) => ({ id: stationId(name), name, department, principal: PRINCIPAL_STATIONS.has(name) })));
+const PRINCIPAL_STATIONS = new Set([
+  "Kandi",
+  "Parakou",
+  "Natitingou",
+  "Savè",
+  "Bohicon",
+  "Cotonou",
+]);
+const H10_BY_STATION: Record<string, number> = {
+  cotonou: 124,
+  bohicon: 125,
+  savè: 125,
+  parakou: 126,
+  natitingou: 126,
+  kandi: 127,
+};
+const stationId = (name: string) =>
+  name.toLocaleLowerCase("fr-FR").replace(/ /g, "-").replace(/\./g, "");
+const STATIC_AGRO_STATIONS = Object.entries(AGRO_DEPARTMENTS).flatMap(
+  ([department, names]) =>
+    names.map((name) => ({
+      id: stationId(name),
+      name,
+      department,
+      principal: PRINCIPAL_STATIONS.has(name),
+    })),
+);
 
 const pentades = [
   { id: "2026-P45", label: "11–15 août 2026", detail: "P45 · 2026" },
@@ -42,35 +193,112 @@ const pentades = [
   { id: "2026-P41", label: "21–25 juillet 2026", detail: "P41 · 2026" },
 ];
 
-type GalleryMap = { id: string | number; product: Product; label: string; date: string; tone: string; value?: string; imageUrl?: string; thumbnailUrl?: string };
+type GalleryMap = {
+  id: string | number;
+  product: Product;
+  label: string;
+  date: string;
+  tone: string;
+  value?: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+};
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
-    calendar: <><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
-    download: <><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 20h16"/></>,
-    copy: <><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></>,
-    arrow: <path d="M5 12h14m-6-6 6 6-6 6"/>,
-    close: <><path d="m6 6 12 12M18 6 6 18"/></>,
-    refresh: <><path d="M20 11a8 8 0 0 0-14.9-3L3 11m0 0V5m0 6h6M4 13a8 8 0 0 0 14.9 3L21 13m0 0v6m0-6h-6"/></>,
-    layers: <><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></>,
-    map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></>,
+    calendar: (
+      <>
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M16 2v4M8 2v4M3 10h18" />
+      </>
+    ),
+    download: (
+      <>
+        <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 20h16" />
+      </>
+    ),
+    copy: (
+      <>
+        <rect x="8" y="8" width="12" height="12" rx="2" />
+        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+      </>
+    ),
+    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
+    close: (
+      <>
+        <path d="m6 6 12 12M18 6 6 18" />
+      </>
+    ),
+    refresh: (
+      <>
+        <path d="M20 11a8 8 0 0 0-14.9-3L3 11m0 0V5m0 6h6M4 13a8 8 0 0 0 14.9 3L21 13m0 0v6m0-6h-6" />
+      </>
+    ),
+    layers: (
+      <>
+        <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+        <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
+      </>
+    ),
+    map: (
+      <>
+        <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+        <path d="M9 3v15m6-12v15" />
+      </>
+    ),
   };
-  return <svg aria-hidden="true" className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      className="icon"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {paths[name]}
+    </svg>
+  );
 }
 
-function MapArtwork({ tone, large = false }: { tone: string; large?: boolean }) {
-  return <div className={`map-art map-${tone} ${large ? "map-art-large" : ""}`}>
-    <div className="map-grid" />
-    <svg className="benin-shape" viewBox="0 0 260 390" aria-label="Aperçu de la carte du Bénin" role="img">
-      <path d="M91 15 133 6l25 23 19 4 7 28 18 24-14 24 9 26-13 28 12 31-18 24 6 30-20 24 4 30-28 20-14 30-28 11-18-20-23 2-15-30 7-31-10-29 14-26-4-33 16-25-7-32 19-25-7-30 17-25Z" />
-      <path className="map-line" d="M94 75 157 77m-74 50 88 4m-97 48 100 3m-111 48 106 5m-102 43 91 1m-69 42 61-1" />
-      <path className="map-line map-line-soft" d="m132 8-6 365M91 15l15 350M157 29l-28 330" />
-    </svg>
-    <span className="map-label map-label-north">ALIBORI</span>
-    <span className="map-label map-label-center">BORGOU</span>
-    <span className="map-label map-label-south">ZOU</span>
-    <span className="map-scale">0°E&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4°E</span>
-  </div>;
+function MapArtwork({
+  tone,
+  large = false,
+}: {
+  tone: string;
+  large?: boolean;
+}) {
+  return (
+    <div className={`map-art map-${tone} ${large ? "map-art-large" : ""}`}>
+      <div className="map-grid" />
+      <svg
+        className="benin-shape"
+        viewBox="0 0 260 390"
+        aria-label="Aperçu de la carte du Bénin"
+        role="img"
+      >
+        <path d="M91 15 133 6l25 23 19 4 7 28 18 24-14 24 9 26-13 28 12 31-18 24 6 30-20 24 4 30-28 20-14 30-28 11-18-20-23 2-15-30 7-31-10-29 14-26-4-33 16-25-7-32 19-25-7-30 17-25Z" />
+        <path
+          className="map-line"
+          d="M94 75 157 77m-74 50 88 4m-97 48 100 3m-111 48 106 5m-102 43 91 1m-69 42 61-1"
+        />
+        <path
+          className="map-line map-line-soft"
+          d="m132 8-6 365M91 15l15 350M157 29l-28 330"
+        />
+      </svg>
+      <span className="map-label map-label-north">ALIBORI</span>
+      <span className="map-label map-label-center">BORGOU</span>
+      <span className="map-label map-label-south">ZOU</span>
+      <span className="map-scale">
+        0°E&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4°E
+      </span>
+    </div>
+  );
 }
 
 function AuthScreen() {
@@ -80,53 +308,789 @@ function AuthScreen() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setMessage("");
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
     try {
-      const response = await fetch("/api/platform-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+      const response = await fetch("/api/platform-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
       if (!response.ok) throw new Error("ACCESS_DENIED");
       window.location.href = "/";
       return;
-      if (mode === "reset") setMessage("Un lien de réinitialisation a été envoyé.");
-    } catch { setMessage("Email ou mot de passe invalide. Vérifiez vos informations."); }
-    finally { setBusy(false); }
+      if (mode === "reset")
+        setMessage("Un lien de réinitialisation a été envoyé.");
+    } catch {
+      setMessage("Email ou mot de passe invalide. Vérifiez vos informations.");
+    } finally {
+      setBusy(false);
+    }
   }
-  return <main className="auth-shell"><div className="auth-card"><div className="brand-symbol"><span>ND</span><i /></div><span className="section-kicker">MÉTÉO BÉNIN · ACCÈS PRIVÉ</span><h1>Accès à la plateforme</h1><p>Cette plateforme est réservée à un usage personnel.</p><form onSubmit={submit}><label htmlFor="auth-password">Mot de passe<input id="auth-password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mot de passe de la plateforme" autoComplete="current-password" /></label><button className="auth-submit" disabled={busy}>{busy ? "Vérification…" : "Se connecter"}</button></form>{message && <div className="auth-message">Mot de passe incorrect.</div>}</div></main>;
+  return (
+    <main className="auth-shell">
+      <div className="auth-card">
+        <div className="brand-symbol">
+          <span>ND</span>
+          <i />
+        </div>
+        <span className="section-kicker">MÉTÉO BÉNIN · ACCÈS PRIVÉ</span>
+        <h1>Accès à la plateforme</h1>
+        <p>Cette plateforme est réservée à un usage personnel.</p>
+        <form onSubmit={submit}>
+          <label htmlFor="auth-password">
+            Mot de passe
+            <input
+              id="auth-password"
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Mot de passe de la plateforme"
+              autoComplete="current-password"
+            />
+          </label>
+          <button className="auth-submit" disabled={busy}>
+            {busy ? "Vérification…" : "Se connecter"}
+          </button>
+        </form>
+        {message && <div className="auth-message">Mot de passe incorrect.</div>}
+      </div>
+    </main>
+  );
 }
 
 function AgroPanel({
-  agroYear, setAgroYear, agroMonth, setAgroMonth, agroDecade, setAgroDecade, agroView, setAgroView,
-  rainDepartmentGroup, setRainDepartmentGroup, visibleRainStations, days, rainRows, updateRain, saveRain,
-  agroStations, setAgroStations, agroStation, setAgroStation, agroRows, updateAgro, saveObservations, ewEtpRows, setEwEtpRows,
-  agroMessage, exportAvailability, agroFetch, setAgroMessage, ewEtpCalculations, onClose, newStation, setNewStation, createStation,
+  agroYear,
+  setAgroYear,
+  agroMonth,
+  setAgroMonth,
+  agroDecade,
+  setAgroDecade,
+  agroView,
+  setAgroView,
+  rainDepartmentGroup,
+  setRainDepartmentGroup,
+  visibleRainStations,
+  days,
+  rainRows,
+  updateRain,
+  saveRain,
+  agroStations,
+  setAgroStations,
+  agroStation,
+  setAgroStation,
+  agroRows,
+  updateAgro,
+  saveObservations,
+  ewEtpRows,
+  setEwEtpRows,
+  agroMessage,
+  exportAvailability,
+  agroFetch,
+  setAgroMessage,
+  ewEtpCalculations,
+  onClose,
+  newStation,
+  setNewStation,
+  createStation,
 }: any) {
-  const rainValue = (stationId: string, day: number) => rainRows.find((row: any) => row.station_id === stationId && row.jour === day)?.hauteur_mm;
+  const rainValue = (stationId: string, day: number) =>
+    rainRows.find(
+      (row: any) => row.station_id === stationId && row.jour === day,
+    )?.hauteur_mm;
   const rainStats = (stationId: string) => {
-    const values = days.map((day: number) => Number(rainValue(stationId, day))).filter((value: number) => Number.isFinite(value));
-    return { gt0: values.filter((value: number) => value > 0).length, gt20: values.filter((value: number) => value > 20).length, max: values.length ? Math.max(...values) : "", total: values.reduce((sum: number, value: number) => sum + value, 0) || "" };
+    const values = days
+      .map((day: number) => Number(rainValue(stationId, day)))
+      .filter((value: number) => Number.isFinite(value));
+    return {
+      gt0: values.filter((value: number) => value > 0).length,
+      gt20: values.filter((value: number) => value > 20).length,
+      max: values.length ? Math.max(...values) : "",
+      total:
+        values.reduce((sum: number, value: number) => sum + value, 0) || "",
+    };
   };
-  const setEwEtp = (stationId: string, key: "ew" | "etp", value: string) => setEwEtpRows((rows: any[]) => {
-    const current = rows.find((row) => row.station_id === stationId) ?? { station_id: stationId };
-    return [...rows.filter((row) => row.station_id !== stationId), { ...current, [key]: value === "" ? undefined : Number(value) }];
-  });
+  const setEwEtp = (stationId: string, key: "ew" | "etp", value: string) =>
+    setEwEtpRows((rows: any[]) => {
+      const current = rows.find((row) => row.station_id === stationId) ?? {
+        station_id: stationId,
+      };
+      return [
+        ...rows.filter((row) => row.station_id !== stationId),
+        { ...current, [key]: value === "" ? undefined : Number(value) },
+      ];
+    });
   const saveEwEtp = async () => {
     try {
-      await agroFetch("/ew-etp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: ewEtpRows }) });
+      await agroFetch("/ew-etp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: Number(agroYear),
+          month: Number(agroMonth),
+          decade: Number(agroDecade),
+          valeurs: ewEtpRows,
+        }),
+      });
       setAgroMessage("Valeurs ew / ETP enregistrées");
-    } catch { setAgroMessage("Impossible d'enregistrer les valeurs ew / ETP"); }
+    } catch {
+      setAgroMessage("Impossible d'enregistrer les valeurs ew / ETP");
+    }
   };
-  return <div className="lightbox" role="dialog" aria-modal="true" aria-label="Bulletin agrométéo" onClick={onClose}>
-    <section className="lightbox-panel agro-panel" onClick={(event) => event.stopPropagation()}>
-      <header className="lightbox-head agro-head"><div><span className="section-kicker">SAISIE ET SYNTHÈSE</span><h2>Bulletin agrométéo</h2></div><button className="icon-button" onClick={onClose} aria-label="Fermer"><Icon name="close" /></button></header>
-      <div className="agro-period"><label>Année<select value={agroYear} onChange={(event) => setAgroYear(event.target.value)}>{Array.from({ length: 101 }, (_, index) => 2000 + index).map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label>Mois<select value={agroMonth} onChange={(event) => setAgroMonth(event.target.value)}>{["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"].map((name, index) => <option key={name} value={index + 1}>{name}</option>)}</select></label><label>Décade<select value={agroDecade} onChange={(event) => setAgroDecade(event.target.value)}><option value="1">1ère décade</option><option value="2">2ème décade</option><option value="3">3ème décade</option></select></label></div>
-      <nav className="agro-nav" aria-label="Sections du bulletin"><button className={agroView === "rain" ? "selected" : ""} onClick={() => setAgroView("rain")}>Saisie pluviométrie</button><button className={agroView === "observations" ? "selected" : ""} onClick={() => setAgroView("observations")}>Renseignements agro</button><button className={agroView === "ewetp" ? "selected" : ""} onClick={() => setAgroView("ewetp")}>ew / ETP</button><button className={agroView === "stations" ? "selected" : ""} onClick={() => setAgroView("stations")}>Stations</button><button className={agroView === "exports" ? "selected" : ""} onClick={() => setAgroView("exports")}>Exports</button></nav>
-      {agroView === "rain" && <section className="agro-section"><div className="agro-section-header"><div><h3>Saisie pluviométrique</h3><p>Choisissez une paire de départements pour saisir les pluies quotidiennes.</p></div><label className="agro-rain-group">Départements<select value={rainDepartmentGroup} onChange={(event) => setRainDepartmentGroup(event.target.value)}>{RAIN_DEPARTMENT_GROUPS.map((group) => <option key={group.id} value={group.id}>{group.label}</option>)}</select></label></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th>{days.map((day: number) => <th key={day}>J{day}</th>)}<th>NbJP&gt;0</th><th>NbJP&gt;20</th><th>Max</th><th>Total</th></tr></thead><tbody>{visibleRainStations.map((station: any) => { const stats = rainStats(station.id); return <tr key={station.id}><th scope="row">{station.name}<small>{station.department}</small></th>{days.map((day: number) => <td key={day}><input aria-label={`${station.name}, jour ${day}`} type="number" min="0" step="0.1" value={rainValue(station.id, day) ?? ""} onChange={(event) => updateRain(station.id, day, event.target.value)} /></td>)}<td>{stats.gt0}</td><td>{stats.gt20}</td><td>{stats.max}</td><td>{stats.total}</td></tr>; })}</tbody></table></div><button className="agro-save-button" onClick={saveRain}>Enregistrer les pluies</button></section>}
-      {agroView === "observations" && <section className="agro-section"><div className="agro-section-header"><div><h3>Renseignements agrométéorologiques</h3><p>Saisissez les observations quotidiennes de la station choisie.</p></div><label className="agro-station-select">Station<select value={agroStation} onChange={(event) => setAgroStation(event.target.value)}>{agroStations.filter((station: any) => station.principal).map((station: any) => <option key={station.id} value={station.id}>{station.name} · {station.department}</option>)}</select></label></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Jour</th><th>Pluie</th><th>Insolation</th><th>Tmin</th><th>Tmax</th><th>T moy</th><th>Hum. min</th><th>Hum. max</th><th>Hum. moy</th><th>Évapo. bac</th></tr></thead><tbody>{days.map((day: number) => { const row = agroRows.find((item: any) => item.jour === day) ?? {}; const tmean = row.temp_min != null && row.temp_max != null ? (Number(row.temp_min) + Number(row.temp_max)) / 2 : ""; const hmean = row.humidite_min != null && row.humidite_max != null ? 0.6 * Number(row.humidite_min) + 0.4 * Number(row.humidite_max) : ""; return <tr key={day}><th scope="row">J{day}</th>{[["pluie", "Pluie"], ["insolation", "Insolation"], ["temp_min", "Température minimale"], ["temp_max", "Température maximale"]].map(([key, label]) => <td key={key}><input aria-label={`${label}, jour ${day}`} type="number" step="0.1" value={row[key] ?? ""} onChange={(event) => updateAgro(day, key, event.target.value)} /></td>)}<td>{tmean === "" ? "—" : Number(tmean).toFixed(1)}</td>{[["humidite_min", "Humidité minimale"], ["humidite_max", "Humidité maximale"]].map(([key, label]) => <td key={key}><input aria-label={`${label}, jour ${day}`} type="number" step="0.1" value={row[key] ?? ""} onChange={(event) => updateAgro(day, key, event.target.value)} /></td>)}<td>{hmean === "" ? "—" : Number(hmean).toFixed(1)}</td><td><input aria-label={`Évaporation bac, jour ${day}`} type="number" step="0.1" value={row.evapo_bac_a ?? ""} onChange={(event) => updateAgro(day, "evapo_bac_a", event.target.value)} /></td></tr>; })}<tr className="agro-summary-row"><th>Total</th>{["pluie", "insolation", "temp_min", "temp_max", "tmean", "humidite_min", "humidite_max", "hmean", "evapo_bac_a"].map((key) => <td key={key}>{days.reduce((sum: number, day: number) => { const row = agroRows.find((item: any) => item.jour === day) ?? {}; const value = key === "tmean" ? (row.temp_min != null && row.temp_max != null ? (Number(row.temp_min) + Number(row.temp_max)) / 2 : 0) : key === "hmean" ? (row.humidite_min != null && row.humidite_max != null ? 0.6 * Number(row.humidite_min) + 0.4 * Number(row.humidite_max) : 0) : Number(row[key] ?? 0); return sum + (Number.isFinite(value) ? value : 0); }, 0).toFixed(1)}</td>)}</tr><tr className="agro-summary-row"><th>Moyenne</th>{["pluie", "insolation", "temp_min", "temp_max", "tmean", "humidite_min", "humidite_max", "hmean", "evapo_bac_a"].map((key) => <td key={key}>{(days.reduce((sum: number, day: number) => { const row = agroRows.find((item: any) => item.jour === day) ?? {}; const value = key === "tmean" ? (row.temp_min != null && row.temp_max != null ? (Number(row.temp_min) + Number(row.temp_max)) / 2 : 0) : key === "hmean" ? (row.humidite_min != null && row.humidite_max != null ? 0.6 * Number(row.humidite_min) + 0.4 * Number(row.humidite_max) : 0) : Number(row[key] ?? 0); return sum + (Number.isFinite(value) ? value : 0); }, 0) / days.length).toFixed(1)}</td>)}</tr></tbody></table></div><button className="agro-save-button" onClick={saveObservations}>Enregistrer les renseignements</button></section>}
-      {agroView === "ewetp" && <section className="agro-section"><div className="agro-section-header"><div><h3>Évaporation et évapotranspiration</h3><p>Les champs calculés sont chargés dès l’ouverture de la plateforme.</p></div></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th><th>Fract. insol.</th><th>Ray. global</th><th>H×10</th><th>ew</th><th>ETP</th></tr></thead><tbody>{agroStations.filter((station: any) => station.principal).map((station: any) => { const row = ewEtpRows.find((item: any) => item.station_id === station.id) ?? {}; const calculation = ewEtpCalculations.find((item: any) => item.station_id === station.id || item.station_id === station.name.toLowerCase()); const h10 = calculation?.h10 ?? H10_BY_STATION[station.id]; return <tr key={station.id}><th scope="row">{station.name}</th><td>{calculation?.insolation_fraction == null ? "—" : Number(calculation.insolation_fraction).toFixed(2)}</td><td>{calculation?.global_radiation == null ? "—" : Number(calculation.global_radiation).toFixed(2)}</td><td>{h10 ?? "—"}</td><td><input aria-label={`ew ${station.name}`} type="number" step="0.1" value={row.ew ?? ""} onChange={(event) => setEwEtp(station.id, "ew", event.target.value)} /></td><td><input aria-label={`ETP ${station.name}`} type="number" step="0.1" value={row.etp ?? ""} onChange={(event) => setEwEtp(station.id, "etp", event.target.value)} /></td></tr>; })}</tbody></table></div><button className="agro-save-button" onClick={saveEwEtp}>Enregistrer ew / ETP</button></section>}
-      {agroView === "exports" && <section className="agro-section agro-export-actions"><h3>Export des données</h3><p>Téléchargez les tableaux disponibles pour la période sélectionnée.</p><a className={`agro-export-link${exportAvailability.network ? "" : " disabled-export"}`} href={exportAvailability.network ? `/api/agro/export/network.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}` : undefined}>Données pluviométriques</a><a className={`agro-export-link${exportAvailability.climate ? "" : " disabled-export"}`} href={exportAvailability.climate ? `/api/agro/export/climate.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}` : undefined}>Données climatiques</a><a className="agro-export-link" href={`/api/agro/export/observations.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}&station_id=${agroStation}`}>Renseignements agro</a></section>}
-      {agroView === "stations" && <section className="agro-section"><div className="agro-section-header"><div><h3>Stations</h3><p>Gérez les stations, leurs départements et leurs coordonnées.</p></div><button className="agro-save-button" onClick={() => setNewStation({ id: "", name: "", department: "", locality: "", longitude: "", latitude: "" })}>+ Nouvelle station</button></div><div className="agro-table-wrap"><table className="agro-table"><thead><tr><th>Station</th><th>Département</th><th>Localité</th><th>Longitude</th><th>Latitude</th><th>Actions</th></tr></thead><tbody>{agroStations.map((station: any) => <tr key={station.id}><th>{station.name}</th><td>{station.department}</td><td>{station.locality ?? ""}</td><td>{station.longitude ?? ""}</td><td>{station.latitude ?? ""}</td><td><button onClick={() => setNewStation({ id: station.id, name: station.name, department: station.department, locality: station.locality ?? "", longitude: String(station.longitude ?? ""), latitude: String(station.latitude ?? "") })}>Modifier</button>{!station.principal && <button onClick={async () => { await agroFetch(`/stations/${station.id}`, { method: "DELETE" }); setAgroStations((items: typeof agroStations) => items.filter((item: (typeof agroStations)[number]) => item.id !== station.id)); }}>Supprimer</button>}</td></tr>)}</tbody></table></div>{newStation.name && <div className="station-add"><input placeholder="Nom station" value={newStation.name} onChange={(event) => setNewStation({ ...newStation, name: event.target.value })} /><select value={newStation.department} onChange={(event) => setNewStation({ ...newStation, department: event.target.value })}><option value="">Département</option>{Object.keys(AGRO_DEPARTMENTS).map((department) => <option key={department} value={department}>{department}</option>)}</select><input placeholder="Localité" value={newStation.locality} onChange={(event) => setNewStation({ ...newStation, locality: event.target.value })} /><input placeholder="Longitude" value={newStation.longitude} onChange={(event) => setNewStation({ ...newStation, longitude: event.target.value })} /><input placeholder="Latitude" value={newStation.latitude} onChange={(event) => setNewStation({ ...newStation, latitude: event.target.value })} /><button className="agro-save-button" onClick={createStation}>Enregistrer</button></div>}</section>}
-      {agroMessage && <p className="agro-message" role="status">{agroMessage}</p>}
-    </section>
-  </div>;
+  return (
+    <div
+      className="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Bulletin agrométéo"
+      onClick={onClose}
+    >
+      <section
+        className="lightbox-panel agro-panel"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="lightbox-head agro-head">
+          <div>
+            <span className="section-kicker">SAISIE ET SYNTHÈSE</span>
+            <h2>Bulletin agrométéo</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} aria-label="Fermer">
+            <Icon name="close" />
+          </button>
+        </header>
+        <div className="agro-period">
+          <label>
+            Année
+            <select
+              value={agroYear}
+              onChange={(event) => setAgroYear(event.target.value)}
+            >
+              {Array.from({ length: 101 }, (_, index) => 2000 + index).map(
+                (year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ),
+              )}
+            </select>
+          </label>
+          <label>
+            Mois
+            <select
+              value={agroMonth}
+              onChange={(event) => setAgroMonth(event.target.value)}
+            >
+              {[
+                "Janvier",
+                "Février",
+                "Mars",
+                "Avril",
+                "Mai",
+                "Juin",
+                "Juillet",
+                "Août",
+                "Septembre",
+                "Octobre",
+                "Novembre",
+                "Décembre",
+              ].map((name, index) => (
+                <option key={name} value={index + 1}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Décade
+            <select
+              value={agroDecade}
+              onChange={(event) => setAgroDecade(event.target.value)}
+            >
+              <option value="1">1ère décade</option>
+              <option value="2">2ème décade</option>
+              <option value="3">3ème décade</option>
+            </select>
+          </label>
+        </div>
+        <nav className="agro-nav" aria-label="Sections du bulletin">
+          <button
+            className={agroView === "rain" ? "selected" : ""}
+            onClick={() => setAgroView("rain")}
+          >
+            Saisie pluviométrie
+          </button>
+          <button
+            className={agroView === "observations" ? "selected" : ""}
+            onClick={() => setAgroView("observations")}
+          >
+            Renseignements agro
+          </button>
+          <button
+            className={agroView === "ewetp" ? "selected" : ""}
+            onClick={() => setAgroView("ewetp")}
+          >
+            ew / ETP
+          </button>
+          <button
+            className={agroView === "stations" ? "selected" : ""}
+            onClick={() => setAgroView("stations")}
+          >
+            Stations
+          </button>
+          <button
+            className={agroView === "exports" ? "selected" : ""}
+            onClick={() => setAgroView("exports")}
+          >
+            Exports
+          </button>
+        </nav>
+        {agroView === "rain" && (
+          <section className="agro-section">
+            <div className="agro-section-header">
+              <div>
+                <h3>Saisie pluviométrique</h3>
+                <p>
+                  Choisissez une paire de départements pour saisir les pluies
+                  quotidiennes.
+                </p>
+              </div>
+              <label className="agro-rain-group">
+                Départements
+                <select
+                  value={rainDepartmentGroup}
+                  onChange={(event) =>
+                    setRainDepartmentGroup(event.target.value)
+                  }
+                >
+                  {RAIN_DEPARTMENT_GROUPS.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="agro-table-wrap">
+              <table className="agro-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    {days.map((day: number) => (
+                      <th key={day}>J{day}</th>
+                    ))}
+                    <th>NbJP&gt;0</th>
+                    <th>NbJP&gt;20</th>
+                    <th>Max</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleRainStations.map((station: any) => {
+                    const stats = rainStats(station.id);
+                    return (
+                      <tr key={station.id}>
+                        <th scope="row">
+                          {station.name}
+                          <small>{station.department}</small>
+                        </th>
+                        {days.map((day: number) => (
+                          <td key={day}>
+                            <input
+                              aria-label={`${station.name}, jour ${day}`}
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={rainValue(station.id, day) ?? ""}
+                              onChange={(event) =>
+                                updateRain(station.id, day, event.target.value)
+                              }
+                            />
+                          </td>
+                        ))}
+                        <td>{stats.gt0}</td>
+                        <td>{stats.gt20}</td>
+                        <td>{stats.max}</td>
+                        <td>{stats.total}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <button className="agro-save-button" onClick={saveRain}>
+              Enregistrer les pluies
+            </button>
+          </section>
+        )}
+        {agroView === "observations" && (
+          <section className="agro-section">
+            <div className="agro-section-header">
+              <div>
+                <h3>Renseignements agrométéorologiques</h3>
+                <p>
+                  Saisissez les observations quotidiennes de la station choisie.
+                </p>
+              </div>
+              <label className="agro-station-select">
+                Station
+                <select
+                  value={agroStation}
+                  onChange={(event) => setAgroStation(event.target.value)}
+                >
+                  {agroStations
+                    .filter((station: any) => station.principal)
+                    .map((station: any) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name} · {station.department}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+            <div className="agro-table-wrap">
+              <table className="agro-table">
+                <thead>
+                  <tr>
+                    <th>Jour</th>
+                    <th>Pluie</th>
+                    <th>Insolation</th>
+                    <th>Tmin</th>
+                    <th>Tmax</th>
+                    <th>T moy</th>
+                    <th>Hum. min</th>
+                    <th>Hum. max</th>
+                    <th>Hum. moy</th>
+                    <th>Évapo. bac</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {days.map((day: number) => {
+                    const row =
+                      agroRows.find((item: any) => item.jour === day) ?? {};
+                    const tmean =
+                      row.temp_min != null && row.temp_max != null
+                        ? (Number(row.temp_min) + Number(row.temp_max)) / 2
+                        : "";
+                    const hmean =
+                      row.humidite_min != null && row.humidite_max != null
+                        ? 0.6 * Number(row.humidite_min) +
+                          0.4 * Number(row.humidite_max)
+                        : "";
+                    return (
+                      <tr key={day}>
+                        <th scope="row">J{day}</th>
+                        {[
+                          ["pluie", "Pluie"],
+                          ["insolation", "Insolation"],
+                          ["temp_min", "Température minimale"],
+                          ["temp_max", "Température maximale"],
+                        ].map(([key, label]) => (
+                          <td key={key}>
+                            <input
+                              aria-label={`${label}, jour ${day}`}
+                              type="number"
+                              step="0.1"
+                              value={row[key] ?? ""}
+                              onChange={(event) =>
+                                updateAgro(day, key, event.target.value)
+                              }
+                            />
+                          </td>
+                        ))}
+                        <td>{tmean === "" ? "—" : Number(tmean).toFixed(1)}</td>
+                        {[
+                          ["humidite_min", "Humidité minimale"],
+                          ["humidite_max", "Humidité maximale"],
+                        ].map(([key, label]) => (
+                          <td key={key}>
+                            <input
+                              aria-label={`${label}, jour ${day}`}
+                              type="number"
+                              step="0.1"
+                              value={row[key] ?? ""}
+                              onChange={(event) =>
+                                updateAgro(day, key, event.target.value)
+                              }
+                            />
+                          </td>
+                        ))}
+                        <td>{hmean === "" ? "—" : Number(hmean).toFixed(1)}</td>
+                        <td>
+                          <input
+                            aria-label={`Évaporation bac, jour ${day}`}
+                            type="number"
+                            step="0.1"
+                            value={row.evapo_bac_a ?? ""}
+                            onChange={(event) =>
+                              updateAgro(day, "evapo_bac_a", event.target.value)
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="agro-summary-row">
+                    <th>Total</th>
+                    {[
+                      "pluie",
+                      "insolation",
+                      "temp_min",
+                      "temp_max",
+                      "tmean",
+                      "humidite_min",
+                      "humidite_max",
+                      "hmean",
+                      "evapo_bac_a",
+                    ].map((key) => (
+                      <td key={key}>
+                        {days
+                          .reduce((sum: number, day: number) => {
+                            const row =
+                              agroRows.find((item: any) => item.jour === day) ??
+                              {};
+                            const value =
+                              key === "tmean"
+                                ? row.temp_min != null && row.temp_max != null
+                                  ? (Number(row.temp_min) +
+                                      Number(row.temp_max)) /
+                                    2
+                                  : 0
+                                : key === "hmean"
+                                  ? row.humidite_min != null &&
+                                    row.humidite_max != null
+                                    ? 0.6 * Number(row.humidite_min) +
+                                      0.4 * Number(row.humidite_max)
+                                    : 0
+                                  : Number(row[key] ?? 0);
+                            return sum + (Number.isFinite(value) ? value : 0);
+                          }, 0)
+                          .toFixed(1)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="agro-summary-row">
+                    <th>Moyenne</th>
+                    {[
+                      "pluie",
+                      "insolation",
+                      "temp_min",
+                      "temp_max",
+                      "tmean",
+                      "humidite_min",
+                      "humidite_max",
+                      "hmean",
+                      "evapo_bac_a",
+                    ].map((key) => (
+                      <td key={key}>
+                        {(
+                          days.reduce((sum: number, day: number) => {
+                            const row =
+                              agroRows.find((item: any) => item.jour === day) ??
+                              {};
+                            const value =
+                              key === "tmean"
+                                ? row.temp_min != null && row.temp_max != null
+                                  ? (Number(row.temp_min) +
+                                      Number(row.temp_max)) /
+                                    2
+                                  : 0
+                                : key === "hmean"
+                                  ? row.humidite_min != null &&
+                                    row.humidite_max != null
+                                    ? 0.6 * Number(row.humidite_min) +
+                                      0.4 * Number(row.humidite_max)
+                                    : 0
+                                  : Number(row[key] ?? 0);
+                            return sum + (Number.isFinite(value) ? value : 0);
+                          }, 0) / days.length
+                        ).toFixed(1)}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button className="agro-save-button" onClick={saveObservations}>
+              Enregistrer les renseignements
+            </button>
+          </section>
+        )}
+        {agroView === "ewetp" && (
+          <section className="agro-section">
+            <div className="agro-section-header">
+              <div>
+                <h3>Évaporation et évapotranspiration</h3>
+                <p>
+                  Les champs calculés sont chargés dès l’ouverture de la
+                  plateforme.
+                </p>
+              </div>
+            </div>
+            <div className="agro-table-wrap">
+              <table className="agro-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Fract. insol.</th>
+                    <th>Ray. global</th>
+                    <th>H×10</th>
+                    <th>ew</th>
+                    <th>ETP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agroStations
+                    .filter((station: any) => station.principal)
+                    .map((station: any) => {
+                      const row =
+                        ewEtpRows.find(
+                          (item: any) => item.station_id === station.id,
+                        ) ?? {};
+                      const calculation = ewEtpCalculations.find(
+                        (item: any) =>
+                          item.station_id === station.id ||
+                          item.station_id === station.name.toLowerCase(),
+                      );
+                      const h10 =
+                        calculation?.h10 ?? H10_BY_STATION[station.id];
+                      return (
+                        <tr key={station.id}>
+                          <th scope="row">{station.name}</th>
+                          <td>
+                            {calculation?.insolation_fraction == null
+                              ? "—"
+                              : Number(calculation.insolation_fraction).toFixed(
+                                  2,
+                                )}
+                          </td>
+                          <td>
+                            {calculation?.global_radiation == null
+                              ? "—"
+                              : Number(calculation.global_radiation).toFixed(2)}
+                          </td>
+                          <td>{h10 ?? "—"}</td>
+                          <td>
+                            <input
+                              aria-label={`ew ${station.name}`}
+                              type="number"
+                              step="0.1"
+                              value={row.ew ?? ""}
+                              onChange={(event) =>
+                                setEwEtp(station.id, "ew", event.target.value)
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              aria-label={`ETP ${station.name}`}
+                              type="number"
+                              step="0.1"
+                              value={row.etp ?? ""}
+                              onChange={(event) =>
+                                setEwEtp(station.id, "etp", event.target.value)
+                              }
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+            <button className="agro-save-button" onClick={saveEwEtp}>
+              Enregistrer ew / ETP
+            </button>
+          </section>
+        )}
+        {agroView === "exports" && (
+          <section className="agro-section agro-export-actions">
+            <h3>Export des données</h3>
+            <p>
+              Téléchargez les tableaux disponibles pour la période sélectionnée.
+            </p>
+            <a
+              className={`agro-export-link${exportAvailability.network ? "" : " disabled-export"}`}
+              href={
+                exportAvailability.network
+                  ? `/api/agro/export/network.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`
+                  : undefined
+              }
+            >
+              Données pluviométriques
+            </a>
+            <a
+              className={`agro-export-link${exportAvailability.climate ? "" : " disabled-export"}`}
+              href={
+                exportAvailability.climate
+                  ? `/api/agro/export/climate.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`
+                  : undefined
+              }
+            >
+              Données climatiques
+            </a>
+            <a
+              className="agro-export-link"
+              href={`/api/agro/export/observations.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}&station_id=${agroStation}`}
+            >
+              Renseignements agro
+            </a>
+          </section>
+        )}
+        {agroView === "stations" && (
+          <section className="agro-section">
+            <div className="agro-section-header">
+              <div>
+                <h3>Stations</h3>
+                <p>
+                  Gérez les stations, leurs départements et leurs coordonnées.
+                </p>
+              </div>
+              <button
+                className="agro-save-button"
+                onClick={() =>
+                  setNewStation({
+                    id: "",
+                    name: "",
+                    department: "",
+                    locality: "",
+                    longitude: "",
+                    latitude: "",
+                  })
+                }
+              >
+                + Nouvelle station
+              </button>
+            </div>
+            <div className="agro-table-wrap">
+              <table className="agro-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Département</th>
+                    <th>Localité</th>
+                    <th>Longitude</th>
+                    <th>Latitude</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agroStations.map((station: any) => (
+                    <tr key={station.id}>
+                      <th>{station.name}</th>
+                      <td>{station.department}</td>
+                      <td>{station.locality ?? ""}</td>
+                      <td>{station.longitude ?? ""}</td>
+                      <td>{station.latitude ?? ""}</td>
+                      <td>
+                        <button
+                          onClick={() =>
+                            setNewStation({
+                              id: station.id,
+                              name: station.name,
+                              department: station.department,
+                              locality: station.locality ?? "",
+                              longitude: String(station.longitude ?? ""),
+                              latitude: String(station.latitude ?? ""),
+                            })
+                          }
+                        >
+                          Modifier
+                        </button>
+                        {!station.principal && (
+                          <button
+                            onClick={async () => {
+                              await agroFetch(`/stations/${station.id}`, {
+                                method: "DELETE",
+                              });
+                              setAgroStations((items: typeof agroStations) =>
+                                items.filter(
+                                  (item: (typeof agroStations)[number]) =>
+                                    item.id !== station.id,
+                                ),
+                              );
+                            }}
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {newStation.name && (
+              <div className="station-add">
+                <input
+                  placeholder="Nom station"
+                  value={newStation.name}
+                  onChange={(event) =>
+                    setNewStation({ ...newStation, name: event.target.value })
+                  }
+                />
+                <select
+                  value={newStation.department}
+                  onChange={(event) =>
+                    setNewStation({
+                      ...newStation,
+                      department: event.target.value,
+                    })
+                  }
+                >
+                  <option value="">Département</option>
+                  {Object.keys(AGRO_DEPARTMENTS).map((department) => (
+                    <option key={department} value={department}>
+                      {department}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  placeholder="Localité"
+                  value={newStation.locality}
+                  onChange={(event) =>
+                    setNewStation({
+                      ...newStation,
+                      locality: event.target.value,
+                    })
+                  }
+                />
+                <input
+                  placeholder="Longitude"
+                  value={newStation.longitude}
+                  onChange={(event) =>
+                    setNewStation({
+                      ...newStation,
+                      longitude: event.target.value,
+                    })
+                  }
+                />
+                <input
+                  placeholder="Latitude"
+                  value={newStation.latitude}
+                  onChange={(event) =>
+                    setNewStation({
+                      ...newStation,
+                      latitude: event.target.value,
+                    })
+                  }
+                />
+                <button className="agro-save-button" onClick={createStation}>
+                  Enregistrer
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+        {agroMessage && (
+          <p className="agro-message" role="status">
+            {agroMessage}
+          </p>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function Dashboard({ user }: { user: User }) {
@@ -137,7 +1101,9 @@ function Dashboard({ user }: { user: User }) {
   const [activeMap, setActiveMap] = useState<GalleryMap | null>(null);
   const [jobMap, setJobMap] = useState<GalleryMap | null>(null);
   const [maps, setMaps] = useState<GalleryMap[]>([]);
-  const [status, setStatus] = useState<"idle" | "pending" | "processing" | "done" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "pending" | "processing" | "done" | "error"
+  >("idle");
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
@@ -147,35 +1113,103 @@ function Dashboard({ user }: { user: User }) {
   const [agroYear, setAgroYear] = useState("2026");
   const [agroMonth, setAgroMonth] = useState("8");
   const [agroDecade, setAgroDecade] = useState("1");
-  const [agroView, setAgroView] = useState<"rain" | "observations" | "ewetp" | "exports">("rain");
-  const [rainDepartmentGroup, setRainDepartmentGroup] = useState(RAIN_DEPARTMENT_GROUPS[0].id);
+  const [agroView, setAgroView] = useState<
+    "rain" | "observations" | "ewetp" | "exports"
+  >("rain");
+  const [rainDepartmentGroup, setRainDepartmentGroup] = useState(
+    RAIN_DEPARTMENT_GROUPS[0].id,
+  );
   const [agroStations, setAgroStations] = useState(STATIC_AGRO_STATIONS);
   const [agroStation, setAgroStation] = useState("kandi");
-  const [rainRows, setRainRows] = useState<Array<{ station_id: string; jour: number; hauteur_mm?: number }>>([]);
-  const [agroRows, setAgroRows] = useState<Array<Record<string, number | string | undefined>>>([]);
-  const [ewEtpRows, setEwEtpRows] = useState<Array<{ station_id: string; ew?: number; etp?: number }>>([]);
-  const [ewEtpCalculations, setEwEtpCalculations] = useState<Array<{ station_id: string; h10?: number; insolation_fraction?: number; global_radiation?: number }>>([]);
+  const [rainRows, setRainRows] = useState<
+    Array<{ station_id: string; jour: number; hauteur_mm?: number }>
+  >([]);
+  const [agroRows, setAgroRows] = useState<
+    Array<Record<string, number | string | undefined>>
+  >([]);
+  const [ewEtpRows, setEwEtpRows] = useState<
+    Array<{ station_id: string; ew?: number; etp?: number }>
+  >([]);
+  const [ewEtpCalculations, setEwEtpCalculations] = useState<
+    Array<{
+      station_id: string;
+      h10?: number;
+      insolation_fraction?: number;
+      global_radiation?: number;
+    }>
+  >([]);
   const [agroMessage, setAgroMessage] = useState("");
-  const [exportAvailability, setExportAvailability] = useState({ network: false, climate: false });
-  const [newStation, setNewStation] = useState({ id: "", name: "", department: "", locality: "", longitude: "", latitude: "" });
-  useEffect(() => { document.title = status === "processing" || status === "pending" ? "⏳ Génération… · Cartes NDVI Bénin" : "Cartes NDVI Bénin"; }, [status]);
-  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(timer); }, [toast]);
+  const [exportAvailability, setExportAvailability] = useState({
+    network: false,
+    climate: false,
+  });
+  const [newStation, setNewStation] = useState({
+    id: "",
+    name: "",
+    department: "",
+    locality: "",
+    longitude: "",
+    latitude: "",
+  });
+  useEffect(() => {
+    document.title =
+      status === "processing" || status === "pending"
+        ? "⏳ Génération… · Cartes NDVI Bénin"
+        : "Cartes NDVI Bénin";
+  }, [status]);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 2200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
   const agroFetch = async (path: string, init?: RequestInit) => {
     const started = performance.now();
     const response = await fetch(`/api/agro${path}`, init);
     const data = await response.json();
-    console.info(`[agro] ${path}: ${Math.round(performance.now() - started)} ms`, { ok: response.ok });
-    if (!response.ok) throw new Error(data.detail ?? data.error ?? "Erreur API agro");
+    console.info(
+      `[agro] ${path}: ${Math.round(performance.now() - started)} ms`,
+      { ok: response.ok },
+    );
+    if (!response.ok)
+      throw new Error(data.detail ?? data.error ?? "Erreur API agro");
     return data;
   };
   const createStation = async () => {
-    if (!newStation.name || !newStation.department || !newStation.locality) return;
+    if (!newStation.name || !newStation.department || !newStation.locality)
+      return;
     try {
-      await agroFetch("/stations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...newStation, id: newStation.id || stationId(newStation.name) }) });
-      setAgroStations((stations) => [...stations, { id: stationId(newStation.name), name: newStation.name, department: newStation.department, locality: newStation.locality, longitude: Number(newStation.longitude) || undefined, latitude: Number(newStation.latitude) || undefined, principal: false }]);
+      await agroFetch("/stations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newStation,
+          id: newStation.id || stationId(newStation.name),
+        }),
+      });
+      setAgroStations((stations) => [
+        ...stations,
+        {
+          id: stationId(newStation.name),
+          name: newStation.name,
+          department: newStation.department,
+          locality: newStation.locality,
+          longitude: Number(newStation.longitude) || undefined,
+          latitude: Number(newStation.latitude) || undefined,
+          principal: false,
+        },
+      ]);
       setAgroMessage("Station ajoutée");
-      setNewStation({ id: "", name: "", department: "", locality: "", longitude: "", latitude: "" });
-    } catch { setAgroMessage("Impossible d'ajouter la station"); }
+      setNewStation({
+        id: "",
+        name: "",
+        department: "",
+        locality: "",
+        longitude: "",
+        latitude: "",
+      });
+    } catch {
+      setAgroMessage("Impossible d'ajouter la station");
+    }
   };
   // Le proxy Next.js monte déjà la route worker sur `/agro/*`.
   // Donc on ne doit PAS réajouter un préfixe `/agro` ici.
@@ -184,22 +1218,33 @@ function Dashboard({ user }: { user: User }) {
       await agroFetch("/pluies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), valeurs: rainRows })
+        body: JSON.stringify({
+          year: Number(agroYear),
+          month: Number(agroMonth),
+          decade: Number(agroDecade),
+          valeurs: rainRows,
+        }),
       });
       setToast("Pluies enregistrées");
       setAgroMessage("Pluies enregistrées");
 
       // Rafraîchit l'état UI basé sur les valeurs calculées.
       const [rain, climate] = await Promise.all([
-        agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
-        agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)
+        agroFetch(
+          `/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+        ),
+        agroFetch(
+          `/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+        ),
       ]);
       setExportAvailability({
         network: (rain.valeurs ?? []).length > 0,
-        climate: (climate.calculs ?? []).length > 0
+        climate: (climate.calculs ?? []).length > 0,
       });
     } catch (e) {
-      setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les pluies");
+      setToast(
+        e instanceof Error ? e.message : "Impossible d'enregistrer les pluies",
+      );
       setAgroMessage("Impossible d'enregistrer les pluies");
     }
   };
@@ -209,62 +1254,143 @@ function Dashboard({ user }: { user: User }) {
       await agroFetch("/observations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ year: Number(agroYear), month: Number(agroMonth), decade: Number(agroDecade), station_id: agroStation, valeurs: agroRows })
+        body: JSON.stringify({
+          year: Number(agroYear),
+          month: Number(agroMonth),
+          decade: Number(agroDecade),
+          station_id: agroStation,
+          valeurs: agroRows,
+        }),
       });
       setToast("Observations enregistrées");
       setAgroMessage("Observations enregistrées");
 
       // Les observations impactent les exports climatiques; on rafraîchit le statut.
       const [rain, climate] = await Promise.all([
-        agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
-        agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`)
+        agroFetch(
+          `/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+        ),
+        agroFetch(
+          `/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+        ),
       ]);
       setExportAvailability({
         network: (rain.valeurs ?? []).length > 0,
-        climate: (climate.calculs ?? []).length > 0
+        climate: (climate.calculs ?? []).length > 0,
       });
     } catch (e) {
-      setToast(e instanceof Error ? e.message : "Impossible d'enregistrer les observations");
+      setToast(
+        e instanceof Error
+          ? e.message
+          : "Impossible d'enregistrer les observations",
+      );
       setAgroMessage("Impossible d'enregistrer les observations");
     }
   };
-  const daysInMonth = new Date(Number(agroYear), Number(agroMonth), 0).getDate();
+  const daysInMonth = new Date(
+    Number(agroYear),
+    Number(agroMonth),
+    0,
+  ).getDate();
   const decadeNumber = Number(agroDecade);
   const firstDay = decadeNumber === 1 ? 1 : decadeNumber === 2 ? 11 : 21;
-  const lastDay = decadeNumber === 1 ? 10 : decadeNumber === 2 ? 20 : daysInMonth;
-  const days = Array.from({ length: lastDay - firstDay + 1 }, (_, index) => firstDay + index);
+  const lastDay =
+    decadeNumber === 1 ? 10 : decadeNumber === 2 ? 20 : daysInMonth;
+  const days = Array.from(
+    { length: lastDay - firstDay + 1 },
+    (_, index) => firstDay + index,
+  );
   useEffect(() => {
     let cancelled = false;
     const loadAgroData = async () => {
       try {
         const [rain, climate] = await Promise.all([
-          agroFetch(`/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
-          agroFetch(`/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`),
+          agroFetch(
+            `/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+          ),
+          agroFetch(
+            `/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
+          ),
         ]);
         if (cancelled) return;
         setRainRows(rain.valeurs ?? []);
-        if (agroView === "observations") setAgroRows((rows) => rows.map((row) => ({ ...row, pluie: rain.valeurs?.find((value: any) => value.station_id === agroStation && value.jour === row.jour)?.hauteur_mm ?? row.pluie })));
+        if (agroView === "observations")
+          setAgroRows((rows) =>
+            rows.map((row) => ({
+              ...row,
+              pluie:
+                rain.valeurs?.find(
+                  (value: any) =>
+                    value.station_id === agroStation && value.jour === row.jour,
+                )?.hauteur_mm ?? row.pluie,
+            })),
+          );
         setEwEtpRows(climate.valeurs ?? []);
         setEwEtpCalculations(climate.calculs ?? []);
-        setExportAvailability({ network: (rain.valeurs ?? []).length > 0, climate: (climate.calculs ?? []).length > 0 });
+        setExportAvailability({
+          network: (rain.valeurs ?? []).length > 0,
+          climate: (climate.calculs ?? []).length > 0,
+        });
       } catch {
-        if (!cancelled) setExportAvailability({ network: false, climate: false });
+        if (!cancelled)
+          setExportAvailability({ network: false, climate: false });
       }
     };
     void loadAgroData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [agroYear, agroMonth, agroDecade, agroStation, agroView]);
-  const updateRain = (station_id: string, jour: number, value: string) => setRainRows((rows) => [...rows.filter((row) => !(row.station_id === station_id && row.jour === jour)), ...(value === "" ? [] : [{ station_id, jour, hauteur_mm: Number(value) }])]);
-  const updateAgro = (jour: number, key: string, value: string) => setAgroRows((rows) => { const current = rows.find((row) => row.jour === jour) ?? { jour }; const next = { ...current, [key]: value === "" ? undefined : Number(value) }; return [...rows.filter((row) => row.jour !== jour), next]; });
+  const updateRain = (station_id: string, jour: number, value: string) =>
+    setRainRows((rows) => [
+      ...rows.filter(
+        (row) => !(row.station_id === station_id && row.jour === jour),
+      ),
+      ...(value === ""
+        ? []
+        : [{ station_id, jour, hauteur_mm: Number(value) }]),
+    ]);
+  const updateAgro = (jour: number, key: string, value: string) =>
+    setAgroRows((rows) => {
+      const current = rows.find((row) => row.jour === jour) ?? { jour };
+      const next = {
+        ...current,
+        [key]: value === "" ? undefined : Number(value),
+      };
+      return [...rows.filter((row) => row.jour !== jour), next];
+    });
   useEffect(() => {
     let cancelled = false;
-    const loadPentades = () => fetch(`/api/pentades?product=${product}`).then((response) => response.json()).then((data) => {
-      if (cancelled || !Array.isArray(data.pentades) || !data.pentades.length) return;
-      const next = data.pentades.map((item: { id: string; label: string; year: number; num: number }) => ({ id: item.id, label: item.label, detail: `P${String(item.num).padStart(2, "0")} · ${item.year}` }));
-      setAvailablePentades(next); setPentade(next[0].id);
-    }).catch(() => setToast("Impossible de charger les pentades"));
+    const loadPentades = () =>
+      fetch(`/api/pentades?product=${product}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (
+            cancelled ||
+            !Array.isArray(data.pentades) ||
+            !data.pentades.length
+          )
+            return;
+          const next = data.pentades.map(
+            (item: {
+              id: string;
+              label: string;
+              year: number;
+              num: number;
+            }) => ({
+              id: item.id,
+              label: item.label,
+              detail: `P${String(item.num).padStart(2, "0")} · ${item.year}`,
+            }),
+          );
+          setAvailablePentades(next);
+          setPentade(next[0].id);
+        })
+        .catch(() => setToast("Impossible de charger les pentades"));
     loadPentades();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [product]);
   useEffect(() => {
     let cancelled = false;
@@ -272,78 +1398,535 @@ function Dashboard({ user }: { user: User }) {
       try {
         const response = await fetch("/api/jobs", { cache: "no-store" });
         const data = await response.json();
-        if (!cancelled && response.ok) setMaps((data.jobs ?? []).map((item: { id: string; product: Product; label?: string; pentadeId: string; completedAt?: { _seconds?: number }; imageUrl?: string; thumbnailUrl?: string }) => ({ id: item.id, product: item.product, label: item.label ?? item.pentadeId, date: item.completedAt?._seconds ? new Date(item.completedAt._seconds * 1000).toLocaleDateString("fr-FR") : "Récemment", tone: item.product === "anomaly" ? "olive" : "forest", imageUrl: item.imageUrl, thumbnailUrl: item.thumbnailUrl })));
-      } catch { if (!cancelled) setToast("Galerie Firestore indisponible"); }
+        if (!cancelled && response.ok)
+          setMaps(
+            (data.jobs ?? []).map(
+              (item: {
+                id: string;
+                product: Product;
+                label?: string;
+                pentadeId: string;
+                completedAt?: { _seconds?: number };
+                imageUrl?: string;
+                thumbnailUrl?: string;
+              }) => ({
+                id: item.id,
+                product: item.product,
+                label: item.label ?? item.pentadeId,
+                date: item.completedAt?._seconds
+                  ? new Date(
+                      item.completedAt._seconds * 1000,
+                    ).toLocaleDateString("fr-FR")
+                  : "Récemment",
+                tone: item.product === "anomaly" ? "olive" : "forest",
+                imageUrl: item.imageUrl,
+                thumbnailUrl: item.thumbnailUrl,
+              }),
+            ),
+          );
+      } catch {
+        if (!cancelled) setToast("Galerie Firestore indisponible");
+      }
     };
-    load(); const timer = window.setInterval(load, 30000);
-    return () => { cancelled = true; window.clearInterval(timer); };
+    load();
+    const timer = window.setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
   useEffect(() => {
     if (!jobId) return;
     let cancelled = false;
-    const load = async () => { const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" }); const data = await response.json(); if (cancelled || !response.ok) return; setStatus(data.status ?? "idle"); setProgress(Number(data.progress ?? 0)); setStep(data.step ?? "Préparation du traitement"); setError(data.error ?? ""); if (data.status === "done" && data.imageUrl) setJobMap({ id: data.id ?? jobId, product: data.product ?? product, label: data.label ?? selected.label, date: new Date().toLocaleDateString("fr-FR"), tone: data.product === "anomaly" ? "olive" : "forest", imageUrl: data.imageUrl, thumbnailUrl: data.thumbnailUrl }); };
-    load(); const timer = window.setInterval(load, 4000); return () => { cancelled = true; window.clearInterval(timer); };
+    const load = async () => {
+      const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" });
+      const data = await response.json();
+      if (cancelled || !response.ok) return;
+      setStatus(data.status ?? "idle");
+      setProgress(Number(data.progress ?? 0));
+      setStep(data.step ?? "Préparation du traitement");
+      setError(data.error ?? "");
+      if (data.status === "done" && data.imageUrl)
+        setJobMap({
+          id: data.id ?? jobId,
+          product: data.product ?? product,
+          label: data.label ?? selected.label,
+          date: new Date().toLocaleDateString("fr-FR"),
+          tone: data.product === "anomaly" ? "olive" : "forest",
+          imageUrl: data.imageUrl,
+          thumbnailUrl: data.thumbnailUrl,
+        });
+    };
+    load();
+    const timer = window.setInterval(load, 4000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [jobId]);
 
-  const visibleMaps = useMemo(() => filter === "all" ? maps : maps.filter((item) => item.product === filter), [filter, maps]);
+  const visibleMaps = useMemo(
+    () =>
+      filter === "all" ? maps : maps.filter((item) => item.product === filter),
+    [filter, maps],
+  );
   const visibleRainStations = useMemo(() => {
-    const group = RAIN_DEPARTMENT_GROUPS.find((item) => item.id === rainDepartmentGroup) ?? RAIN_DEPARTMENT_GROUPS[0];
-    return agroStations.filter((station) => group.departments.includes(station.department as never));
+    const group =
+      RAIN_DEPARTMENT_GROUPS.find((item) => item.id === rainDepartmentGroup) ??
+      RAIN_DEPARTMENT_GROUPS[0];
+    return agroStations.filter((station) =>
+      group.departments.includes(station.department as never),
+    );
   }, [agroStations, rainDepartmentGroup]);
-  const selected = availablePentades.find((item) => item.id === pentade) ?? availablePentades[0] ?? pentades[0];
-  const previewMap = maps.find((item) => item.product === product && item.label === selected.label) ?? jobMap;
+  const selected =
+    availablePentades.find((item) => item.id === pentade) ??
+    availablePentades[0] ??
+    pentades[0];
+  const previewMap =
+    maps.find(
+      (item) => item.product === product && item.label === selected.label,
+    ) ?? jobMap;
 
   async function generate() {
     const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setJobId(id); setJobMap(null); setStatus("pending"); setError("");
+    setJobId(id);
+    setJobMap(null);
+    setStatus("pending");
+    setError("");
     try {
-      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: id, pentadeId: pentade, product, force: false }) });
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: id,
+          pentadeId: pentade,
+          product,
+          force: false,
+        }),
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "La génération a échoué");
-    } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Erreur de génération"); setStatus("error"); }
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Erreur de génération",
+      );
+      setStatus("error");
+    }
   }
 
-  function copyLink() { navigator.clipboard?.writeText("https://res.cloudinary.com/ndvi-benin/anomaly_2026-P44.jpg"); setToast("Lien copié"); }
+  function copyLink() {
+    navigator.clipboard?.writeText(
+      "https://res.cloudinary.com/ndvi-benin/anomaly_2026-P44.jpg",
+    );
+    setToast("Lien copié");
+  }
 
-  return <main className="app-shell">
-    <header className="topbar">
-      <div className="brand">
-        <div className="brand-symbol"><span>ND</span><i /></div>
-        <div><div className="brand-name">Météo Bénin</div><div className="brand-sub">Observatoire de la végétation</div></div>
-      </div>
-      <div className="topbar-meta" style={{ display: "flex" }}><span className="live-dot" /><span className="user-email">Accès privé</span><button className="settings-text-button" onClick={() => setShowAgro(true)}>Paramètres agrométéo</button><button className="logout-button" onClick={() => { void fetch("/api/platform-login", { method: "DELETE" }).then(() => window.location.reload()); }}>Déconnexion</button></div>
-    </header>
+  return (
+    <main className="app-shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-symbol">
+            <span>ND</span>
+            <i />
+          </div>
+          <div>
+            <div className="brand-name">Météo Bénin</div>
+            <div className="brand-sub">Observatoire de la végétation</div>
+          </div>
+        </div>
+        <div className="topbar-meta" style={{ display: "flex" }}>
+          <span className="live-dot" />
+          <span className="user-email">Accès privé</span>
+          <button
+            className="settings-text-button"
+            onClick={() => setShowAgro(true)}
+          >
+            Paramètres agrométéo
+          </button>
+          <button
+            className="logout-button"
+            onClick={() => {
+              void fetch("/api/platform-login", { method: "DELETE" }).then(() =>
+                window.location.reload(),
+              );
+            }}
+          >
+            Déconnexion
+          </button>
+        </div>
+      </header>
 
-    <section className="hero-row">
-      <div><div className="eyebrow">PRODUCTION CARTOGRAPHIQUE <span>·</span> BÉNIN</div><h1>Cartes de végétation</h1><p>Générez et consultez les indicateurs NDVI à 375 m, période par période.</p></div>
-      <div className="hero-stats"><div><strong>375</strong><span>m résolution</span></div><div><strong>72</strong><span>pentades / an</span></div><div><strong>12</strong><span>départements</span></div></div>
-    </section>
+      <section className="hero-row">
+        <div>
+          <div className="eyebrow">
+            PRODUCTION CARTOGRAPHIQUE <span>·</span> BÉNIN
+          </div>
+          <h1>Cartes de végétation</h1>
+          <p>
+            Générez et consultez les indicateurs NDVI à 375 m, période par
+            période.
+          </p>
+        </div>
+        <div className="hero-stats">
+          <div>
+            <strong>375</strong>
+            <span>m résolution</span>
+          </div>
+          <div>
+            <strong>72</strong>
+            <span>pentades / an</span>
+          </div>
+          <div>
+            <strong>12</strong>
+            <span>départements</span>
+          </div>
+        </div>
+      </section>
 
-    <section className="workspace-grid">
-      <div className="generation-card card">
-        <div className="card-heading"><div><span className="section-kicker">NOUVELLE CARTE</span><h2>Paramètres de génération</h2></div><span className="secure-pill"><span className="live-dot" /> Source active</span></div>
-        <div className="field-block"><label>Produit cartographique</label><div className="product-toggle"><button className={product === "anomaly" ? "active anomaly-active" : ""} onClick={() => setProduct("anomaly")}><span className="toggle-swatch anomaly-swatch" /><span><strong>NDVI anomalie</strong><small>Pourcentage de la moyenne</small></span></button><button className={product === "ndvi" ? "active" : ""} onClick={() => setProduct("ndvi")}><span className="toggle-swatch ndvi-swatch" /><span><strong>NDVI brut</strong><small>Indice de végétation</small></span></button></div></div>
-        <div className="field-block"><label htmlFor="pentade">Période d’analyse</label><div className="select-wrap"><Icon name="calendar" size={17} /><select id="pentade" value={pentade} onChange={(event) => setPentade(event.target.value)}>{availablePentades.map((item) => <option key={item.id} value={item.id}>{item.label}  ·  {item.detail}</option>)}</select><span className="select-chevron">⌄</span></div><span className="field-hint">Les données les plus récentes sont proposées en premier.</span></div>
-        <button className="generate-button" onClick={generate} disabled={status === "processing" || status === "pending"}><span>{status === "processing" || status === "pending" ? "Génération en cours…" : "Générer la carte"}</span><Icon name="arrow" size={18} /></button>
-        <div className={`job-status ${status}`} aria-live="polite">{(status === "idle" || status === "error") && <><span className="status-icon"><Icon name="layers" size={17} /></span><span><strong>{status === "error" ? "Échec de génération" : "Prêt à générer"}</strong><small>{status === "error" ? error : "Le traitement prend généralement 1 à 5 minutes sur Render Free."}</small></span></>}{(status === "processing" || status === "pending") && <><span className="spinner" /><span className="progress-copy"><strong>{status === "pending" ? "Serveur en réveil…" : "Génération en cours"}</strong><small>{step}</small><span className="progress-track"><span style={{ width: `${progress}%` }} /></span></span><b>{progress}%</b></>}{status === "done" && <><span className="status-icon done-icon">✓</span><span><strong>Carte prête</strong><small>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} · {selected.label}</small></span><button onClick={() => previewMap && setActiveMap(previewMap)}>Voir</button></>}</div>
-      </div>
-      <div className="preview-card card"><div className="preview-top"><div><span className="section-kicker">APERÇU DU PRODUIT</span><h2>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"}</h2></div><span className={`product-badge ${product}`}>{product === "anomaly" ? "ANOMALIE" : "NDVI"}</span></div>{previewMap?.imageUrl ? <img className="real-preview" src={previewMap.imageUrl} alt={`Carte réelle ${product} du Bénin · ${previewMap.label}`} /> : <div className="preview-empty"><Icon name="map" size={26} /><strong>Aucune carte réelle disponible</strong><span>Générez cette période pour afficher le raster USGS découpé sur les limites du Bénin.</span></div>}<div className="preview-caption"><span><Icon name="map" size={15} /> Bénin · {previewMap?.label ?? selected.label}</span><span className="caption-muted">USGS FEWS NET · données réelles uniquement</span></div></div>
-    </section>
+      <section className="workspace-grid">
+        <div className="generation-card card">
+          <div className="card-heading">
+            <div>
+              <span className="section-kicker">NOUVELLE CARTE</span>
+              <h2>Paramètres de génération</h2>
+            </div>
+            <span className="secure-pill">
+              <span className="live-dot" /> Source active
+            </span>
+          </div>
+          <div className="field-block">
+            <label>Produit cartographique</label>
+            <div className="product-toggle">
+              <button
+                className={product === "anomaly" ? "active anomaly-active" : ""}
+                onClick={() => setProduct("anomaly")}
+              >
+                <span className="toggle-swatch anomaly-swatch" />
+                <span>
+                  <strong>NDVI anomalie</strong>
+                  <small>Pourcentage de la moyenne</small>
+                </span>
+              </button>
+              <button
+                className={product === "ndvi" ? "active" : ""}
+                onClick={() => setProduct("ndvi")}
+              >
+                <span className="toggle-swatch ndvi-swatch" />
+                <span>
+                  <strong>NDVI brut</strong>
+                  <small>Indice de végétation</small>
+                </span>
+              </button>
+            </div>
+          </div>
+          <div className="field-block">
+            <label htmlFor="pentade">Période d’analyse</label>
+            <div className="select-wrap">
+              <Icon name="calendar" size={17} />
+              <select
+                id="pentade"
+                value={pentade}
+                onChange={(event) => setPentade(event.target.value)}
+              >
+                {availablePentades.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label} · {item.detail}
+                  </option>
+                ))}
+              </select>
+              <span className="select-chevron">⌄</span>
+            </div>
+            <span className="field-hint">
+              Les données les plus récentes sont proposées en premier.
+            </span>
+          </div>
+          <button
+            className="generate-button"
+            onClick={generate}
+            disabled={status === "processing" || status === "pending"}
+          >
+            <span>
+              {status === "processing" || status === "pending"
+                ? "Génération en cours…"
+                : "Générer la carte"}
+            </span>
+            <Icon name="arrow" size={18} />
+          </button>
+          <div className={`job-status ${status}`} aria-live="polite">
+            {(status === "idle" || status === "error") && (
+              <>
+                <span className="status-icon">
+                  <Icon name="layers" size={17} />
+                </span>
+                <span>
+                  <strong>
+                    {status === "error"
+                      ? "Échec de génération"
+                      : "Prêt à générer"}
+                  </strong>
+                  <small>
+                    {status === "error"
+                      ? error
+                      : "Le traitement prend généralement 1 à 5 minutes sur Render Free."}
+                  </small>
+                </span>
+              </>
+            )}
+            {(status === "processing" || status === "pending") && (
+              <>
+                <span className="spinner" />
+                <span className="progress-copy">
+                  <strong>
+                    {status === "pending"
+                      ? "Serveur en réveil…"
+                      : "Génération en cours"}
+                  </strong>
+                  <small>{step}</small>
+                  <span className="progress-track">
+                    <span style={{ width: `${progress}%` }} />
+                  </span>
+                </span>
+                <b>{progress}%</b>
+              </>
+            )}
+            {status === "done" && (
+              <>
+                <span className="status-icon done-icon">✓</span>
+                <span>
+                  <strong>Carte prête</strong>
+                  <small>
+                    {product === "anomaly" ? "NDVI anomalie" : "NDVI brut"} ·{" "}
+                    {selected.label}
+                  </small>
+                </span>
+                <button onClick={() => previewMap && setActiveMap(previewMap)}>
+                  Voir
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="preview-card card">
+          <div className="preview-top">
+            <div>
+              <span className="section-kicker">APERÇU DU PRODUIT</span>
+              <h2>{product === "anomaly" ? "NDVI anomalie" : "NDVI brut"}</h2>
+            </div>
+            <span className={`product-badge ${product}`}>
+              {product === "anomaly" ? "ANOMALIE" : "NDVI"}
+            </span>
+          </div>
+          {previewMap?.imageUrl ? (
+            <img
+              className="real-preview"
+              src={previewMap.imageUrl}
+              alt={`Carte réelle ${product} du Bénin · ${previewMap.label}`}
+            />
+          ) : (
+            <div className="preview-empty">
+              <Icon name="map" size={26} />
+              <strong>Aucune carte réelle disponible</strong>
+              <span>
+                Générez cette période pour afficher le raster USGS découpé sur
+                les limites du Bénin.
+              </span>
+            </div>
+          )}
+          <div className="preview-caption">
+            <span>
+              <Icon name="map" size={15} /> Bénin ·{" "}
+              {previewMap?.label ?? selected.label}
+            </span>
+            <span className="caption-muted">
+              USGS FEWS NET · données réelles uniquement
+            </span>
+          </div>
+        </div>
+      </section>
 
-    <section className="gallery-section"><div className="gallery-heading"><div><div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div><h2>Cartes générées <span>{maps.length}</span></h2></div><div className="filter-tabs"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Toutes <em>{maps.length}</em></button><button className={filter === "ndvi" ? "selected" : ""} onClick={() => setFilter("ndvi")}>NDVI</button><button className={filter === "anomaly" ? "selected" : ""} onClick={() => setFilter("anomaly")}>Anomalie</button></div></div><div className="gallery-grid">{visibleMaps.length ? visibleMaps.map((item) => <button className="gallery-item" key={item.id} onClick={() => setActiveMap(item)}>{item.thumbnailUrl ? <img className="real-thumb" src={item.thumbnailUrl} alt={`Carte ${item.label}`} /> : <div className="preview-empty"><Icon name="map" size={20} /><span>Aperçu indisponible</span></div>}<div className="gallery-info"><div><span className={`mini-badge ${item.product}`}>{item.product === "anomaly" ? "Anomalie" : "NDVI"}</span><strong>{item.label}</strong></div><span className="gallery-date">{item.date}</span></div></button>) : <div className="empty-gallery"><Icon name="map" size={22} /><strong>Aucune carte générée</strong><span>Choisissez une pentade ci-dessus pour commencer.</span></div>}</div></section>
+      <section className="gallery-section">
+        <div className="gallery-heading">
+          <div>
+            <div className="eyebrow">ARCHIVE EN TEMPS RÉEL</div>
+            <h2>
+              Cartes générées <span>{maps.length}</span>
+            </h2>
+          </div>
+          <div className="filter-tabs">
+            <button
+              className={filter === "all" ? "selected" : ""}
+              onClick={() => setFilter("all")}
+            >
+              Toutes <em>{maps.length}</em>
+            </button>
+            <button
+              className={filter === "ndvi" ? "selected" : ""}
+              onClick={() => setFilter("ndvi")}
+            >
+              NDVI
+            </button>
+            <button
+              className={filter === "anomaly" ? "selected" : ""}
+              onClick={() => setFilter("anomaly")}
+            >
+              Anomalie
+            </button>
+          </div>
+        </div>
+        <div className="gallery-grid">
+          {visibleMaps.length ? (
+            visibleMaps.map((item) => (
+              <button
+                className="gallery-item"
+                key={item.id}
+                onClick={() => setActiveMap(item)}
+              >
+                {item.thumbnailUrl ? (
+                  <img
+                    className="real-thumb"
+                    src={item.thumbnailUrl}
+                    alt={`Carte ${item.label}`}
+                  />
+                ) : (
+                  <div className="preview-empty">
+                    <Icon name="map" size={20} />
+                    <span>Aperçu indisponible</span>
+                  </div>
+                )}
+                <div className="gallery-info">
+                  <div>
+                    <span className={`mini-badge ${item.product}`}>
+                      {item.product === "anomaly" ? "Anomalie" : "NDVI"}
+                    </span>
+                    <strong>{item.label}</strong>
+                  </div>
+                  <span className="gallery-date">{item.date}</span>
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="empty-gallery">
+              <Icon name="map" size={22} />
+              <strong>Aucune carte générée</strong>
+              <span>Choisissez une pentade ci-dessus pour commencer.</span>
+            </div>
+          )}
+        </div>
+      </section>
 
-    <footer className="footer"><span>Source : USGS FEWS NET · eVIIRS 375 m</span><span>Plateforme opérationnelle <span className="live-dot" /></span></footer>
-    {showAgro && <AgroPanel agroYear={agroYear} setAgroYear={setAgroYear} agroMonth={agroMonth} setAgroMonth={setAgroMonth} agroDecade={agroDecade} setAgroDecade={setAgroDecade} agroView={agroView} setAgroView={setAgroView} rainDepartmentGroup={rainDepartmentGroup} setRainDepartmentGroup={setRainDepartmentGroup} visibleRainStations={visibleRainStations} days={days} rainRows={rainRows} updateRain={updateRain} saveRain={saveRain} agroStations={agroStations} setAgroStations={setAgroStations} agroStation={agroStation} setAgroStation={setAgroStation} agroRows={agroRows} updateAgro={updateAgro} saveObservations={saveObservations} ewEtpRows={ewEtpRows} setEwEtpRows={setEwEtpRows} ewEtpCalculations={ewEtpCalculations} agroMessage={agroMessage} exportAvailability={exportAvailability} agroFetch={agroFetch} setAgroMessage={setAgroMessage} newStation={newStation} setNewStation={setNewStation} createStation={createStation} onClose={() => setShowAgro(false)} />}
-    {activeMap && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Visualiseur de carte" onClick={() => setActiveMap(null)}><div className="lightbox-panel" onClick={(event) => event.stopPropagation()}><div className="lightbox-head"><div><span className={`mini-badge ${activeMap.product}`}>{activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}</span><h2>{activeMap.label}</h2></div><button className="icon-button" onClick={() => setActiveMap(null)} aria-label="Fermer"><Icon name="close" /></button></div>{activeMap.imageUrl && <img className="real-map" src={activeMap.imageUrl} alt={`Carte ${activeMap.label}`} />}<div className="lightbox-actions"><button className="secondary-button" onClick={copyLink}><Icon name="copy" size={16} /> Copier le lien</button>{activeMap.imageUrl && <a className="primary-small" href={activeMap.imageUrl} download><Icon name="download" size={16} /> Télécharger JPEG</a>}</div></div></div>}
-    {toast && <div className="toast">✓ {toast}</div>}
-  </main>;
+      <footer className="footer">
+        <span>Source : USGS FEWS NET · eVIIRS 375 m</span>
+        <span>
+          Plateforme opérationnelle <span className="live-dot" />
+        </span>
+      </footer>
+      {showAgro && (
+        <AgroPanel
+          agroYear={agroYear}
+          setAgroYear={setAgroYear}
+          agroMonth={agroMonth}
+          setAgroMonth={setAgroMonth}
+          agroDecade={agroDecade}
+          setAgroDecade={setAgroDecade}
+          agroView={agroView}
+          setAgroView={setAgroView}
+          rainDepartmentGroup={rainDepartmentGroup}
+          setRainDepartmentGroup={setRainDepartmentGroup}
+          visibleRainStations={visibleRainStations}
+          days={days}
+          rainRows={rainRows}
+          updateRain={updateRain}
+          saveRain={saveRain}
+          agroStations={agroStations}
+          setAgroStations={setAgroStations}
+          agroStation={agroStation}
+          setAgroStation={setAgroStation}
+          agroRows={agroRows}
+          updateAgro={updateAgro}
+          saveObservations={saveObservations}
+          ewEtpRows={ewEtpRows}
+          setEwEtpRows={setEwEtpRows}
+          ewEtpCalculations={ewEtpCalculations}
+          agroMessage={agroMessage}
+          exportAvailability={exportAvailability}
+          agroFetch={agroFetch}
+          setAgroMessage={setAgroMessage}
+          newStation={newStation}
+          setNewStation={setNewStation}
+          createStation={createStation}
+          onClose={() => setShowAgro(false)}
+        />
+      )}
+      {activeMap && (
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visualiseur de carte"
+          onClick={() => setActiveMap(null)}
+        >
+          <div
+            className="lightbox-panel"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="lightbox-head">
+              <div>
+                <span className={`mini-badge ${activeMap.product}`}>
+                  {activeMap.product === "anomaly" ? "Anomalie" : "NDVI"}
+                </span>
+                <h2>{activeMap.label}</h2>
+              </div>
+              <button
+                className="icon-button"
+                onClick={() => setActiveMap(null)}
+                aria-label="Fermer"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+            {activeMap.imageUrl && (
+              <img
+                className="real-map"
+                src={activeMap.imageUrl}
+                alt={`Carte ${activeMap.label}`}
+              />
+            )}
+            <div className="lightbox-actions">
+              <button className="secondary-button" onClick={copyLink}>
+                <Icon name="copy" size={16} /> Copier le lien
+              </button>
+              {activeMap.imageUrl && (
+                <a className="primary-small" href={activeMap.imageUrl} download>
+                  <Icon name="download" size={16} /> Télécharger JPEG
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {toast && <div className="toast">✓ {toast}</div>}
+    </main>
+  );
 }
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   useEffect(() => {
-    fetch("/api/platform-session", { cache: "no-store" }).then((response) => setUser(response.ok ? { id: "platform", email: "" } : null)).catch(() => setUser(null));
+    fetch("/api/platform-session", { cache: "no-store" })
+      .then((response) =>
+        setUser(response.ok ? { id: "platform", email: "" } : null),
+      )
+      .catch(() => setUser(null));
   }, []);
-  if (user === undefined) return <main className="auth-shell"><div className="auth-card"><span className="spinner" /></div></main>;
+  if (user === undefined)
+    return (
+      <main className="auth-shell">
+        <div className="auth-card">
+          <span className="spinner" />
+        </div>
+      </main>
+    );
   return user ? <Dashboard user={user} /> : <AuthScreen />;
 }
