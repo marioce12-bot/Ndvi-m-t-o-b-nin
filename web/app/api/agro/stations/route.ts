@@ -19,3 +19,13 @@ export async function POST(request: NextRequest) {
   const body = await response.arrayBuffer();
   return new NextResponse(body, { status: response.status, headers: { "Content-Type": response.headers.get("content-type") ?? "application/json" } });
 }
+
+export async function DELETE(request: NextRequest) {
+  const workerUrl = process.env.WORKER_URL;
+  const workerKey = process.env.WORKER_API_KEY;
+  if (!workerUrl || !workerKey) return NextResponse.json({ error: "Worker agro non configuré" }, { status: 503 });
+  const id = request.nextUrl.pathname.split("/").pop();
+  const response = await fetch(`${workerUrl.replace(/\/$/, "")}/agro/stations/${encodeURIComponent(id ?? "")}`, { method: "DELETE", headers: { "X-API-Key": workerKey }, cache: "no-store" });
+  const body = await response.arrayBuffer();
+  return new NextResponse(body, { status: response.status, headers: { "Content-Type": response.headers.get("content-type") ?? "application/json" } });
+}

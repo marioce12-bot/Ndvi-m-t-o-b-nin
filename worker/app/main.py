@@ -294,6 +294,12 @@ def save_agro_station(request: StationRequest) -> dict[str, object]:
     return {"station": next((station for station in db.list_agro_stations() if station["id"] == request.id), {"id": request.id, **request.model_dump(exclude={"id"})})}
 
 
+@app.delete("/agro/stations/{station_id}", dependencies=[Depends(require_api_key)])
+def delete_agro_station(station_id: str) -> dict[str, object]:
+    db.delete_agro_station(station_id)
+    return {"deleted": station_id}
+
+
 @app.get("/agro/pluies", dependencies=[Depends(require_api_key)])
 def agro_rains(year: int, month: int, decade: int) -> dict[str, object]:
     _validate_period(year, month, decade)

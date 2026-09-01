@@ -25,3 +25,4 @@ export function GET(request: Request, context: { params: Promise<{ path: string[
 export function POST(request: Request, context: { params: Promise<{ path: string[] }> }) { return proxy(request, context); }
 export function PUT(request: Request, context: { params: Promise<{ path: string[] }> }) { return proxy(request, context); }
 export function PATCH(request: Request, context: { params: Promise<{ path: string[] }> }) { return proxy(request, context); }
+export function DELETE(request: Request, context: { params: Promise<{ path: string[] }> }) { return proxy(request, context); }

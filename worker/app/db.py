@@ -54,6 +54,10 @@ def upsert_agro_station(value: dict[str, object]) -> None:
     get_client().table("agro_stations").upsert(payload, on_conflict="id").execute()
 
 
+def delete_agro_station(station_id: str) -> None:
+    get_client().table("agro_stations").delete().eq("id", station_id).eq("principal", False).execute()
+
+
 def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = None) -> list[dict[str, object]]:
     query = get_client().table("agro_rain_daily").select("*").eq("year", year).eq("month", month).eq("decade", decade)
     if station_id:

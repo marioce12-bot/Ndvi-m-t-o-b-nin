@@ -397,6 +397,8 @@ function AgroPanel({
   createStation,
   stationDialogOpen,
   setStationDialogOpen,
+  stationDepartmentFilter,
+  setStationDepartmentFilter,
 }: any) {
   const rainValue = (stationId: string, day: number) =>
     rainRows.find(
@@ -978,7 +980,7 @@ function AgroPanel({
                   </tr>
                 </thead>
                 <tbody>
-                  {agroStations.map((station: any) => (
+                  {agroStations.filter((station: any) => !stationDepartmentFilter || station.department === stationDepartmentFilter).map((station: any) => (
                     <tr key={station.id}>
                       <th>{station.name}</th>
                       <td>{station.department}</td>
@@ -1148,6 +1150,7 @@ function Dashboard({ user }: { user: User }) {
     latitude: "",
   });
   const [stationDialogOpen, setStationDialogOpen] = useState(false);
+  const [stationDepartmentFilter, setStationDepartmentFilter] = useState("");
   useEffect(() => {
     void fetch("/api/agro/stations", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data) => {
       if (!data?.stations) return;
@@ -1173,7 +1176,7 @@ function Dashboard({ user }: { user: User }) {
   const agroFetch = async (path: string, init?: RequestInit) => {
     const started = performance.now();
     const response = await fetch(`/api/agro${path}`, init);
-    const data = await response.json();
+    const data = response.status === 204 ? {} : await response.json();
     console.info(
       `[agro] ${path}: ${Math.round(performance.now() - started)} ms`,
       { ok: response.ok },
