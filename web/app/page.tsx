@@ -1174,7 +1174,7 @@ function Dashboard({ user }: { user: User }) {
       { ok: response.ok },
     );
     if (!response.ok)
-      throw new Error(data.detail ?? data.error ?? "Erreur API agro");
+      throw new Error(Array.isArray(data.detail) ? data.detail.map((item: any) => item.msg).join(", ") : data.detail ?? data.error ?? "Erreur API agro");
     return data;
   };
   const createStation = async () => {
