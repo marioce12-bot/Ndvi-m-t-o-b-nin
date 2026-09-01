@@ -116,12 +116,22 @@ def build_observations_export(year: int, month: int, decade: int, station: Stati
     sheet.append([])
     headers = ["Jour", "Pluie", "Insolation", "Tmin", "Tmax", "T moy", "Hum. min", "Hum. max", "Hum. moy", "Évapo. bac"]
     sheet.append(headers)
-    for row in sorted(rows, key=lambda item: int(item.get("jour", 0))):
+    data_start = sheet.max_row + 1
+    ordered = {int(row.get("jour", 0)): row for row in rows}
+    for day in range(1, 11):
+        row = ordered.get(day, {})
         tmin, tmax = row.get("temp_min"), row.get("temp_max")
         hmin, hmax = row.get("humidite_min"), row.get("humidite_max")
         row_number = sheet.max_row + 1
-        sheet.append([row.get("jour"), row.get("pluie"), row.get("insolation"), tmin, tmax, f"=AVERAGE(D{row_number}:E{row_number})" if tmin is not None and tmax is not None else None, hmin, hmax, f"=0.6*G{row_number}+0.4*H{row_number}" if hmin is not None and hmax is not None else None, row.get("evapo_bac_a")])
+        sheet.append([day, row.get("pluie"), row.get("insolation"), tmin, tmax, f"=IF(COUNT(D{row_number}:E{row_number})=2,AVERAGE(D{row_number}:E{row_number}),\"\")", hmin, hmax, f"=IF(COUNT(G{row_number}:H{row_number})=2,0.6*G{row_number}+0.4*H{row_number},\"\")", row.get("evapo_bac_a")])
+    data_end = sheet.max_row
+    sheet.append(["Total", f"=SUM(B{data_start}:B{data_end})", f"=SUM(C{data_start}:C{data_end})", "", "", "", "", "", "", f"=SUM(J{data_start}:J{data_end})"])
+    sheet.append(["Moyenne", f"=AVERAGE(B{data_start}:B{data_end})", f"=AVERAGE(C{data_start}:C{data_end})", f"=AVERAGE(D{data_start}:D{data_end})", f"=AVERAGE(E{data_start}:E{data_end})", f"=AVERAGE(F{data_start}:F{data_end})", f"=AVERAGE(G{data_start}:G{data_end})", f"=AVERAGE(H{data_start}:H{data_end})", f"=AVERAGE(I{data_start}:I{data_end})", f"=AVERAGE(J{data_start}:J{data_end})"])
     _style_table(sheet, 4, [12, 14, 16, 12, 12, 12, 14, 14, 14, 16])
+    for row in (sheet.max_row - 1, sheet.max_row):
+        for cell in sheet[row]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill("solid", fgColor="4E8B5D")
     sheet.auto_filter.ref = f"A4:J{sheet.max_row}"
     return _download(workbook, f"RENSEIGNEMENTS_AGRO_{station.id}_{year}_{month:02d}_D{decade}.xlsx")
     
