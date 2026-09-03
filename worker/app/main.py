@@ -414,13 +414,11 @@ def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse
 
 
 @app.get("/agro/export/observations.xlsx", dependencies=[Depends(require_api_key)])
-def agro_observations_export(year: int, month: int, decade: int, station_id: str) -> StreamingResponse:
+def agro_observations_export(year: int, month: int, decade: int) -> StreamingResponse:
     _validate_period(year, month, decade)
     stations = _build_principal_stations()
-    station = next((item for item in stations if item.id == station_id), None)
-    if station is None:
-        raise HTTPException(status_code=404, detail="Station agro introuvable")
-    stream, filename = build_observations_export(year, month, decade, station, db.list_agro_observations(year, month, decade, station_id))
+    rows_by_station = {station.id: db.list_agro_observations(year, month, decade, station.id) for station in stations}
+    stream, filename = build_observations_export(year, month, decade, stations, rows_by_station)
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
