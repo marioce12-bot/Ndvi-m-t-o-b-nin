@@ -486,8 +486,8 @@ function AgroPanel({
   };
   const missingObservationDays = days.filter((day: number) => {
     const row = agroRows.find((item: any) => item.jour === day);
-    const pluieEmpty =
-      row?.pluie === undefined || row?.pluie === null || row?.pluie === "";
+    const pluie = rainValue(agroStation, day);
+    const pluieEmpty = pluie === undefined || pluie === null || (pluie as any) === "";
     const tempMinEmpty =
       row?.temp_min === undefined ||
       row?.temp_min === null ||
@@ -758,8 +758,19 @@ function AgroPanel({
                     return (
                       <tr key={day}>
                         <th scope="row">J{day}</th>
+                        <td>
+                          <input
+                            aria-label={`Pluie, jour ${day}`}
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={rainValue(agroStation, day) ?? ""}
+                            onChange={(event) =>
+                              updateRain(agroStation, day, event.target.value)
+                            }
+                          />
+                        </td>
                         {[
-                          ["pluie", "Pluie"],
                           ["temp_min", "Température minimale"],
                           ["temp_max", "Température maximale"],
                         ].map(([key, label]) => (
@@ -838,9 +849,10 @@ function AgroPanel({
                       <td key={key}>
                         {days
                           .reduce((sum: number, day: number) => {
-                            const row =
-                              agroRows.find((item: any) => item.jour === day) ??
-                              {};
+                            const row = {
+                              ...(agroRows.find((item: any) => item.jour === day) ?? {}),
+                              pluie: rainValue(agroStation, day),
+                            };
                             const value =
                               key === "tmean"
                                 ? row.temp_min != null && row.temp_max != null
@@ -882,9 +894,10 @@ function AgroPanel({
                       <td key={key}>
                         {(
                           days.reduce((sum: number, day: number) => {
-                            const row =
-                              agroRows.find((item: any) => item.jour === day) ??
-                              {};
+                            const row = {
+                              ...(agroRows.find((item: any) => item.jour === day) ?? {}),
+                              pluie: rainValue(agroStation, day),
+                            };
                             const value =
                               key === "tmean"
                                 ? row.temp_min != null && row.temp_max != null
@@ -1366,6 +1379,16 @@ function Dashboard({ user }: { user: User }) {
 
   const saveObservations = async () => {
     try {
+      // La colonne "Pluie" vit dans rainRows (partagée avec la saisie
+      // pluviométrique) : on la fusionne ici avec les autres champs saisis
+      // dans "Renseignements agro" avant l'envoi.
+      const valeurs = days.map((day: number) => {
+        const row = agroRows.find((item: any) => item.jour === day) ?? { jour: day };
+        const pluie = rainRows.find(
+          (item: any) => item.station_id === agroStation && item.jour === day,
+        )?.hauteur_mm;
+        return { ...row, jour: day, pluie: pluie ?? row.pluie };
+      });
       await agroFetch("/observations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1374,13 +1397,14 @@ function Dashboard({ user }: { user: User }) {
           month: Number(agroMonth),
           decade: Number(agroDecade),
           station_id: agroStation,
-          valeurs: agroRows,
+          valeurs,
         }),
       });
       setToast("Observations enregistrées");
       setAgroMessage("Observations enregistrées");
 
-      // Les observations impactent les exports climatiques; on rafraîchit le statut.
+      // Les observations impactent les exports climatiques; on rafraîchit le statut,
+      // et on recharge la pluie (elle a pu être mise à jour côté serveur).
       const [rain, climate] = await Promise.all([
         agroFetch(
           `/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
@@ -1389,6 +1413,7 @@ function Dashboard({ user }: { user: User }) {
           `/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
         ),
       ]);
+      setRainRows(rain.valeurs ?? []);
       setExportAvailability({
         network: (rain.valeurs ?? []).length > 0,
         climate: (climate.calculs ?? []).length > 0,
@@ -1419,27 +1444,22 @@ function Dashboard({ user }: { user: User }) {
     let cancelled = false;
     const loadAgroData = async () => {
       try {
-        const [rain, climate] = await Promise.all([
+        const [rain, climate, observations] = await Promise.all([
           agroFetch(
             `/pluies?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
           ),
           agroFetch(
             `/ew-etp?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`,
           ),
+          agroFetch(
+            `/observations?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}&station_id=${agroStation}`,
+          ),
         ]);
         if (cancelled) return;
+        // "Pluie" est une donnée partagée avec la saisie pluviométrique : elle
+        // vit uniquement dans rainRows, jamais recopiée dans agroRows.
         setRainRows(rain.valeurs ?? []);
-        if (agroView === "observations")
-          setAgroRows((rows) =>
-            rows.map((row) => ({
-              ...row,
-              pluie:
-                rain.valeurs?.find(
-                  (value: any) =>
-                    value.station_id === agroStation && value.jour === row.jour,
-                )?.hauteur_mm ?? row.pluie,
-            })),
-          );
+        setAgroRows(observations.valeurs ?? []);
         setEwEtpRows(climate.valeurs ?? []);
         setEwEtpCalculations(climate.calculs ?? []);
         setExportAvailability({
