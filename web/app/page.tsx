@@ -1993,6 +1993,8 @@ function Dashboard({ user }: { user: User }) {
       createStation={createStation}
       stationDialogOpen={stationDialogOpen}
       setStationDialogOpen={setStationDialogOpen}
+      stationDepartmentFilter={stationDepartmentFilter}
+      setStationDepartmentFilter={setStationDepartmentFilter}
           onClose={() => setShowAgro(false)}
         />
       )}
