@@ -3,7 +3,7 @@ import unittest
 
 import openpyxl
 
-from app.agro.exports import build_climate_export, build_network_export
+from app.agro.exports import build_climate_export, build_network_export, build_observations_export
 from app.agro.models import Station
 from app.agro.registry import canonical_stations
 
@@ -33,6 +33,22 @@ class AgroExportTests(unittest.TestCase):
         values = [cell.value for row in sheet.iter_rows() for cell in row]
         self.assertIn("Agouna", values)
         self.assertIn("Allada", values)
+
+    def test_observations_export_contains_a_table_per_station_with_all_columns(self) -> None:
+        rows_by_station = {
+            "a": [{"jour": 1, "pluie": 5, "temp_min": 20, "temp_max": 30, "temp_10cm": 27, "temp_50cm": 26, "vent_moyen": 2, "vent_max": 4, "insolation": 8, "humidite_min": 40, "humidite_max": 90, "tension_vapeur": 2.1, "evapo_bac_a": 4}],
+            "c": [],
+        }
+        stream, filename = build_observations_export(2026, 8, 1, self.stations, rows_by_station)
+        self.assertEqual(filename, "RENSEIGNEMENTS_AGRO_2026_08_D1.xlsx")
+        sheet = openpyxl.load_workbook(stream).active
+        values = [cell.value for row in sheet.iter_rows() for cell in row]
+        # Both stations get their own table.
+        self.assertIn("Station A", " ".join(str(v) for v in values if v))
+        self.assertIn("Station C", " ".join(str(v) for v in values if v))
+        # All 15 columns from the platform table are present.
+        for header in ("Temp. 10cm", "Temp. 50cm", "Vent moyen", "Vent maxi", "Tension vapeur"):
+            self.assertIn(header, values)
 
 
 if __name__ == "__main__":
