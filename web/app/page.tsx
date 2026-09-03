@@ -1028,9 +1028,9 @@ function AgroPanel({
             </a>
             <a
               className="agro-export-link"
-              href={`/api/agro/export/observations.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}&station_id=${agroStation}`}
+              href={`/api/agro/export/observations.xlsx?year=${agroYear}&month=${agroMonth}&decade=${agroDecade}`}
             >
-              Renseignements agro
+              Renseignements agro (toutes les stations)
             </a>
           </section>
         )}
