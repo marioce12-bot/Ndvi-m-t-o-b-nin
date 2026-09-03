@@ -316,18 +316,37 @@ def save_agro_rains(request: RainRequest) -> dict[str, object]:
     return {"valeurs": db.list_agro_rain(request.year, request.month, request.decade), "calculs": {station: dict(zip(("nbjp_gt0", "nbjp_gt20", "max", "total"), rain_statistics(values))) for station, values in grouped.items()}}
 
 
+def _merge_pluie_with_rain(year: int, month: int, decade: int, station_id: str, observations: list[dict[str, object]]) -> list[dict[str, object]]:
+    """La colonne "Pluie" des renseignements agro et la saisie pluviométrique
+    représentent la même donnée (agro_rain_daily). On la fusionne ici pour que
+    les deux sections affichent toujours la même valeur, quel que soit
+    l'écran depuis lequel elle a été saisie."""
+    rain_by_day = {int(row.get("jour", 0)): row.get("hauteur_mm") for row in db.list_agro_rain(year, month, decade, station_id)}
+    by_day = {int(row.get("jour", 0)): dict(row) for row in observations}
+    for day, hauteur in rain_by_day.items():
+        by_day.setdefault(day, {"jour": day})
+        by_day[day]["pluie"] = hauteur
+    return [by_day[day] for day in sorted(by_day)]
+
+
 @app.get("/agro/observations", dependencies=[Depends(require_api_key)])
 def agro_observations(year: int, month: int, decade: int, station_id: str) -> dict[str, object]:
     _validate_period(year, month, decade)
-    return {"valeurs": db.list_agro_observations(year, month, decade, station_id)}
+    values = db.list_agro_observations(year, month, decade, station_id)
+    return {"valeurs": _merge_pluie_with_rain(year, month, decade, station_id, values)}
 
 
 @app.post("/agro/observations", dependencies=[Depends(require_api_key)])
 def save_agro_observations(request: AgroRequest) -> dict[str, object]:
     _validate_period(request.year, request.month, request.decade)
-    payloads = [{"year": request.year, "month": request.month, "decade": request.decade, "station_id": request.station_id, **value.model_dump()} for value in request.valeurs]
+    payloads = [{"year": request.year, "month": request.month, "decade": request.decade, "station_id": request.station_id, **{key: val for key, val in value.model_dump().items() if key != "pluie"}} for value in request.valeurs]
     db.upsert_agro_observations(payloads)
-    values = db.list_agro_observations(request.year, request.month, request.decade, request.station_id)
+    # La "Pluie" saisie ici est la même donnée que celle de l'écran "Saisie pluviométrique" :
+    # on la répercute dans agro_rain_daily pour que les deux écrans restent synchronisés.
+    rain_payloads = [{"year": request.year, "month": request.month, "decade": request.decade, "station_id": request.station_id, "jour": value.jour, "hauteur_mm": value.pluie} for value in request.valeurs if value.pluie is not None]
+    if rain_payloads:
+        db.upsert_agro_rain(rain_payloads)
+    values = _merge_pluie_with_rain(request.year, request.month, request.decade, request.station_id, db.list_agro_observations(request.year, request.month, request.decade, request.station_id))
     return {"valeurs": values, "totaux_moyennes": {"pluie": sum(v.get("pluie") or 0 for v in values), "insolation": sum(v.get("insolation") or 0 for v in values), "evapo_bac_a": sum(v.get("evapo_bac_a") or 0 for v in values), "temp_moy": sum((v.get("temp_min") + v.get("temp_max")) / 2 for v in values if v.get("temp_min") is not None and v.get("temp_max") is not None) / max(1, len(values))}}
 
 
@@ -417,7 +436,10 @@ def agro_climate_export(year: int, month: int, decade: int) -> StreamingResponse
 def agro_observations_export(year: int, month: int, decade: int) -> StreamingResponse:
     _validate_period(year, month, decade)
     stations = _build_principal_stations()
-    rows_by_station = {station.id: db.list_agro_observations(year, month, decade, station.id) for station in stations}
+    rows_by_station = {
+        station.id: _merge_pluie_with_rain(year, month, decade, station.id, db.list_agro_observations(year, month, decade, station.id))
+        for station in stations
+    }
     stream, filename = build_observations_export(year, month, decade, stations, rows_by_station)
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
