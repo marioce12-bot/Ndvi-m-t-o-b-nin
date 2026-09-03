@@ -659,13 +659,18 @@ function AgroPanel({
                   <tr>
                     <th>Jour</th>
                     <th>Pluie</th>
-                    <th>Insolation</th>
                     <th>Tmin</th>
                     <th>Tmax</th>
                     <th>T moy</th>
+                    <th>Temp. 10cm</th>
+                    <th>Temp. 50cm</th>
+                    <th>Vent moyen</th>
+                    <th>Vent maxi</th>
+                    <th>Insolation</th>
                     <th>Hum. min</th>
                     <th>Hum. max</th>
                     <th>Hum. moy</th>
+                    <th>Tension vapeur</th>
                     <th>Évapo. bac</th>
                   </tr>
                 </thead>
@@ -687,7 +692,6 @@ function AgroPanel({
                         <th scope="row">J{day}</th>
                         {[
                           ["pluie", "Pluie"],
-                          ["insolation", "Insolation"],
                           ["temp_min", "Température minimale"],
                           ["temp_max", "Température maximale"],
                         ].map(([key, label]) => (
@@ -705,6 +709,11 @@ function AgroPanel({
                         ))}
                         <td>{tmean === "" ? "—" : Number(tmean).toFixed(1)}</td>
                         {[
+                          ["temp_10cm", "Température à 10 cm"],
+                          ["temp_50cm", "Température à 50 cm"],
+                          ["vent_moyen", "Vent moyen"],
+                          ["vent_max", "Vent maximal"],
+                          ["insolation", "Insolation"],
                           ["humidite_min", "Humidité minimale"],
                           ["humidite_max", "Humidité maximale"],
                         ].map(([key, label]) => (
@@ -721,17 +730,22 @@ function AgroPanel({
                           </td>
                         ))}
                         <td>{hmean === "" ? "—" : Number(hmean).toFixed(1)}</td>
-                        <td>
-                          <input
-                            aria-label={`Évaporation bac, jour ${day}`}
-                            type="number"
-                            step="0.1"
-                            value={row.evapo_bac_a ?? ""}
-                            onChange={(event) =>
-                              updateAgro(day, "evapo_bac_a", event.target.value)
-                            }
-                          />
-                        </td>
+                        {[
+                          ["tension_vapeur", "Tension de vapeur"],
+                          ["evapo_bac_a", "Évaporation bac A"],
+                        ].map(([key, label]) => (
+                          <td key={key}>
+                            <input
+                              aria-label={`${label}, jour ${day}`}
+                              type="number"
+                              step="0.1"
+                              value={row[key] ?? ""}
+                              onChange={(event) =>
+                                updateAgro(day, key, event.target.value)
+                              }
+                            />
+                          </td>
+                        ))}
                       </tr>
                     );
                   })}
@@ -739,13 +753,18 @@ function AgroPanel({
                     <th>Total</th>
                     {[
                       "pluie",
-                      "insolation",
                       "temp_min",
                       "temp_max",
                       "tmean",
+                      "temp_10cm",
+                      "temp_50cm",
+                      "vent_moyen",
+                      "vent_max",
+                      "insolation",
                       "humidite_min",
                       "humidite_max",
                       "hmean",
+                      "tension_vapeur",
                       "evapo_bac_a",
                     ].map((key) => (
                       <td key={key}>
@@ -778,13 +797,18 @@ function AgroPanel({
                     <th>Moyenne</th>
                     {[
                       "pluie",
-                      "insolation",
                       "temp_min",
                       "temp_max",
                       "tmean",
+                      "temp_10cm",
+                      "temp_50cm",
+                      "vent_moyen",
+                      "vent_max",
+                      "insolation",
                       "humidite_min",
                       "humidite_max",
                       "hmean",
+                      "tension_vapeur",
                       "evapo_bac_a",
                     ].map((key) => (
                       <td key={key}>
