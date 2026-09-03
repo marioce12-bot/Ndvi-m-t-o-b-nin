@@ -246,6 +246,27 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <path d="M9 3v15m6-12v15" />
       </>
     ),
+    droplet: (
+      <path d="M12 2.5c3.4 4.2 7 8.4 7 12.7a7 7 0 1 1-14 0c0-4.3 3.6-8.5 7-12.7Z" />
+    ),
+    clipboard: (
+      <>
+        <rect x="6" y="4" width="12" height="17" rx="2" />
+        <path d="M9 4V3.6A1.6 1.6 0 0 1 10.6 2h2.8A1.6 1.6 0 0 1 15 3.6V4M9 10.5h6M9 14.5h4" />
+      </>
+    ),
+    thermometer: (
+      <>
+        <path d="M11 13.6V5a1.5 1.5 0 0 1 3 0v8.6a3.5 3.5 0 1 1-3 0Z" />
+        <path d="M12.5 8h1.5" />
+      </>
+    ),
+    pin: (
+      <>
+        <path d="M12 21s7-7.6 7-12.4A7 7 0 0 0 5 8.6C5 13.4 12 21 12 21Z" />
+        <circle cx="12" cy="8.6" r="2.4" />
+      </>
+    ),
   };
   return (
     <svg
@@ -361,6 +382,53 @@ function AuthScreen() {
   );
 }
 
+const AGRO_MONTHS = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+
+const AGRO_DECADE_LABELS: Record<string, string> = {
+  "1": "1ère décade",
+  "2": "2ème décade",
+  "3": "3ème décade",
+};
+
+const AGRO_NAV_GROUPS: {
+  label: string;
+  items: {
+    id: "rain" | "observations" | "ewetp" | "stations" | "exports";
+    label: string;
+    icon: string;
+  }[];
+}[] = [
+  {
+    label: "Configuration",
+    items: [{ id: "stations", label: "Stations", icon: "pin" }],
+  },
+  {
+    label: "Saisie décadaire",
+    items: [
+      { id: "rain", label: "Pluviométrie", icon: "droplet" },
+      { id: "observations", label: "Observations", icon: "clipboard" },
+      { id: "ewetp", label: "EW / ETP", icon: "thermometer" },
+    ],
+  },
+  {
+    label: "Sortie",
+    items: [{ id: "exports", label: "Exports", icon: "download" }],
+  },
+];
+
 function AgroPanel({
   agroYear,
   setAgroYear,
@@ -416,6 +484,16 @@ function AgroPanel({
         values.reduce((sum: number, value: number) => sum + value, 0) || "",
     };
   };
+  const missingObservationDays = days.filter((day: number) => {
+    const row = agroRows.find((item: any) => item.jour === day);
+    const pluieEmpty =
+      row?.pluie === undefined || row?.pluie === null || row?.pluie === "";
+    const tempMinEmpty =
+      row?.temp_min === undefined ||
+      row?.temp_min === null ||
+      row?.temp_min === "";
+    return pluieEmpty || tempMinEmpty;
+  }).length;
   const setEwEtp = (stationId: string, key: "ew" | "etp", value: string) =>
     setEwEtpRows((rows: any[]) => {
       const current = rows.find((row) => row.station_id === stationId) ?? {
@@ -455,101 +533,91 @@ function AgroPanel({
         className="lightbox-panel agro-panel"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="lightbox-head agro-head">
-          <div>
-            <span className="section-kicker">SAISIE ET SYNTHÈSE</span>
-            <h2>Bulletin agrométéo</h2>
+        <header className="agro-head">
+          <div className="agro-head-top">
+            <div>
+              <span className="section-kicker">SAISIE ET SYNTHÈSE</span>
+              <h2>Bulletin agrométéo</h2>
+            </div>
+            <button className="icon-button" onClick={onClose} aria-label="Fermer">
+              <Icon name="close" />
+            </button>
           </div>
-          <button className="icon-button" onClick={onClose} aria-label="Fermer">
-            <Icon name="close" />
-          </button>
+          <div className="agro-period">
+            <div className="agro-period-fields">
+              <label>
+                Année
+                <select
+                  value={agroYear}
+                  onChange={(event) => setAgroYear(event.target.value)}
+                >
+                  {Array.from({ length: 101 }, (_, index) => 2000 + index).map(
+                    (year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
+              <label>
+                Mois
+                <select
+                  value={agroMonth}
+                  onChange={(event) => setAgroMonth(event.target.value)}
+                >
+                  {AGRO_MONTHS.map((name, index) => (
+                    <option key={name} value={index + 1}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Décade
+                <select
+                  value={agroDecade}
+                  onChange={(event) => setAgroDecade(event.target.value)}
+                >
+                  <option value="1">1ère décade</option>
+                  <option value="2">2ème décade</option>
+                  <option value="3">3ème décade</option>
+                </select>
+              </label>
+            </div>
+            <span className="agro-period-live">
+              <Icon name="calendar" size={13} />
+              {AGRO_MONTHS[Number(agroMonth) - 1]} {agroYear} ·{" "}
+              {AGRO_DECADE_LABELS[String(agroDecade)] ?? `Décade ${agroDecade}`}
+            </span>
+          </div>
         </header>
-        <div className="agro-period">
-          <label>
-            Année
-            <select
-              value={agroYear}
-              onChange={(event) => setAgroYear(event.target.value)}
-            >
-              {Array.from({ length: 101 }, (_, index) => 2000 + index).map(
-                (year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ),
-              )}
-            </select>
-          </label>
-          <label>
-            Mois
-            <select
-              value={agroMonth}
-              onChange={(event) => setAgroMonth(event.target.value)}
-            >
-              {[
-                "Janvier",
-                "Février",
-                "Mars",
-                "Avril",
-                "Mai",
-                "Juin",
-                "Juillet",
-                "Août",
-                "Septembre",
-                "Octobre",
-                "Novembre",
-                "Décembre",
-              ].map((name, index) => (
-                <option key={name} value={index + 1}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Décade
-            <select
-              value={agroDecade}
-              onChange={(event) => setAgroDecade(event.target.value)}
-            >
-              <option value="1">1ère décade</option>
-              <option value="2">2ème décade</option>
-              <option value="3">3ème décade</option>
-            </select>
-          </label>
-        </div>
-        <nav className="agro-nav" aria-label="Sections du bulletin">
-          <button
-            className={agroView === "rain" ? "selected" : ""}
-            onClick={() => setAgroView("rain")}
-          >
-            Saisie pluviométrie
-          </button>
-          <button
-            className={agroView === "observations" ? "selected" : ""}
-            onClick={() => setAgroView("observations")}
-          >
-            Renseignements agro
-          </button>
-          <button
-            className={agroView === "ewetp" ? "selected" : ""}
-            onClick={() => setAgroView("ewetp")}
-          >
-            ew / ETP
-          </button>
-          <button
-            className={agroView === "stations" ? "selected" : ""}
-            onClick={() => setAgroView("stations")}
-          >
-            Stations
-          </button>
-          <button
-            className={agroView === "exports" ? "selected" : ""}
-            onClick={() => setAgroView("exports")}
-          >
-            Exports
-          </button>
-        </nav>
+        <div className="agro-body">
+          <nav className="agro-nav" aria-label="Sections du bulletin">
+            {AGRO_NAV_GROUPS.map((group) => (
+              <div className="agro-nav-group" key={group.label}>
+                <span className="agro-nav-label">{group.label}</span>
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`agro-nav-item${agroView === item.id ? " selected" : ""}`}
+                    onClick={() => setAgroView(item.id)}
+                  >
+                    <Icon name={item.icon} size={16} />
+                    <span>{item.label}</span>
+                    {item.id === "observations" &&
+                      missingObservationDays > 0 && (
+                        <span className="agro-nav-badge">
+                          {missingObservationDays} j.
+                        </span>
+                      )}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <div className="agro-content">
         {agroView === "rain" && (
           <section className="agro-section">
             <div className="agro-section-header">
@@ -1119,6 +1187,8 @@ function AgroPanel({
             {agroMessage}
           </p>
         )}
+          </div>
+        </div>
       </section>
     </div>
   );
