@@ -49,7 +49,7 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .agro-period-live .icon{flex:none}
 .agro-export-actions{display:grid;gap:10px}
 .agro-body{flex:1;min-height:0;display:flex;overflow:hidden}
-.agro-nav{flex:0 0 220px;display:flex;flex-direction:column;gap:20px;margin:0;padding:20px 14px;overflow-y:auto;border-right:1px solid var(--line);background:#fbfdfb}
+.agro-nav{flex:0 0 220px;display:flex;flex-direction:column;gap:20px;margin:0;padding:20px 14px;overflow:visible;border-right:1px solid var(--line);background:#fbfdfb}
 .agro-nav-group{display:flex;flex-direction:column;gap:4px}
 .agro-nav-label{margin:0 4px 2px;color:var(--muted);font-size:11px;font-weight:700}
 .agro-nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:11px;font-weight:600;text-align:left;transition:.15s}
@@ -58,14 +58,14 @@ h1 { margin:12px 0 8px; font-size:37px; line-height:1.08; letter-spacing:-.055em
 .agro-nav-item .icon{flex:none;opacity:.8}
 .agro-nav-item.selected .icon{opacity:1}
 .agro-nav-badge{margin-left:auto;padding:2px 7px;border-radius:20px;background:#f8ecdc;color:#905a22;font:700 9px 'DM Mono',monospace;white-space:nowrap}
-.agro-content{flex:1;min-width:0;overflow-y:auto;padding:20px 25px 25px}
+.agro-content{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 25px 25px}
 .agro-section{margin:0 0 20px;padding:18px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .agro-section:last-child{margin-bottom:0}
 .agro-section-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end}
 .agro-section h3{margin:0;color:var(--ink);font-size:14px}
 .agro-section p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.55}
 .agro-rain-group,.agro-station-select{min-width:220px}
-.agro-table-wrap{overflow:auto;max-height:56vh;margin:16px 0;border:1px solid var(--line);border-radius:9px}
+.agro-table-wrap{overflow-x:auto;overflow-y:visible;margin:16px 0;border:1px solid var(--line);border-radius:9px}
 .agro-table{width:100%;border-collapse:separate;border-spacing:0;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .agro-table th,.agro-table td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:7px;text-align:center}
 .agro-table tr:last-child th,.agro-table tr:last-child td{border-bottom:0}
