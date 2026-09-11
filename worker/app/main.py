@@ -450,7 +450,9 @@ def agro_observations_export(year: int, month: int, decade: int) -> StreamingRes
         station.id: _merge_pluie_with_rain(year, month, decade, station.id, db.list_agro_observations(year, month, decade, station.id))
         for station in stations
     }
-    stream, filename = build_observations_export(year, month, decade, stations, rows_by_station)
+    ew_etp = _get_ew_etp_map(year, month, decade)
+    etp_by_station = {station.id: _resolve_etp_value(ew_etp, station) for station in stations}
+    stream, filename = build_observations_export(year, month, decade, stations, rows_by_station, etp_by_station)
     return StreamingResponse(stream, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
