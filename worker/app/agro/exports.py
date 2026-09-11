@@ -26,6 +26,17 @@ def _download(workbook: openpyxl.Workbook, filename: str) -> tuple[BytesIO, str]
     return stream, filename
 
 
+def _title_row_height(font_size: int) -> float:
+    """Hauteur de ligne suffisante pour un titre en gras de `font_size` pt.
+
+    La hauteur de ligne par défaut d'openpyxl (~15pt) est calibrée pour du texte
+    à 11pt : avec un titre en gras à 13-15pt elle est trop courte et le texte
+    apparaît tassé/coupé (surtout sur les visionneuses mobiles). On force donc
+    une hauteur proportionnelle au corps du texte.
+    """
+    return round(font_size * 1.7, 1)
+
+
 def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int, widths: list[int], divider_col: int | None = None) -> None:
     border = Border(*(Side(style="thin", color="9BB7A2") for _ in range(4)))
     for row in sheet.iter_rows(min_row=header_row, max_row=sheet.max_row, min_col=1, max_col=len(widths)):
@@ -66,6 +77,7 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.cell(start, 1).font = Font(bold=True, size=13, color="FFFFFF")
         sheet.cell(start, 1).fill = PatternFill("solid", fgColor="0D472B")
         sheet.cell(start, 1).alignment = Alignment(horizontal="center")
+        sheet.row_dimensions[start].height = _title_row_height(13)
         sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=total_columns)
         sheet.cell(start + 1, 1, "RESEAU PLUVIOMETRIQUE - DEPARTEMENTS : " + ", ".join(departments))
         sheet.cell(start + 1, 1).font = Font(bold=True)
@@ -112,6 +124,7 @@ def build_climate_export(year: int, month: int, decade: int, stations: Iterable[
     sheet["A1"].font = Font(bold=True, size=15, color="FFFFFF")
     sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
     sheet["A1"].alignment = Alignment(horizontal="center")
+    sheet.row_dimensions[1].height = _title_row_height(15)
     sheet.merge_cells("A2:I2")
     sheet["A2"] = f"Période : {decade}ère décade de {MONTHS[month - 1].title()} {year}"
     sheet["A2"].alignment = Alignment(horizontal="center")
@@ -127,6 +140,7 @@ def build_climate_export(year: int, month: int, decade: int, stations: Iterable[
     normals_sheet["A1"] = "TABLEAU IV - DONNEES CLIMATIQUES (Moyennes sur décade)"
     normals_sheet["A1"].font = Font(bold=True, size=14, color="FFFFFF")
     normals_sheet["A1"].fill = PatternFill("solid", fgColor="0D472B")
+    normals_sheet.row_dimensions[1].height = _title_row_height(14)
     normals_sheet.append(["STATIONS", "Tmin", "Tmax", "Tmoy", "+10cm", "+50cm", "Hum. min", "Hum. max", "Hum. moy", "Tension Vapeur", "Déficit"])
     for station in stations:
         values = climate.get(station.id, {})
@@ -148,6 +162,7 @@ def _append_observations_table(sheet: openpyxl.worksheet.worksheet.Worksheet, ye
     sheet.cell(start, 1).font = Font(bold=True, size=15, color="FFFFFF")
     sheet.cell(start, 1).fill = PatternFill("solid", fgColor="0D472B")
     sheet.cell(start, 1).alignment = Alignment(horizontal="center")
+    sheet.row_dimensions[start].height = _title_row_height(15)
     sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=15)
     sheet.cell(start + 1, 1, f"Station : {station.name} | Période : {decade}ère décade de {MONTHS[month - 1]} {year}")
     sheet.cell(start + 1, 1).alignment = Alignment(horizontal="center")
