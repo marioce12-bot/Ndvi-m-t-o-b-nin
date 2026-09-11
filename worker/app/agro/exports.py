@@ -78,7 +78,10 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.cell(start, 1).fill = PatternFill("solid", fgColor="0D472B")
         sheet.cell(start, 1).alignment = Alignment(horizontal="center")
         sheet.row_dimensions[start].height = _title_row_height(13)
-        sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=total_columns)
+        # Sous-titre du bloc résumé (ne couvre que les colonnes du résumé, pas toute la
+        # ligne) pour laisser la place au sous-titre du bloc journalier juste à côté,
+        # sans chevaucher deux plages fusionnées sur la même ligne.
+        sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=NETWORK_SUMMARY_COLUMN_COUNT)
         sheet.cell(start + 1, 1, "RESEAU PLUVIOMETRIQUE - DEPARTEMENTS : " + ", ".join(departments))
         sheet.cell(start + 1, 1).font = Font(bold=True)
         # Sous-titre du bloc de détail, aligné sur les colonnes journalières, pour bien
