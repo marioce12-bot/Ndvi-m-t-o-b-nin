@@ -22,7 +22,25 @@ DEPARTMENTS = {
 }
 
 PRINCIPAL = {"Kandi": "Alibori", "Parakou": "Borgou", "Natitingou": "Atacora", "Savè": "Collines", "Bohicon": "Zou", "Cotonou": "Littoral"}
-ETP_ATTACHMENTS = {"Comè": "Cotonou", "Grand-Popo": "Cotonou", "Sakété": "Cotonou", "Kétou": "Bohicon", "Pobè": "Bohicon"}
+
+# Chaque département sans station principale ETP utilise l'ETP de la station
+# principale RESA du référentiel ci-dessous (couverture complète des 12
+# départements, en remplacement des rattachements station par station).
+ETP_DEPARTMENT_SOURCE = {
+    "Alibori": "Kandi",
+    "Borgou": "Parakou",
+    "Atacora": "Natitingou",
+    "Donga": "Natitingou",
+    "Collines": "Savè",
+    "Zou": "Bohicon",
+    "Couffo": "Bohicon",
+    "Mono": "Cotonou",
+    "Atlantique": "Cotonou",
+    "Littoral": "Cotonou",
+    "Oueme": "Cotonou",
+    "Plateau": "Cotonou",
+}
+
 H10_BY_STATION = {"cotonou": 124.0, "bohicon": 125.0, "savè": 125.0, "parakou": 126.0, "natitingou": 126.0, "kandi": 127.0}
 
 
@@ -33,8 +51,11 @@ def station_id(name: str) -> str:
 def canonical_stations() -> list[Station]:
     stations = []
     for department, names in DEPARTMENTS.items():
+        etp_source = ETP_DEPARTMENT_SOURCE.get(department)
         for name in names:
-            stations.append(Station(station_id(name), name, department, name, name in PRINCIPAL, station_id(ETP_ATTACHMENTS[name]) if name in ETP_ATTACHMENTS else None))
+            principal = name in PRINCIPAL
+            etp_station_id = None if principal or not etp_source else station_id(etp_source)
+            stations.append(Station(station_id(name), name, department, name, principal, etp_station_id))
     return stations
 
 
