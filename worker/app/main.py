@@ -89,6 +89,16 @@ def _lookup_by_station(values: dict[str, dict[str, object]], station: Station) -
     return values.get(station.id) or values.get(station.name.casefold()) or values.get(station.name.lower()) or {}
 
 
+def _resolve_etp_value(ew_etp: dict[str, dict[str, object]], station: Station) -> float | None:
+    """Une station non principale n'a pas d'ETP saisie directement : elle
+    utilise celle de sa station RESA de rattachement (station.etp_station_id),
+    définie par département dans le référentiel agro.registry."""
+    etp_station_id = station.id if station.principal else station.etp_station_id
+    if not etp_station_id:
+        return None
+    return (ew_etp.get(etp_station_id) or {}).get("etp")
+
+
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
     stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
@@ -118,7 +128,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
-        etp = _lookup_by_station(ew_etp, station).get("etp")
+        etp = _resolve_etp_value(ew_etp, station)
         normal_values = NORMALS.get(station.id) or NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
         normal = normal_values.get(_decade_code(month, decade), {})
         if not normal and month == 6:
