@@ -11,10 +11,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from .models import Station
 
 MONTHS = ("JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE")
-NETWORK_SUMMARY_HEADERS = ["STATIONS", "LONGITUDE", "LATITUDE", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "% de la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale", "Bilan hydrique"]
-NETWORK_DAILY_HEADERS = [f"J{day}" for day in range(1, 11)]
-NETWORK_HEADERS = NETWORK_SUMMARY_HEADERS + NETWORK_DAILY_HEADERS
-NETWORK_SUMMARY_COLUMN_COUNT = len(NETWORK_SUMMARY_HEADERS)  # 13 -> dernière colonne du bloc résumé = "Bilan hydrique"
+NETWORK_HEADERS = ["STATIONS", "LONGITUDE", "LATITUDE", "Nbre jours pluie > 00mm", "Nbre jours pluie > 20mm", "Sur la décade en cours", "Ecart à la normale", "% de la normale", "Depuis début année civile", "Ecart à la normale", "Depuis début Saison des pluies", "Ecart à la normale", "Bilan hydrique"]
 OBSERVATIONS_HEADERS = ["Jour", "Pluie", "Tmin", "Tmax", "T moy", "Temp. 10cm", "Temp. 50cm", "Vent moyen", "Vent maxi", "Insolation", "Hum. min", "Hum. max", "Hum. moy", "Tension vapeur", "Évapo. bac"]
 OBSERVATIONS_VAPOR_PRESSURE_COLUMN = "N"  # colonne "Tension vapeur" dans OBSERVATIONS_HEADERS
 
@@ -37,20 +34,12 @@ def _title_row_height(font_size: int) -> float:
     return round(font_size * 1.7, 1)
 
 
-def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int, widths: list[int], divider_col: int | None = None) -> None:
+def _style_table(sheet: openpyxl.worksheet.worksheet.Worksheet, header_row: int, widths: list[int]) -> None:
     border = Border(*(Side(style="thin", color="9BB7A2") for _ in range(4)))
     for row in sheet.iter_rows(min_row=header_row, max_row=sheet.max_row, min_col=1, max_col=len(widths)):
         for cell in row:
             cell.border = border
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    if divider_col:
-        # Bordure plus marquée à droite de `divider_col` pour signaler visuellement
-        # la fin du bloc résumé (ex: la colonne "Bilan hydrique"), avant les blocs
-        # de détail qui continuent la table (ex: pluies journalières).
-        thick = Side(style="medium", color="0D472B")
-        for row in sheet.iter_rows(min_row=header_row, max_row=sheet.max_row, min_col=divider_col, max_col=divider_col):
-            for cell in row:
-                cell.border = Border(left=cell.border.left, top=cell.border.top, bottom=cell.border.bottom, right=thick)
     for cell in sheet[header_row]:
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor="196B3A")
@@ -78,19 +67,10 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
         sheet.cell(start, 1).fill = PatternFill("solid", fgColor="0D472B")
         sheet.cell(start, 1).alignment = Alignment(horizontal="center")
         sheet.row_dimensions[start].height = _title_row_height(13)
-        # Sous-titre du bloc résumé (ne couvre que les colonnes du résumé, pas toute la
-        # ligne) pour laisser la place au sous-titre du bloc journalier juste à côté,
-        # sans chevaucher deux plages fusionnées sur la même ligne.
-        sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=NETWORK_SUMMARY_COLUMN_COUNT)
+        sheet.merge_cells(start_row=start + 1, start_column=1, end_row=start + 1, end_column=total_columns)
         sheet.cell(start + 1, 1, "RESEAU PLUVIOMETRIQUE - DEPARTEMENTS : " + ", ".join(departments))
         sheet.cell(start + 1, 1).font = Font(bold=True)
-        # Sous-titre du bloc de détail, aligné sur les colonnes journalières, pour bien
-        # distinguer visuellement le résumé décadaire ("...Bilan hydrique") du détail
-        # jour par jour qui suit sur la même ligne d'en-tête.
-        sheet.merge_cells(start_row=start + 1, start_column=NETWORK_SUMMARY_COLUMN_COUNT + 1, end_row=start + 1, end_column=total_columns)
-        sheet.cell(start + 1, NETWORK_SUMMARY_COLUMN_COUNT + 1, "PLUIES JOURNALIERES (mm)")
-        sheet.cell(start + 1, NETWORK_SUMMARY_COLUMN_COUNT + 1).font = Font(bold=True, italic=True, size=9)
-        sheet.cell(start + 1, NETWORK_SUMMARY_COLUMN_COUNT + 1).alignment = Alignment(horizontal="center")
+        sheet.cell(start + 1, 1).alignment = Alignment(horizontal="center")
         sheet.append(NETWORK_HEADERS)
         header_row = sheet.max_row
         for department in departments:
@@ -104,17 +84,28 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
                 cell.fill = PatternFill("solid", fgColor="4E8B5D")
             for station in members:
                 summary = summaries.get(station.id, {})
-                row_number = sheet.max_row + 1
                 normal = summary.get("normal_decade")
                 etp = summary.get("etp")
-                daily = list(summary.get("daily_values", []))[:10]
-                daily += [None] * (10 - len(daily))
-                sheet.append([station.name, summary.get("longitude", station.longitude), summary.get("latitude", station.latitude), f'=COUNTIF(N{row_number}:W{row_number},">0")', f'=COUNTIF(N{row_number}:W{row_number},">20")', f'=SUM(N{row_number}:W{row_number})', f'=F{row_number}-{normal}' if isinstance(normal, (int, float)) else summary.get("decade_deviation"), f'=IFERROR(F{row_number}/{normal},"")' if isinstance(normal, (int, float)) and normal else summary.get("normal_percentage"), summary.get("year_total"), summary.get("year_deviation"), summary.get("season_total"), summary.get("season_deviation"), f'=F{row_number}-{etp}' if isinstance(etp, (int, float)) else summary.get("water_balance")] + daily)
-        # Repère visuel : fond légèrement différent sur les en-têtes du bloc détail
-        # journalier pour qu'il ne se confonde pas avec la suite du bloc résumé.
-        for cell in sheet[header_row][NETWORK_SUMMARY_COLUMN_COUNT:total_columns]:
-            cell.fill = PatternFill("solid", fgColor="2F8F52")
-        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 18, 20, 18, 24, 18, 16] + [10] * 10, divider_col=NETWORK_SUMMARY_COLUMN_COUNT)
+                decade_total = summary.get("rainfall_total")
+                decade_deviation = decade_total - normal if isinstance(decade_total, (int, float)) and isinstance(normal, (int, float)) else summary.get("decade_deviation")
+                normal_percentage = (decade_total / normal) if isinstance(decade_total, (int, float)) and isinstance(normal, (int, float)) and normal else summary.get("normal_percentage")
+                water_balance = decade_total - etp if isinstance(decade_total, (int, float)) and isinstance(etp, (int, float)) else summary.get("water_balance")
+                sheet.append([
+                    station.name,
+                    summary.get("longitude", station.longitude),
+                    summary.get("latitude", station.latitude),
+                    summary.get("rain_days"),
+                    summary.get("heavy_rain_days"),
+                    decade_total,
+                    decade_deviation,
+                    normal_percentage,
+                    summary.get("year_total"),
+                    summary.get("year_deviation"),
+                    summary.get("season_total"),
+                    summary.get("season_deviation"),
+                    water_balance,
+                ])
+        _style_table(sheet, header_row, [24, 13, 13, 14, 14, 18, 18, 18, 20, 18, 24, 18, 16])
     return _download(workbook, f"DONNEES_PLUVIOMETRIQUES_{year}_{month:02d}_D{decade}.xlsx")
 
 
