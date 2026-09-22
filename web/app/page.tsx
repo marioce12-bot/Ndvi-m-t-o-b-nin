@@ -455,6 +455,9 @@ function AgroPanel({
   ewEtpRows,
   setEwEtpRows,
   agroMessage,
+  agroLoading,
+  agroSaving,
+  agroSaveProgress,
   exportAvailability,
   agroFetch,
   setAgroMessage,
@@ -505,6 +508,7 @@ function AgroPanel({
       ];
     });
   const saveEwEtp = async () => {
+    setAgroSaving(true); setAgroSaveProgress(10);
     try {
       await agroFetch("/ew-etp", {
         method: "POST",
@@ -516,9 +520,11 @@ function AgroPanel({
           valeurs: ewEtpRows,
         }),
       });
+      setAgroSaveProgress(100);
       setAgroMessage("Valeurs ew / ETP enregistrées");
     } catch {
       setAgroMessage("Impossible d'enregistrer les valeurs ew / ETP");
+    } finally { setAgroSaving(false); }
     }
   };
   return (
@@ -618,6 +624,11 @@ function AgroPanel({
             ))}
           </nav>
           <div className="agro-content">
+            {agroLoading && (
+              <div className="agro-loading" role="status">
+                <span className="spinner" /> Chargement des données agro…
+              </div>
+            )}
         {agroView === "rain" && (
           <section className="agro-section">
             <div className="agro-section-header">
@@ -692,8 +703,9 @@ function AgroPanel({
                 </tbody>
               </table>
             </div>
-            <button className="agro-save-button" onClick={saveRain}>
-              Enregistrer les pluies
+            <button className="agro-save-button" onClick={saveRain} disabled={agroSaving}>
+              {agroSaving && <span className="spinner spinner-small" />}
+              {agroSaving ? `Enregistrement ${agroSaveProgress}%` : "Enregistrer les pluies"}
             </button>
           </section>
         )}
@@ -923,8 +935,9 @@ function AgroPanel({
                 </tbody>
               </table>
             </div>
-            <button className="agro-save-button" onClick={saveObservations}>
-              Enregistrer les renseignements
+            <button className="agro-save-button" onClick={saveObservations} disabled={agroSaving}>
+              {agroSaving && <span className="spinner spinner-small" />}
+              {agroSaving ? `Enregistrement ${agroSaveProgress}%` : "Enregistrer les renseignements"}
             </button>
           </section>
         )}
@@ -1020,8 +1033,9 @@ function AgroPanel({
                 </tbody>
               </table>
             </div>
-            <button className="agro-save-button" onClick={saveEwEtp}>
-              Enregistrer ew / ETP
+            <button className="agro-save-button" onClick={saveEwEtp} disabled={agroSaving}>
+              {agroSaving && <span className="spinner spinner-small" />}
+              {agroSaving ? `Enregistrement ${agroSaveProgress}%` : "Enregistrer ew / ETP"}
             </button>
           </section>
         )}
@@ -1267,6 +1281,9 @@ function Dashboard({ user }: { user: User }) {
     }>
   >([]);
   const [agroMessage, setAgroMessage] = useState("");
+  const [agroLoading, setAgroLoading] = useState(false);
+  const [agroSaving, setAgroSaving] = useState(false);
+  const [agroSaveProgress, setAgroSaveProgress] = useState(0);
   const [exportAvailability, setExportAvailability] = useState({
     network: false,
     climate: false,
@@ -1378,6 +1395,7 @@ function Dashboard({ user }: { user: User }) {
   // Le proxy Next.js monte déjà la route worker sur `/agro/*`.
   // Donc on ne doit PAS réajouter un préfixe `/agro` ici.
   const saveRain = async () => {
+    setAgroSaving(true); setAgroSaveProgress(10);
     try {
       await agroFetch("/pluies", {
         method: "POST",
@@ -1389,8 +1407,10 @@ function Dashboard({ user }: { user: User }) {
           valeurs: rainRows,
         }),
       });
+      setAgroSaveProgress(70);
       setToast("Pluies enregistrées");
       setAgroMessage("Pluies enregistrées");
+      setAgroSaveProgress(100);
 
       // Rafraîchit l'état UI basé sur les valeurs calculées.
       const [rain, climate] = await Promise.all([
@@ -1410,10 +1430,12 @@ function Dashboard({ user }: { user: User }) {
         e instanceof Error ? e.message : "Impossible d'enregistrer les pluies",
       );
       setAgroMessage("Impossible d'enregistrer les pluies");
+    } finally { setAgroSaving(false); }
     }
   };
 
   const saveObservations = async () => {
+    setAgroSaving(true); setAgroSaveProgress(10);
     try {
       // La colonne "Pluie" vit dans rainRows (partagée avec la saisie
       // pluviométrique) : on la fusionne ici avec les autres champs saisis
@@ -1425,6 +1447,7 @@ function Dashboard({ user }: { user: User }) {
         )?.hauteur_mm;
         return { ...row, jour: day, pluie: pluie ?? row.pluie };
       });
+      setAgroSaveProgress(70);
       await agroFetch("/observations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1438,6 +1461,7 @@ function Dashboard({ user }: { user: User }) {
       });
       setToast("Observations enregistrées");
       setAgroMessage("Observations enregistrées");
+      setAgroSaveProgress(100);
 
       // Les observations impactent les exports climatiques; on rafraîchit le statut,
       // et on recharge la pluie (elle a pu être mise à jour côté serveur).
@@ -1461,6 +1485,7 @@ function Dashboard({ user }: { user: User }) {
           : "Impossible d'enregistrer les observations",
       );
       setAgroMessage("Impossible d'enregistrer les observations");
+    } finally { setAgroSaving(false); }
     }
   };
   const daysInMonth = new Date(
@@ -1479,6 +1504,7 @@ function Dashboard({ user }: { user: User }) {
   useEffect(() => {
     let cancelled = false;
     const loadAgroData = async () => {
+      setAgroLoading(true);
       try {
         const [rain, climate, observations] = await Promise.all([
           agroFetch(
@@ -1505,6 +1531,8 @@ function Dashboard({ user }: { user: User }) {
       } catch {
         if (!cancelled)
           setExportAvailability({ network: false, climate: false });
+      } finally {
+        if (!cancelled) setAgroLoading(false);
       }
     };
     void loadAgroData();
@@ -2087,6 +2115,9 @@ function Dashboard({ user }: { user: User }) {
         </div>
       )}
       {toast && <div className="toast">✓ {toast}</div>}
+      {agroMessage && /enregistrées|enregistrés/.test(agroMessage) && (
+        <div className="agro-confirmation" role="status">✓ {agroMessage}</div>
+      )}
     </main>
   );
 }
