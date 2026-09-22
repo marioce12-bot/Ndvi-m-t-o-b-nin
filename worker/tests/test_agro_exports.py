@@ -20,6 +20,26 @@ class AgroExportTests(unittest.TestCase):
         self.assertIn("RESEAU PLUVIOMETRIQUE", str(workbook.active["A3"].value))
         self.assertEqual(workbook.active["A4"].value, "STATIONS")
 
+    def test_network_export_includes_rainfall_deviations_and_percentage(self) -> None:
+        stream, _ = build_network_export(2026, 9, 1, [self.stations[0]], {
+            "a": {
+                "rainfall_total": 36.1,
+                "normal_decade": 84.36333333333333,
+                "year_total": 447.0,
+                "year_deviation": -396.2,
+                "season_total": 447.0,
+                "season_deviation": -392.0,
+            },
+        })
+        sheet = openpyxl.load_workbook(stream).active
+        rows = list(sheet.iter_rows(values_only=True))
+        station_row = next(row for row in rows if row[0] == "Station A")
+        self.assertAlmostEqual(station_row[5], 36.1)
+        self.assertAlmostEqual(station_row[6], 36.1 - 84.36333333333333)
+        self.assertAlmostEqual(station_row[7], 36.1 / 84.36333333333333 * 100)
+        self.assertEqual(station_row[9], -396.2)
+        self.assertEqual(station_row[11], -392.0)
+
     def test_climate_export_keeps_missing_values_blank(self) -> None:
         stream, filename = build_climate_export(2026, 8, 1, self.stations, {"a": {"etp": 12}})
         workbook = openpyxl.load_workbook(stream)
