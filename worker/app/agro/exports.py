@@ -88,7 +88,7 @@ def build_network_export(year: int, month: int, decade: int, stations: Iterable[
                 etp = summary.get("etp")
                 decade_total = summary.get("rainfall_total")
                 decade_deviation = decade_total - normal if isinstance(decade_total, (int, float)) and isinstance(normal, (int, float)) else summary.get("decade_deviation")
-                normal_percentage = ((decade_total / normal) * 100) if isinstance(decade_total, (int, float)) and isinstance(normal, (int, float)) and normal else summary.get("normal_percentage")
+                normal_percentage = (decade_total / normal) if isinstance(decade_total, (int, float)) and isinstance(normal, (int, float)) and normal else summary.get("normal_percentage")
                 water_balance = decade_total - etp if isinstance(decade_total, (int, float)) and isinstance(etp, (int, float)) else summary.get("water_balance")
                 sheet.append([
                     station.name,

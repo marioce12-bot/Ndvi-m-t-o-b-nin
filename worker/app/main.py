@@ -37,14 +37,11 @@ from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-_normals_path = Path(__file__).parents[1] / "data" / "rainfall_normals_station_specific.json"
-if not _normals_path.exists():
-    _normals_path = Path(__file__).parents[1] / "data" / "rainfall_normals.json"
-NORMALS = json.loads(_normals_path.read_text(encoding="utf-8")) if _normals_path.exists() else {}
+NORMALS = json.loads((Path(__file__).parents[1] / "data" / "rainfall_normals.json").read_text(encoding="utf-8")) if (Path(__file__).parents[1] / "data" / "rainfall_normals.json").exists() else {}
 
 
 def _decade_code(month: int, decade: int) -> str:
-    prefixes = {1: "j", 2: "f", 3: "m", 4: "a", 5: "ma", 6: "j", 7: "jl", 8: "ao", 9: "s", 10: "o", 11: "n", 12: "d"}
+    prefixes = {1: "ja", 2: "fe", 3: "mr", 4: "av", 5: "mi", 6: "jn", 7: "jl", 8: "ao", 9: "se", 10: "oc", 11: "no", 12: "de"}
     return f"{prefixes[month]}{decade}"
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
@@ -170,8 +167,8 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             "daily_values": values,
             "year_total": year_total,
             "season_total": season_total,
-            "decade_deviation": (total - normal_decade) if total is not None and isinstance(normal_decade, (int, float)) else None,
-            "normal_percentage": ((total / normal_decade) * 100) if total is not None and isinstance(normal_decade, (int, float)) and normal_decade else None,
+            "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
+            "normal_percentage": (total / normal_decade) if total is not None and isinstance(normal_decade, (int, float)) and normal_decade else None,
             "year_deviation": year_total - normal_year if isinstance(normal_year, (int, float)) else None,
             "season_deviation": season_total - normal_season if season_total is not None and isinstance(normal_season, (int, float)) else None,
             "water_balance": total - float(etp) if total is not None and isinstance(etp, (int, float)) else None,
