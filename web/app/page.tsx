@@ -494,7 +494,7 @@ function AgroPanel({
       row?.temp_min === "";
     return pluieEmpty || tempMinEmpty;
   }).length;
-  const setEwEtp = (stationId: string, key: "ew" | "etp", value: string) =>
+  const setEwEtp = (stationId: string, key: "h10" | "ew" | "etp", value: string) =>
     setEwEtpRows((rows: any[]) => {
       const current = rows.find((row) => row.station_id === stationId) ?? {
         station_id: stationId,
