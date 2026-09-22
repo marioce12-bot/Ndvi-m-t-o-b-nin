@@ -114,7 +114,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
     history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
     decade_by_station: dict[str, list[float]] = {station.id: [] for station in stations}
-    imported_totals: dict[str, dict[str, float]] = {}
+    imported_totals: dict[str, dict[str, float | None]] = {}
     for row in current_rain:
         station_id = str(row.get("station_id"))
         if station_id in by_station:
@@ -142,8 +142,8 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         imported_decade_total = sum(decade_by_station[station.id]) if decade_by_station[station.id] else None
         imported_cumulative = imported_totals.get(station.id)
         if imported_cumulative:
-            year_total = imported_cumulative["year"]
-            season_total = imported_cumulative["season"]
+            year_total = imported_cumulative["year"] or 0
+            season_total = imported_cumulative["season"] if season_contains(station, month) else None
         elif imported_decade_total is not None:
             year_total = imported_decade_total
             season_total = imported_decade_total if season_contains(station, month) else None

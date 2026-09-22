@@ -22,6 +22,13 @@ class RainfallNormalsTests(unittest.TestCase):
         source = Path(r"C:\Users\DELL\Downloads\Gmail\RESA-01 SEPT 2026.xls")
         self.assertEqual(read_totals(source)["kandi"], {"decade": 28.0, "year": 753.1, "season": 753.1})
 
+    def test_cumulative_rule_adds_current_decade_to_previous_cumulative(self) -> None:
+        previous_year = 753.1
+        previous_season = 753.1
+        current_decade = 12.4
+        self.assertEqual(previous_year + current_decade, 765.5)
+        self.assertEqual(previous_season + current_decade, 765.5)
+
 
 class AgroCalculationTests(unittest.TestCase):
     def test_rain_statistics_match_resa_thresholds(self) -> None:
