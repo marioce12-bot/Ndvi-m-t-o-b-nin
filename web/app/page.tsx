@@ -979,7 +979,17 @@ function AgroPanel({
                               ? "—"
                               : Number(calculation.global_radiation).toFixed(2)}
                           </td>
-                          <td>{h10 ?? "—"}</td>
+                           <td>
+                             <input
+                               aria-label={`H×10 ${station.name}`}
+                               type="number"
+                               step="0.1"
+                               value={row.h10 ?? h10 ?? ""}
+                               onChange={(event) =>
+                                 setEwEtp(station.id, "h10", event.target.value)
+                               }
+                             />
+                           </td>
                           <td>
                             <input
                               aria-label={`ew ${station.name}`}
@@ -1244,7 +1254,7 @@ function Dashboard({ user }: { user: User }) {
     Array<Record<string, number | string | undefined>>
   >([]);
   const [ewEtpRows, setEwEtpRows] = useState<
-    Array<{ station_id: string; ew?: number; etp?: number }>
+    Array<{ station_id: string; h10?: number; ew?: number; etp?: number }>
   >([]);
   const [ewEtpCalculations, setEwEtpCalculations] = useState<
     Array<{

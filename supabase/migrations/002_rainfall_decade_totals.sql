@@ -14,6 +14,9 @@ alter table public.agro_rain_decades
   add column if not exists year_total_mm double precision,
   add column if not exists season_total_mm double precision;
 
+alter table public.agro_ew_etp
+  add column if not exists h10 double precision;
+
 create index if not exists rain_decade_period_idx
   on public.agro_rain_decades(year, month, decade, station_id);
 

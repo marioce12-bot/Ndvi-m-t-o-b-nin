@@ -55,6 +55,7 @@ class AgroRequest(BaseModel):
 
 class EwEtpValue(BaseModel):
     station_id: str = Field(min_length=1)
+    h10: Optional[float] = None
     ew: Optional[float] = None
     etp: Optional[float] = None
     h10: Optional[float] = None

@@ -20,7 +20,8 @@ class AgroApiContractTests(unittest.TestCase):
         self.assertFalse(hasattr(request.valeurs[0], "humidite_moy"))
 
     def test_ew_etp_is_independent_payload(self) -> None:
-        request = EwEtpRequest(year=2026, month=8, decade=1, valeurs=[{"station_id": "cotonou", "ew": 30, "etp": 42}])
+        request = EwEtpRequest(year=2026, month=8, decade=1, valeurs=[{"station_id": "cotonou", "h10": 130, "ew": 30, "etp": 42}])
+        self.assertEqual(request.valeurs[0].h10, 130)
         self.assertEqual(request.valeurs[0].etp, 42)
 
 

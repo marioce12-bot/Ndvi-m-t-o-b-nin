@@ -238,7 +238,7 @@ def _build_climate_for_principal_stations(year: int, month: int, decade: int) ->
         ew = ew_doc.get("ew")
         etp = ew_doc.get("etp")
 
-        h10 = H10_BY_STATION.get(station.id)
+        h10 = ew_doc.get("h10") if isinstance(ew_doc.get("h10"), (int, float)) else H10_BY_STATION.get(station.id)
 
         if not sunshine_present:
             radiation_fields = {"h10": h10, "insolation_fraction": None, "global_radiation": None}
