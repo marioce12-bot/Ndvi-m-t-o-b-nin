@@ -141,18 +141,10 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
         etp = _resolve_etp_value(ew_etp, station)
-        # Les normales ne sont calculées que pour les 6 stations RESA
-        # principales (cf. worker/app/data/rainfall_normals.json). Une
-        # station secondaire hérite donc de la normale de la station
-        # principale de son département, exactement comme pour l'ETP
-        # (station.etp_station_id) — sans ce repli, l'écart aux normales
-        # ne s'affichait que pour les 6 stations principales.
-        normal_station_id = station.id if station.principal else station.etp_station_id
-        normal_values = {}
-        if normal_station_id:
-            normal_values = NORMALS.get(normal_station_id) or NORMALS.get(normal_station_id.casefold()) or {}
-        if not normal_values:
-            normal_values = NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
+        # Les normales pluviométriques sont propres à chaque station. L'ETP
+        # peut être rattachée à une station source, mais ce rattachement ne
+        # doit jamais être appliqué aux normales de pluie.
+        normal_values = NORMALS.get(station.id) or NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
         normal = normal_values.get(_decade_code(month, decade), {})
         normal_decade = normal.get("decade")
         normal_year = normal.get("annual")

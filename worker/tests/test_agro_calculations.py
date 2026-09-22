@@ -6,6 +6,16 @@ from app.agro.models import AstronomicalConstant, DailyAgro, DailyRain, Editable
 from app.agro.registry import H10_BY_STATION, canonical_stations
 
 
+class RainfallNormalsTests(unittest.TestCase):
+    def test_station_normals_are_not_inherited_from_etp_source(self) -> None:
+        from app.main import NORMALS, _decade_code
+
+        self.assertEqual(_decade_code(9, 1), "se1")
+        self.assertAlmostEqual(NORMALS["banikoara"]["se1"]["decade"], 84.36333333333333)
+        self.assertAlmostEqual(NORMALS["banikoara"]["se1"]["annual"], 843.1635632183908)
+        self.assertAlmostEqual(NORMALS["banikoara"]["se1"]["season"], 839.0402298850574)
+
+
 class AgroCalculationTests(unittest.TestCase):
     def test_rain_statistics_match_resa_thresholds(self) -> None:
         self.assertEqual(rain_statistics([None, 0, 0.5, 1, 20, 20.1]), (4, 1, 20.1, 41.6))
