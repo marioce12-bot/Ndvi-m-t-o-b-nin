@@ -1224,9 +1224,11 @@ function Dashboard({ user }: { user: User }) {
   const [step, setStep] = useState("Préparation du traitement");
   const [toast, setToast] = useState("");
   const [showAgro, setShowAgro] = useState(false);
-  const [agroYear, setAgroYear] = useState("2026");
-  const [agroMonth, setAgroMonth] = useState("8");
-  const [agroDecade, setAgroDecade] = useState("1");
+  const [agroYear, setAgroYear] = useState(() => String(new Date().getFullYear()));
+  const [agroMonth, setAgroMonth] = useState(() => String(new Date().getMonth() + 1));
+  const [agroDecade, setAgroDecade] = useState(() =>
+    String(Math.min(3, Math.ceil(new Date().getDate() / 10))),
+  );
   const [agroView, setAgroView] = useState<
     "rain" | "observations" | "ewetp" | "stations" | "exports"
   >("rain");
@@ -1475,7 +1477,12 @@ function Dashboard({ user }: { user: User }) {
     return () => {
       cancelled = true;
     };
-  }, [agroYear, agroMonth, agroDecade, agroStation, agroView]);
+    // NOTE : volontairement PAS de `agroView` ici. Changer d'onglet dans le
+    // panneau (Pluviométrie / Observations / EW-ETP / ...) ne doit pas
+    // redéclencher ces 3 requêtes réseau : elles ne dépendent que de la
+    // période et de la station sélectionnées, pas de l'onglet affiché.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agroYear, agroMonth, agroDecade, agroStation]);
   const updateRain = (station_id: string, jour: number, value: string) =>
     setRainRows((rows) => [
       ...rows.filter(
