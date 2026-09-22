@@ -1,0 +1,10 @@
+{
+  "source": "RESA Feuil1, 2, 3",
+  "note": "Generated with worker/scripts/import_rainfall_workbooks.py; values are official decade totals stored on the last day of each decade.",
+  "periods": [
+    {"year": 2026, "month": 8, "decade": 1, "file": "RESA-01 AOUT 2026.xls"},
+    {"year": 2026, "month": 8, "decade": 2, "file": "RESA-02 AOUT 2026.xls"},
+    {"year": 2026, "month": 8, "decade": 3, "file": "RESA-03 AOUT 2026.xls"},
+    {"year": 2026, "month": 9, "decade": 1, "file": "RESA-01 SEPT 2026.xls"}
+  ]
+}
