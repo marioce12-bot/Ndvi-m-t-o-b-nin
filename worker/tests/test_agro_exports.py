@@ -2,6 +2,7 @@ from io import BytesIO
 import unittest
 
 import openpyxl
+from app import main
 
 from app.agro.exports import build_climate_export, build_network_export, build_observations_export
 from app.agro.models import Station
@@ -39,6 +40,10 @@ class AgroExportTests(unittest.TestCase):
         self.assertAlmostEqual(station_row[7], 36.1 / 84.36333333333333 * 100)
         self.assertEqual(station_row[9], -396.2)
         self.assertEqual(station_row[11], -392.0)
+
+    def test_september_normals_use_ressa_sheet_codes(self) -> None:
+        self.assertEqual(main._decade_code(9, 1), "s1")
+        self.assertAlmostEqual(main.NORMALS["banikoara"]["s1"]["decade"], 84.36333333333333)
 
     def test_climate_export_keeps_missing_values_blank(self) -> None:
         stream, filename = build_climate_export(2026, 8, 1, self.stations, {"a": {"etp": 12}})

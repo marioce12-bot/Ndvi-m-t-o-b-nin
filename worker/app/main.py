@@ -44,7 +44,7 @@ NORMALS = json.loads(_normals_path.read_text(encoding="utf-8")) if _normals_path
 
 
 def _decade_code(month: int, decade: int) -> str:
-    prefixes = {1: "ja", 2: "fe", 3: "mr", 4: "av", 5: "mi", 6: "jn", 7: "jl", 8: "ao", 9: "se", 10: "oc", 11: "no", 12: "de"}
+    prefixes = {1: "j", 2: "f", 3: "m", 4: "a", 5: "ma", 6: "j", 7: "jl", 8: "ao", 9: "s", 10: "o", 11: "n", 12: "d"}
     return f"{prefixes[month]}{decade}"
 
 app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
