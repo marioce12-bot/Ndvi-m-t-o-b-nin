@@ -114,6 +114,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
     history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
     decade_by_station: dict[str, list[float]] = {station.id: [] for station in stations}
+    imported_totals: dict[str, dict[str, float]] = {}
     for row in current_rain:
         station_id = str(row.get("station_id"))
         if station_id in by_station:
@@ -126,6 +127,11 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         station_id = str(row.get("station_id"))
         if station_id in decade_by_station and row.get("hauteur_mm") is not None:
             decade_by_station[station_id].append(float(row["hauteur_mm"]))
+            if row.get("year_total_mm") is not None or row.get("season_total_mm") is not None:
+                imported_totals[station_id] = {
+                    "year": float(row["year_total_mm"]) if row.get("year_total_mm") is not None else None,
+                    "season": float(row["season_total_mm"]) if row.get("season_total_mm") is not None else None,
+                }
     summaries: dict[str, dict[str, object]] = {}
     for station in stations:
         values = by_station[station.id]
@@ -134,7 +140,11 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         historical = history_by_station[station.id]
         year_total, season_total = rolling_totals(station, current_end, historical)
         imported_decade_total = sum(decade_by_station[station.id]) if decade_by_station[station.id] else None
-        if imported_decade_total is not None:
+        imported_cumulative = imported_totals.get(station.id)
+        if imported_cumulative:
+            year_total = imported_cumulative["year"]
+            season_total = imported_cumulative["season"]
+        elif imported_decade_total is not None:
             year_total = imported_decade_total
             season_total = imported_decade_total if season_contains(station, month) else None
         if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):

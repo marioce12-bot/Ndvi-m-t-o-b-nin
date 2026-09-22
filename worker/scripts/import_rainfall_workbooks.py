@@ -43,17 +43,23 @@ def _last_day(month: int, decade: int) -> int:
     return 31
 
 
-def read_totals(path: Path) -> dict[str, float]:
+def read_totals(path: Path) -> dict[str, dict[str, float]]:
     sheet = xlrd.open_workbook(str(path), formatting_info=False).sheet_by_name("Feuil1, 2, 3")
     known = {_key(station.name): station.id for station in canonical_stations()}
-    totals: dict[str, float] = {}
+    totals: dict[str, dict[str, float]] = {}
     for row in range(10, sheet.nrows):
         name = str(sheet.cell_value(row, 0)).strip()
         station = known.get(_key(name))
-        value = sheet.cell_value(row, 4)
-        if not station or not isinstance(value, (int, float)):
+        decade_total = sheet.cell_value(row, 4)
+        year_total = sheet.cell_value(row, 6)
+        season_total = sheet.cell_value(row, 8)
+        if not station or not all(isinstance(value, (int, float)) for value in (decade_total, year_total, season_total)):
             continue
-        totals[station] = round(float(value), 3)
+        totals[station] = {
+            "decade": round(float(decade_total), 3),
+            "year": round(float(year_total), 3),
+            "season": round(float(season_total), 3),
+        }
     return totals
 
 
@@ -65,7 +71,9 @@ def import_file(path: Path, year: int, month: int, decade: int, dry_run: bool = 
             "month": month,
             "decade": decade,
             "station_id": station,
-            "hauteur_mm": value,
+            "hauteur_mm": value["decade"],
+            "year_total_mm": value["year"],
+            "season_total_mm": value["season"],
         }
         for station, value in totals.items()
     ]

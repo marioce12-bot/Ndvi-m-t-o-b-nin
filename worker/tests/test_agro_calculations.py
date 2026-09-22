@@ -15,6 +15,13 @@ class RainfallNormalsTests(unittest.TestCase):
         self.assertAlmostEqual(NORMALS["banikoara"]["se1"]["annual"], 843.1635632183908)
         self.assertAlmostEqual(NORMALS["banikoara"]["se1"]["season"], 839.0402298850574)
 
+    def test_import_workbook_reads_official_cumulative_columns(self) -> None:
+        from pathlib import Path
+        from scripts.import_rainfall_workbooks import read_totals
+
+        source = Path(r"C:\Users\DELL\Downloads\Gmail\RESA-01 SEPT 2026.xls")
+        self.assertEqual(read_totals(source)["kandi"], {"decade": 28.0, "year": 753.1, "season": 753.1})
+
 
 class AgroCalculationTests(unittest.TestCase):
     def test_rain_statistics_match_resa_thresholds(self) -> None:
