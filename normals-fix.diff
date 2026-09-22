@@ -1,0 +1,36 @@
+diff --git a/worker/app/main.py b/worker/app/main.py
+index d2a20a8..fc6464f 100644
+--- a/worker/app/main.py
++++ b/worker/app/main.py
+@@ -41,7 +41,7 @@ NORMALS = json.loads((Path(__file__).parents[1] / "data" / "rainfall_normals.jso
+ 
+ 
+ def _decade_code(month: int, decade: int) -> str:
+-    prefixes = {1: "j", 2: "f", 3: "ma", 4: "av", 5: "ma", 6: "ju", 7: "jl", 8: "a", 9: "s", 10: "o", 11: "n", 12: "d"}
++    prefixes = {1: "ja", 2: "fe", 3: "mr", 4: "av", 5: "mi", 6: "jn", 7: "jl", 8: "ao", 9: "se", 10: "oc", 11: "no", 12: "de"}
+     return f"{prefixes[month]}{decade}"
+ 
+ app = FastAPI(title="Plateforme NDVI Benin Worker", version="1.0.0")
+@@ -129,10 +129,19 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
+             year_total += total
+             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
+         etp = _resolve_etp_value(ew_etp, station)
+-        normal_values = NORMALS.get(station.id) or NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
++        # Les normales ne sont calculées que pour les 6 stations RESA
++        # principales (cf. worker/app/data/rainfall_normals.json). Une
++        # station secondaire hérite donc de la normale de la station
++        # principale de son département, exactement comme pour l'ETP
++        # (station.etp_station_id) — sans ce repli, l'écart aux normales
++        # ne s'affichait que pour les 6 stations principales.
++        normal_station_id = station.id if station.principal else station.etp_station_id
++        normal_values = {}
++        if normal_station_id:
++            normal_values = NORMALS.get(normal_station_id) or NORMALS.get(normal_station_id.casefold()) or {}
++        if not normal_values:
++            normal_values = NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
+         normal = normal_values.get(_decade_code(month, decade), {})
+-        if not normal and month == 6:
+-            normal = NORMALS.get(station.id, {}).get(f"ju{decade}", {})
+         normal_decade = normal.get("decade")
+         normal_year = normal.get("annual")
+         normal_season = normal.get("season")
