@@ -57,6 +57,7 @@ class EwEtpValue(BaseModel):
     station_id: str = Field(min_length=1)
     ew: Optional[float] = None
     etp: Optional[float] = None
+    h10: Optional[float] = None
 
 
 class EwEtpRequest(BaseModel):
