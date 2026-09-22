@@ -29,6 +29,13 @@ class RainfallNormalsTests(unittest.TestCase):
         self.assertEqual(previous_year + current_decade, 765.5)
         self.assertEqual(previous_season + current_decade, 765.5)
 
+    def test_current_decade_total_is_not_replaced_by_historical_sum(self) -> None:
+        historical_decades = [90.1, 101.1, 29.2]
+        current_decade = 28.0
+        official_year_total = 753.1
+        self.assertAlmostEqual(sum(historical_decades) + current_decade, 248.4)
+        self.assertNotEqual(official_year_total, sum(historical_decades) + current_decade)
+
 
 class AgroCalculationTests(unittest.TestCase):
     def test_rain_statistics_match_resa_thresholds(self) -> None:

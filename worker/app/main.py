@@ -140,14 +140,22 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         historical = history_by_station[station.id]
         year_total, season_total = rolling_totals(station, current_end, historical)
         imported_decade_total = sum(decade_by_station[station.id]) if decade_by_station[station.id] else None
-        imported_cumulative = imported_totals.get(station.id)
+        imported_cumulative = next((
+            {
+                "year": float(row["year_total_mm"]) if row.get("year_total_mm") is not None else None,
+                "season": float(row["season_total_mm"]) if row.get("season_total_mm") is not None else None,
+            }
+            for row in current_decades
+            if str(row.get("station_id")) == station.id
+            and (row.get("year_total_mm") is not None or row.get("season_total_mm") is not None)
+        ), None)
         if imported_cumulative:
             year_total = imported_cumulative["year"] or 0
             season_total = imported_cumulative["season"] if season_contains(station, month) else None
         elif imported_decade_total is not None:
             year_total = imported_decade_total
             season_total = imported_decade_total if season_contains(station, month) else None
-        if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
+        if total is not None and not current_decades and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
         etp = _resolve_etp_value(ew_etp, station)
