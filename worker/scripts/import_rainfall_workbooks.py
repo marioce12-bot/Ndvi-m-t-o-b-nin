@@ -1,9 +1,8 @@
 """Import RESA rainfall decade totals from legacy XLS workbooks.
 
 The source sheets contain one observed cumulative value per station and decade,
-not daily measurements.  The value is stored on the last day of its decade so
-that the existing daily table and all decade/year/season calculations use the
-official observed total without fabricating daily observations.
+not daily measurements. Values are stored in the dedicated decade-total table,
+so the UI cannot mistake a decade total for a measurement on day 10, 20 or 31.
 """
 
 from __future__ import annotations
@@ -66,7 +65,6 @@ def import_file(path: Path, year: int, month: int, decade: int, dry_run: bool = 
             "month": month,
             "decade": decade,
             "station_id": station,
-            "jour": _last_day(month, decade),
             "hauteur_mm": value,
         }
         for station, value in totals.items()
@@ -74,7 +72,7 @@ def import_file(path: Path, year: int, month: int, decade: int, dry_run: bool = 
     if not dry_run:
         from app import db
 
-        db.upsert_agro_rain(payloads)
+        db.upsert_agro_rain_decades(payloads)
     return {"file": path.name, "year": year, "month": month, "decade": decade, "stations": len(payloads), "totals": totals}
 
 

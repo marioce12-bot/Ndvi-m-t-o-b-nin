@@ -25,7 +25,7 @@ from .agro.exports import build_climate_export, build_network_export, build_obse
 from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
 from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
 from .agro.normals import get_climate_normal
-from .agro.api_models import AgroRequest, EwEtpRequest, RainRequest, StationRequest
+from .agro.api_models import AgroRequest, EwEtpRequest, RainDecadeRequest, RainRequest, StationRequest
 from .agro.registry import H10_BY_STATION, canonical_stations
 
 COORDINATES = {}
@@ -102,14 +102,18 @@ def _resolve_etp_value(ew_etp: dict[str, dict[str, object]], station: Station) -
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
     stations = canonical_stations()
     current_rain = db.list_agro_rain(year, month, decade)
+    current_decades = db.list_agro_rain_decades(year, month, decade)
     try:
         historical_rain = db.list_agro_rain_until(year, month, decade)
+        historical_decades = db.list_agro_rain_decades_until(year, month, decade)
     except Exception:
         logger.exception("Unable to load historical rainfall; exporting current decade only")
         historical_rain = list(current_rain)
+        historical_decades = list(current_decades)
     ew_etp = _get_ew_etp_map(year, month, decade)
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
     history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
+    decade_by_station: dict[str, list[float]] = {station.id: [] for station in stations}
     for row in current_rain:
         station_id = str(row.get("station_id"))
         if station_id in by_station:
@@ -118,6 +122,10 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         station_id = str(row.get("station_id"))
         if station_id in history_by_station and row.get("hauteur_mm") is not None:
             history_by_station[station_id].append(DailyRain(station_id, date(int(row["year"]), int(row["month"]), int(row["jour"])), row.get("hauteur_mm")))
+    for row in historical_decades:
+        station_id = str(row.get("station_id"))
+        if station_id in decade_by_station and row.get("hauteur_mm") is not None:
+            decade_by_station[station_id].append(float(row["hauteur_mm"]))
     summaries: dict[str, dict[str, object]] = {}
     for station in stations:
         values = by_station[station.id]
@@ -125,6 +133,10 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         current_end = date(year, month, 10 if decade == 1 else 20 if decade == 2 else 31)
         historical = history_by_station[station.id]
         year_total, season_total = rolling_totals(station, current_end, historical)
+        imported_decade_total = sum(decade_by_station[station.id]) if decade_by_station[station.id] else None
+        if imported_decade_total is not None:
+            year_total = imported_decade_total
+            season_total = imported_decade_total if season_contains(station, month) else None
         if total is not None and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
@@ -149,7 +161,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         summaries[station.id] = {
             "rain_days": rain_days,
             "heavy_rain_days": heavy_rain_days,
-            "rainfall_total": total,
+            "rainfall_total": total if total is not None else (sum(value for value in values if value is not None) or None),
             "normal_decade": normal_decade,
             "etp": etp,
             "daily_values": values,
@@ -322,7 +334,7 @@ def delete_agro_station(station_id: str) -> dict[str, object]:
 @app.get("/agro/pluies", dependencies=[Depends(require_api_key)])
 def agro_rains(year: int, month: int, decade: int) -> dict[str, object]:
     _validate_period(year, month, decade)
-    return {"valeurs": db.list_agro_rain(year, month, decade)}
+    return {"valeurs": db.list_agro_rain(year, month, decade), "totaux_decade": db.list_agro_rain_decades(year, month, decade)}
 
 
 @app.post("/agro/pluies", dependencies=[Depends(require_api_key)])
@@ -333,6 +345,25 @@ def save_agro_rains(request: RainRequest) -> dict[str, object]:
     grouped: dict[str, list[float | None]] = {}
     for value in db.list_agro_rain(request.year, request.month, request.decade): grouped.setdefault(str(value["station_id"]), []).append(value.get("hauteur_mm"))
     return {"valeurs": db.list_agro_rain(request.year, request.month, request.decade), "calculs": {station: dict(zip(("nbjp_gt0", "nbjp_gt20", "max", "total"), rain_statistics(values))) for station, values in grouped.items()}}
+
+
+@app.post("/agro/pluies-decade", dependencies=[Depends(require_api_key)])
+def save_agro_decade_rains(request: RainDecadeRequest) -> dict[str, object]:
+    """Store an official RESA decade total without exposing it as day 10/20/31."""
+    _validate_period(request.year, request.month, request.decade)
+    rows = [
+        {
+            "year": request.year,
+            "month": request.month,
+            "decade": request.decade,
+            "station_id": value.station_id,
+            "hauteur_mm": value.hauteur_mm,
+        }
+        for value in request.valeurs
+        if value.hauteur_mm is not None
+    ]
+    db.upsert_agro_rain_decades(rows)
+    return {"valeurs": db.list_agro_rain_decades(request.year, request.month, request.decade)}
 
 
 def _merge_pluie_with_rain(year: int, month: int, decade: int, station_id: str, observations: list[dict[str, object]]) -> list[dict[str, object]]:

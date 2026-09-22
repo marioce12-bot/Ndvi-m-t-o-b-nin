@@ -77,10 +77,34 @@ def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, o
     return filtered
 
 
+def list_agro_rain_decades_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
+    rows = _rows(get_client().table("agro_rain_decades").select("*").eq("year", year).execute())
+    return [
+        row
+        for row in rows
+        if int(row.get("month", 0)) < month
+        or (int(row.get("month", 0)) == month and int(row.get("decade", 0)) <= decade)
+    ]
+
+
 def upsert_agro_rain(payloads: list[dict[str, object]]) -> None:
     if payloads:
         rows = [{**value, "id": f"{value['station_id']}-{value['year']}-{int(value['month']):02d}-{value['decade']}-{value['jour']}"} for value in payloads]
         get_client().table("agro_rain_daily").upsert(rows, on_conflict="station_id,year,month,decade,jour").execute()
+
+
+def delete_agro_rain_period(year: int, month: int, decade: int) -> None:
+    get_client().table("agro_rain_daily").delete().eq("year", year).eq("month", month).eq("decade", decade).execute()
+
+
+def list_agro_rain_decades(year: int, month: int, decade: int) -> list[dict[str, object]]:
+    return _rows(get_client().table("agro_rain_decades").select("*").eq("year", year).eq("month", month).eq("decade", decade).execute())
+
+
+def upsert_agro_rain_decades(payloads: list[dict[str, object]]) -> None:
+    if payloads:
+        rows = [{**value, "id": f"{value['station_id']}-{value['year']}-{int(value['month']):02d}-{value['decade']}"} for value in payloads]
+        get_client().table("agro_rain_decades").upsert(rows, on_conflict="station_id,year,month,decade").execute()
 
 
 def list_agro_observations(year: int, month: int, decade: int, station_id: str) -> list[dict[str, object]]:

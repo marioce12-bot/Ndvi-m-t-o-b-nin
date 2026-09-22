@@ -10,11 +10,23 @@ class RainValue(BaseModel):
     hauteur_mm: Optional[float] = None
 
 
+class RainDecadeValue(BaseModel):
+    station_id: str = Field(min_length=1)
+    hauteur_mm: Optional[float] = None
+
+
 class RainRequest(BaseModel):
     year: int = Field(ge=1900, le=2100)
     month: int = Field(ge=1, le=12)
     decade: int = Field(ge=1, le=3)
     valeurs: list[RainValue]
+
+
+class RainDecadeRequest(BaseModel):
+    year: int = Field(ge=1900, le=2100)
+    month: int = Field(ge=1, le=12)
+    decade: int = Field(ge=1, le=3)
+    valeurs: list[RainDecadeValue]
 
 
 class AgroValue(BaseModel):
