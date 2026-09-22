@@ -644,7 +644,8 @@ function AgroPanel({
                 </select>
               </label>
             </div>
-            <div className="agro-table-wrap">
+            <div className="agro-table-wrap agro-table-scroll">
+              <div className="agro-table-scrollbar" aria-hidden="true" />
               <table className="agro-table">
                 <thead>
                   <tr>
@@ -721,7 +722,8 @@ function AgroPanel({
                 </select>
               </label>
             </div>
-            <div className="agro-table-wrap">
+            <div className="agro-table-wrap agro-table-scroll">
+              <div className="agro-table-scrollbar" aria-hidden="true" />
               <table className="agro-table">
                 <thead>
                   <tr>
@@ -1279,6 +1281,28 @@ function Dashboard({ user }: { user: User }) {
   });
   const [stationDialogOpen, setStationDialogOpen] = useState(false);
   const [stationDepartmentFilter, setStationDepartmentFilter] = useState("");
+  useEffect(() => {
+    const scrollers = Array.from(
+      document.querySelectorAll<HTMLElement>(".agro-table-scroll"),
+    );
+    const cleanups = scrollers.map((container) => {
+      const top = container.querySelector<HTMLElement>(".agro-table-scrollbar");
+      if (!top) return () => undefined;
+      const syncTop = () => {
+        top.scrollLeft = container.scrollLeft;
+      };
+      const syncContainer = () => {
+        container.scrollLeft = top.scrollLeft;
+      };
+      container.addEventListener("scroll", syncTop);
+      top.addEventListener("scroll", syncContainer);
+      return () => {
+        container.removeEventListener("scroll", syncTop);
+        top.removeEventListener("scroll", syncContainer);
+      };
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
+  });
   useEffect(() => {
     void fetch("/api/agro/stations", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data) => {
       if (!data?.stations) return;
