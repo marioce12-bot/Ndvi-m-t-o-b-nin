@@ -37,7 +37,10 @@ from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-NORMALS = json.loads((Path(__file__).parents[1] / "data" / "rainfall_normals.json").read_text(encoding="utf-8")) if (Path(__file__).parents[1] / "data" / "rainfall_normals.json").exists() else {}
+_normals_path = Path(__file__).parents[1] / "data" / "rainfall_normals_station_specific.json"
+if not _normals_path.exists():
+    _normals_path = Path(__file__).parents[1] / "data" / "rainfall_normals.json"
+NORMALS = json.loads(_normals_path.read_text(encoding="utf-8")) if _normals_path.exists() else {}
 
 
 def _decade_code(month: int, decade: int) -> str:
