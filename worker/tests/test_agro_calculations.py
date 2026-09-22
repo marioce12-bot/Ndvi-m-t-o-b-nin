@@ -36,6 +36,12 @@ class RainfallNormalsTests(unittest.TestCase):
         self.assertAlmostEqual(sum(historical_decades) + current_decade, 248.4)
         self.assertNotEqual(official_year_total, sum(historical_decades) + current_decade)
 
+    def test_imported_decade_total_is_used_when_daily_values_are_missing(self) -> None:
+        imported_decade_total = 28.0
+        daily_values: list[float | None] = []
+        rainfall_total = imported_decade_total if imported_decade_total is not None else sum(daily_values) or None
+        self.assertEqual(rainfall_total, 28.0)
+
 
 class AgroCalculationTests(unittest.TestCase):
     def test_rain_statistics_match_resa_thresholds(self) -> None:

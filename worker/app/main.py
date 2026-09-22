@@ -149,6 +149,14 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             if str(row.get("station_id")) == station.id
             and (row.get("year_total_mm") is not None or row.get("season_total_mm") is not None)
         ), None)
+        imported_current_decade = next(
+            (
+                float(row["hauteur_mm"])
+                for row in current_decades
+                if str(row.get("station_id")) == station.id and row.get("hauteur_mm") is not None
+            ),
+            None,
+        )
         if imported_cumulative:
             year_total = imported_cumulative["year"] or 0
             season_total = imported_cumulative["season"] if season_contains(station, month) else None
@@ -171,14 +179,14 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         summaries[station.id] = {
             "rain_days": rain_days,
             "heavy_rain_days": heavy_rain_days,
-            "rainfall_total": total if total is not None else (sum(value for value in values if value is not None) or None),
+            "rainfall_total": total if total is not None else imported_current_decade if imported_current_decade is not None else (sum(value for value in values if value is not None) or None),
             "normal_decade": normal_decade,
             "etp": etp,
             "daily_values": values,
             "year_total": year_total,
             "season_total": season_total,
-            "decade_deviation": total - normal_decade if total is not None and isinstance(normal_decade, (int, float)) else None,
-            "normal_percentage": (total / normal_decade) if total is not None and isinstance(normal_decade, (int, float)) and normal_decade else None,
+            "decade_deviation": (total if total is not None else imported_current_decade) - normal_decade if (total is not None or imported_current_decade is not None) and isinstance(normal_decade, (int, float)) else None,
+            "normal_percentage": ((total if total is not None else imported_current_decade) / normal_decade) if (total is not None or imported_current_decade is not None) and isinstance(normal_decade, (int, float)) and normal_decade else None,
             "year_deviation": year_total - normal_year if isinstance(normal_year, (int, float)) else None,
             "season_deviation": season_total - normal_season if season_total is not None and isinstance(normal_season, (int, float)) else None,
             "water_balance": total - float(etp) if total is not None and isinstance(etp, (int, float)) else None,
