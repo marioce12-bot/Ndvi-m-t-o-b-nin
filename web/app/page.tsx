@@ -1365,6 +1365,10 @@ function Dashboard({ user }: { user: User }) {
         body: JSON.stringify({
           ...newStation,
           id: newStation.id || stationId(newStation.name),
+          longitude:
+            newStation.longitude === "" ? undefined : Number(newStation.longitude),
+          latitude:
+            newStation.latitude === "" ? undefined : Number(newStation.latitude),
         }),
       });
       setAgroStations((stations) => [
@@ -1374,8 +1378,10 @@ function Dashboard({ user }: { user: User }) {
           name: newStation.name,
           department: newStation.department,
           locality: newStation.locality,
-          longitude: Number(newStation.longitude) || undefined,
-          latitude: Number(newStation.latitude) || undefined,
+          longitude:
+            newStation.longitude === "" ? undefined : Number(newStation.longitude),
+          latitude:
+            newStation.latitude === "" ? undefined : Number(newStation.latitude),
           principal: false,
         },
       ]);
