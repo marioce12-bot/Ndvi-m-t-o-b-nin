@@ -22,7 +22,7 @@ from .processing import process_raster
 from .render import render_map
 from .storage import upload_image
 from .agro.exports import build_climate_export, build_network_export, build_observations_export
-from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains
+from .agro.calculations import build_summary, rain_statistics, rolling_totals, season_contains, season_start
 from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
 from .agro.normals import get_climate_normal
 from .agro.api_models import AgroRequest, EwEtpRequest, RainDecadeRequest, RainRequest, StationRequest
@@ -113,8 +113,7 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
     ew_etp = _get_ew_etp_map(year, month, decade)
     by_station: dict[str, list[float | None]] = {station.id: [] for station in stations}
     history_by_station: dict[str, list[DailyRain]] = {station.id: [] for station in stations}
-    decade_by_station: dict[str, list[float]] = {station.id: [] for station in stations}
-    imported_totals: dict[str, dict[str, float | None]] = {}
+    decades_by_station: dict[str, list[dict[str, object]]] = {station.id: [] for station in stations}
     for row in current_rain:
         station_id = str(row.get("station_id"))
         if station_id in by_station:
@@ -125,13 +124,8 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             history_by_station[station_id].append(DailyRain(station_id, date(int(row["year"]), int(row["month"]), int(row["jour"])), row.get("hauteur_mm")))
     for row in historical_decades:
         station_id = str(row.get("station_id"))
-        if station_id in decade_by_station and row.get("hauteur_mm") is not None:
-            decade_by_station[station_id].append(float(row["hauteur_mm"]))
-            if row.get("year_total_mm") is not None or row.get("season_total_mm") is not None:
-                imported_totals[station_id] = {
-                    "year": float(row["year_total_mm"]) if row.get("year_total_mm") is not None else None,
-                    "season": float(row["season_total_mm"]) if row.get("season_total_mm") is not None else None,
-                }
+        if station_id in decades_by_station:
+            decades_by_station[station_id].append(row)
     summaries: dict[str, dict[str, object]] = {}
     for station in stations:
         values = by_station[station.id]
@@ -139,16 +133,6 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
         current_end = date(year, month, 10 if decade == 1 else 20 if decade == 2 else 31)
         historical = history_by_station[station.id]
         year_total, season_total = rolling_totals(station, current_end, historical)
-        imported_decade_total = sum(decade_by_station[station.id]) if decade_by_station[station.id] else None
-        imported_cumulative = next((
-            {
-                "year": float(row["year_total_mm"]) if row.get("year_total_mm") is not None else None,
-                "season": float(row["season_total_mm"]) if row.get("season_total_mm") is not None else None,
-            }
-            for row in current_decades
-            if str(row.get("station_id")) == station.id
-            and (row.get("year_total_mm") is not None or row.get("season_total_mm") is not None)
-        ), None)
         imported_current_decade = next(
             (
                 float(row["hauteur_mm"])
@@ -157,20 +141,40 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             ),
             None,
         )
-        if imported_decade_total is not None:
-            # Cumul additif : somme des totaux de chaque décade enregistrée
-            # depuis le début de l'année/saison jusqu'à la décade en cours
-            # (décade précédente + décade en cours, etc.). C'est la valeur
-            # correcte à afficher dans les colonnes I/K.
-            year_total = imported_decade_total
-            season_total = imported_decade_total if season_contains(station, month) else None
-        elif imported_cumulative:
-            # Aucune donnée décadaire individuelle disponible pour reconstituer
-            # le cumul de façon additive : on n'utilise plus les valeurs brutes
-            # year_total_mm/season_total_mm importées telles quelles (non
-            # fiables, non recalculées), on force 0 plutôt que de les afficher.
-            year_total = 0
-            season_total = 0 if season_contains(station, month) else None
+
+        # Cumul additif décade par décade : une décade officiellement importée
+        # (fichier RESA, via le script d'import) porte déjà son propre cumul
+        # "année civile"/"saison" (year_total_mm/season_total_mm) — on le
+        # prend alors tel quel, comme référence fiable. Une décade saisie à
+        # la main dans l'application ("Saisie pluviométrique décadaire") ne
+        # porte que sa propre hauteur (hauteur_mm) ; dans ce cas on ajoute
+        # cette hauteur au cumul de la décade précédente pour obtenir le
+        # cumul de la décade en cours (décade N-1 + décade N), en parcourant
+        # toutes les décades enregistrées dans l'ordre chronologique.
+        station_decades = sorted(
+            decades_by_station[station.id],
+            key=lambda row: (int(row.get("year", 0)), int(row.get("month", 0)), int(row.get("decade", 0))),
+        )
+        season_start_date = season_start(station, current_end)
+        year_running: float | None = None
+        season_running: float | None = None
+        for row in station_decades:
+            row_year_total = float(row["year_total_mm"]) if row.get("year_total_mm") is not None else None
+            row_season_total = float(row["season_total_mm"]) if row.get("season_total_mm") is not None else None
+            row_hauteur = float(row["hauteur_mm"]) if row.get("hauteur_mm") is not None else None
+            if row_year_total is not None:
+                year_running = row_year_total
+            elif row_hauteur is not None:
+                year_running = (year_running or 0) + row_hauteur
+            row_month = int(row.get("month", 0))
+            if season_start_date is not None and row_month >= season_start_date.month:
+                if row_season_total is not None:
+                    season_running = row_season_total
+                elif row_hauteur is not None:
+                    season_running = (season_running or 0) + row_hauteur
+        if year_running is not None:
+            year_total = year_running
+            season_total = season_running if season_contains(station, month) else None
         if total is not None and not current_decades and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
