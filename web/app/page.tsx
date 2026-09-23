@@ -457,7 +457,9 @@ function AgroPanel({
   agroMessage,
   agroLoading,
   agroSaving,
+  setAgroSaving,
   agroSaveProgress,
+  setAgroSaveProgress,
   exportAvailability,
   agroFetch,
   setAgroMessage,
@@ -2051,6 +2053,10 @@ function Dashboard({ user }: { user: User }) {
           setEwEtpRows={setEwEtpRows}
           ewEtpCalculations={ewEtpCalculations}
           agroMessage={agroMessage}
+          agroSaving={agroSaving}
+          setAgroSaving={setAgroSaving}
+          agroSaveProgress={agroSaveProgress}
+          setAgroSaveProgress={setAgroSaveProgress}
           exportAvailability={exportAvailability}
           agroFetch={agroFetch}
           setAgroMessage={setAgroMessage}
