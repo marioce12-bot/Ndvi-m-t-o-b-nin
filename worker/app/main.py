@@ -26,7 +26,7 @@ from .agro.calculations import build_summary, rain_statistics, rolling_totals, s
 from .agro.models import AstronomicalConstant, DailyAgro, DailyRain, EditableDecadeValues, Station
 from .agro.normals import get_climate_normal
 from .agro.api_models import AgroRequest, EwEtpRequest, RainDecadeRequest, RainRequest, StationRequest
-from .agro.registry import H10_BY_STATION, canonical_stations
+from .agro.registry import H10_BY_STATION
 
 COORDINATES = {}
 try:
@@ -76,6 +76,33 @@ def _build_principal_stations() -> list[Station]:
     return stations
 
 
+def _build_all_stations() -> list[Station]:
+    """Toutes les stations connues : le référentiel RESA canonique (toujours
+    présent, via ensure_principal_stations) et les stations personnalisées
+    ajoutées manuellement depuis l'écran "Stations" (endpoint POST
+    /agro/stations), qui n'existent qu'en base et jamais dans le code.
+    Utiliser canonical_stations() ici les aurait ignorées."""
+    started = time.perf_counter()
+    db.ensure_principal_stations()
+    docs = db.list_agro_stations()
+    stations: list[Station] = []
+    for item in docs:
+        stations.append(
+            Station(
+                id=str(item["id"]),
+                name=str(item.get("name") or ""),
+                department=str(item.get("department") or ""),
+                locality=str(item.get("locality") or ""),
+                principal=bool(item.get("principal")),
+                etp_station_id=item.get("etp_station_id"),
+                longitude=item.get("longitude") or COORDINATES.get(str(item["id"]), {}).get("longitude") or COORDINATES.get(str(item.get("name", "")), {}).get("longitude"),
+                latitude=item.get("latitude") or COORDINATES.get(str(item["id"]), {}).get("latitude") or COORDINATES.get(str(item.get("name", "")), {}).get("latitude"),
+            )
+        )
+    logger.info("agro stations (all, for exports): %.0f ms, stations=%s", (time.perf_counter() - started) * 1000, len(stations))
+    return stations
+
+
 def _station_coordinates(station: Station) -> tuple[float | None, float | None]:
     values = COORDINATES.get(station.id) or COORDINATES.get(station.name) or COORDINATES.get(station.name.casefold()) or {}
     return values.get("longitude"), values.get("latitude")
@@ -100,7 +127,7 @@ def _resolve_etp_value(ew_etp: dict[str, dict[str, object]], station: Station) -
 
 
 def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[list[Station], dict[str, dict[str, object]]]:
-    stations = canonical_stations()
+    stations = _build_all_stations()
     current_rain = db.list_agro_rain(year, month, decade)
     current_decades = db.list_agro_rain_decades(year, month, decade)
     try:
