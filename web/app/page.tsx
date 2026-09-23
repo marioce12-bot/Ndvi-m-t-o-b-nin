@@ -525,7 +525,6 @@ function AgroPanel({
     } catch {
       setAgroMessage("Impossible d'enregistrer les valeurs ew / ETP");
     } finally { setAgroSaving(false); }
-    }
   };
   return (
     <div
@@ -1431,7 +1430,6 @@ function Dashboard({ user }: { user: User }) {
       );
       setAgroMessage("Impossible d'enregistrer les pluies");
     } finally { setAgroSaving(false); }
-    }
   };
 
   const saveObservations = async () => {
@@ -1486,7 +1484,6 @@ function Dashboard({ user }: { user: User }) {
       );
       setAgroMessage("Impossible d'enregistrer les observations");
     } finally { setAgroSaving(false); }
-    }
   };
   const daysInMonth = new Date(
     Number(agroYear),
