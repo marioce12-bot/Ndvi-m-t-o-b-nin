@@ -26,15 +26,46 @@ def _rows(response) -> list[dict[str, object]]:
     return list(response.data or [])
 
 
+_PAGE_SIZE = 1000
+
+
+def _fetch_all(build_query) -> list[dict[str, object]]:
+    """Fetch every row for a query, working around PostgREST's default response cap.
+
+    Supabase/PostgREST caps a single request's result set (1000 rows by default)
+    even without an explicit ``.limit()``. Any query that can return more rows
+    than that (e.g. all of ``agro_rain_daily`` for a given year, across 100+
+    stations and up to 9+ months) was silently truncated by that cap, and the
+    subset actually returned by PostgREST isn't guaranteed stable across calls
+    without an explicit order — this produced incomplete and inconsistent
+    cumulative totals (a later decade could even look smaller than an earlier
+    one). ``build_query`` is a zero-arg callable returning a fresh, unexecuted
+    Supabase query (so it can be re-applied for each page); this pages through
+    the result with ``.range()`` until a short page confirms the end.
+    """
+    rows: list[dict[str, object]] = []
+    offset = 0
+    while True:
+        response = build_query().range(offset, offset + _PAGE_SIZE - 1).execute()
+        page = list(response.data or [])
+        rows.extend(page)
+        if len(page) < _PAGE_SIZE:
+            break
+        offset += _PAGE_SIZE
+    return rows
+
+
 def get_job(job_id: str):
     return get_client().table("jobs").select("*").eq("id", job_id).maybe_single().execute()
 
 
 def list_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
-    query = get_client().table("agro_stations").select("*")
-    if principale is not None:
-        query = query.eq("principal", principale)
-    return _rows(query.execute())
+    def build():
+        query = get_client().table("agro_stations").select("*")
+        if principale is not None:
+            query = query.eq("principal", principale)
+        return query
+    return _fetch_all(build)
 
 
 def list_all_agro_stations(principale: bool | None = None) -> list[dict[str, object]]:
@@ -59,15 +90,17 @@ def delete_agro_station(station_id: str) -> None:
 
 
 def list_agro_rain(year: int, month: int, decade: int, station_id: str | None = None) -> list[dict[str, object]]:
-    query = get_client().table("agro_rain_daily").select("*").eq("year", year).eq("month", month).eq("decade", decade)
-    if station_id:
-        query = query.eq("station_id", station_id)
-    return _rows(query.execute())
+    def build():
+        query = get_client().table("agro_rain_daily").select("*").eq("year", year).eq("month", month).eq("decade", decade)
+        if station_id:
+            query = query.eq("station_id", station_id)
+        return query
+    return _fetch_all(build)
 
 
 def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
     end_day = 10 if decade == 1 else 20 if decade == 2 else 31
-    rows = _rows(get_client().table("agro_rain_daily").select("*").eq("year", year).execute())
+    rows = _fetch_all(lambda: get_client().table("agro_rain_daily").select("*").eq("year", year))
     filtered = [
         row
         for row in rows
@@ -78,7 +111,7 @@ def list_agro_rain_until(year: int, month: int, decade: int) -> list[dict[str, o
 
 
 def list_agro_rain_decades_until(year: int, month: int, decade: int) -> list[dict[str, object]]:
-    rows = _rows(get_client().table("agro_rain_decades").select("*").eq("year", year).execute())
+    rows = _fetch_all(lambda: get_client().table("agro_rain_decades").select("*").eq("year", year))
     return [
         row
         for row in rows
@@ -98,7 +131,7 @@ def delete_agro_rain_period(year: int, month: int, decade: int) -> None:
 
 
 def list_agro_rain_decades(year: int, month: int, decade: int) -> list[dict[str, object]]:
-    return _rows(get_client().table("agro_rain_decades").select("*").eq("year", year).eq("month", month).eq("decade", decade).execute())
+    return _fetch_all(lambda: get_client().table("agro_rain_decades").select("*").eq("year", year).eq("month", month).eq("decade", decade))
 
 
 def upsert_agro_rain_decades(payloads: list[dict[str, object]]) -> None:
@@ -118,7 +151,7 @@ def upsert_agro_observations(payloads: list[dict[str, object]]) -> None:
 
 
 def get_agro_ew_etp(year: int, month: int, decade: int) -> list[dict[str, object]]:
-    return _rows(get_client().table("agro_ew_etp").select("*").eq("year", year).eq("month", month).eq("decade", decade).execute())
+    return _fetch_all(lambda: get_client().table("agro_ew_etp").select("*").eq("year", year).eq("month", month).eq("decade", decade))
 
 
 def upsert_agro_ew_etp(payloads: list[dict[str, object]]) -> None:
