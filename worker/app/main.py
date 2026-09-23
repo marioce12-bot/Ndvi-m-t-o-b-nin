@@ -142,17 +142,26 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             None,
         )
 
-        # Cumul additif décade par décade : une décade officiellement importée
-        # (fichier RESA, via le script d'import) porte déjà son propre cumul
-        # "année civile"/"saison" (year_total_mm/season_total_mm) — on le
-        # prend alors tel quel, comme référence fiable. Une décade saisie à
-        # la main dans l'application ("Saisie pluviométrique décadaire") ne
-        # porte que sa propre hauteur (hauteur_mm) ; dans ce cas on ajoute
-        # cette hauteur au cumul de la décade précédente pour obtenir le
-        # cumul de la décade en cours (décade N-1 + décade N), en parcourant
-        # toutes les décades enregistrées dans l'ordre chronologique.
+        # Cumul additif décade par décade. On établit d'abord le cumul
+        # "jusqu'à la décade précédente" (baseline) en parcourant, dans
+        # l'ordre chronologique, toutes les décades ANTÉRIEURES à la décade
+        # demandée : une décade officiellement importée (fichier RESA) porte
+        # déjà son propre cumul (year_total_mm/season_total_mm), pris alors
+        # tel quel comme référence fiable ; une décade saisie à la main ne
+        # porte que sa propre hauteur (hauteur_mm), ajoutée au cumul en
+        # cours de construction. On ajoute ensuite systématiquement, par-
+        # dessus cette baseline, la pluie de la décade EN COURS elle-même
+        # (saisie décadaire si présente, sinon saisie journalière) — sans
+        # jamais se fier à un éventuel year_total_mm/season_total_mm déjà
+        # présent sur la décade en cours, qui peut être absent, en cours de
+        # saisie, ou obsolète.
+        target_key = (year, month, decade)
         station_decades = sorted(
-            decades_by_station[station.id],
+            (
+                row
+                for row in decades_by_station[station.id]
+                if (int(row.get("year", 0)), int(row.get("month", 0)), int(row.get("decade", 0))) < target_key
+            ),
             key=lambda row: (int(row.get("year", 0)), int(row.get("month", 0)), int(row.get("decade", 0))),
         )
         season_start_date = season_start(station, current_end)
@@ -172,12 +181,13 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
                     season_running = row_season_total
                 elif row_hauteur is not None:
                     season_running = (season_running or 0) + row_hauteur
-        if year_running is not None:
-            year_total = year_running
-            season_total = season_running if season_contains(station, month) else None
-        if total is not None and not current_decades and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
-            year_total += total
-            season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
+        current_decade_rain = imported_current_decade if imported_current_decade is not None else total
+        if year_running is not None or imported_current_decade is not None:
+            year_total = (year_running or 0) + (current_decade_rain or 0)
+            if season_contains(station, month):
+                season_total = (season_running or 0) + (current_decade_rain or 0)
+            else:
+                season_total = None
         etp = _resolve_etp_value(ew_etp, station)
         # Les normales pluviométriques sont propres à chaque station. L'ETP
         # peut être rattachée à une station source, mais ce rattachement ne
