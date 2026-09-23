@@ -155,6 +155,15 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             decades_by_station[station.id],
             key=lambda row: (int(row.get("year", 0)), int(row.get("month", 0)), int(row.get("decade", 0))),
         )
+        # La décade en cours n'a une ligne dans "station_decades" que si elle a été
+        # saisie via la saisie décadaire (endpoint /agro/pluies-decade) ou un import
+        # RESA. Si elle a été saisie jour par jour (saisie journalière), elle n'y
+        # figure pas du tout : on doit alors ajouter sa pluie propre nous-mêmes,
+        # sans quoi le cumul reste figé sur celui de la décade précédente.
+        current_decade_in_table = any(
+            (int(row.get("year", 0)), int(row.get("month", 0)), int(row.get("decade", 0))) == (year, month, decade)
+            for row in station_decades
+        )
         season_start_date = season_start(station, current_end)
         year_running: float | None = None
         season_running: float | None = None
@@ -172,16 +181,18 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
                     season_running = row_season_total
                 elif row_hauteur is not None:
                     season_running = (season_running or 0) + row_hauteur
+        own_current_total = total if total is not None else imported_current_decade
+        if not current_decade_in_table and own_current_total is not None:
+            year_running = (year_running or 0) + own_current_total
+            if season_start_date is not None and month >= season_start_date.month:
+                season_running = (season_running or 0) + own_current_total
         if year_running is not None:
             year_total = year_running
             season_total = season_running if season_contains(station, month) else None
-        if total is not None and not current_decades and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
-            year_total += total
-            season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
         etp = _resolve_etp_value(ew_etp, station)
         # Les normales pluviométriques sont propres à chaque station. L'ETP
         # peut être rattachée à une station source, mais ce rattachement ne
-        # doit jamais être appliqué aux normales de pluie.
+        # doit jamais être appliquée aux normales de pluie.
         normal_values = NORMALS.get(station.id) or NORMALS.get(station.name.casefold()) or NORMALS.get(station.name.lower()) or {}
         normal = normal_values.get(_decade_code(month, decade), {})
         normal_decade = normal.get("decade")
