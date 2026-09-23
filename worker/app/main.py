@@ -157,12 +157,20 @@ def _build_rain_export_summaries(year: int, month: int, decade: int) -> tuple[li
             ),
             None,
         )
-        if imported_cumulative:
-            year_total = imported_cumulative["year"] or 0
-            season_total = imported_cumulative["season"] if season_contains(station, month) else None
-        elif imported_decade_total is not None:
+        if imported_decade_total is not None:
+            # Cumul additif : somme des totaux de chaque décade enregistrée
+            # depuis le début de l'année/saison jusqu'à la décade en cours
+            # (décade précédente + décade en cours, etc.). C'est la valeur
+            # correcte à afficher dans les colonnes I/K.
             year_total = imported_decade_total
             season_total = imported_decade_total if season_contains(station, month) else None
+        elif imported_cumulative:
+            # Aucune donnée décadaire individuelle disponible pour reconstituer
+            # le cumul de façon additive : on n'utilise plus les valeurs brutes
+            # year_total_mm/season_total_mm importées telles quelles (non
+            # fiables, non recalculées), on force 0 plutôt que de les afficher.
+            year_total = 0
+            season_total = 0 if season_contains(station, month) else None
         if total is not None and not current_decades and not any(item.observed_on.month == month and item.observed_on.day >= (1 if decade == 1 else 11 if decade == 2 else 21) for item in historical):
             year_total += total
             season_total = (season_total or 0) + total if season_total is not None else total if season_contains(station, month) else None
