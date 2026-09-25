@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 from pathlib import Path
 
 import geopandas as gpd
@@ -22,6 +23,13 @@ DEPARTMENT_LABEL_POSITIONS = {
     "ATLANTIQUE": (1.12, 6.16),
     "LITTORAL": (3.12, 6.04),
 }
+
+# DPI utilise pour l'enregistrement du JPEG final ; c'est CE dpi (celui passe
+# a savefig), et non celui de la figure, qui determine la taille en pixels
+# et donc l'empreinte memoire du rendu Matplotlib/Agg. 200 donne encore une
+# image nette (2800x1970 px) pour un affichage web ou une impression A4,
+# pour environ 55% des pixels (et de la memoire de rendu) d'un export a 300.
+RENDER_DPI = 200
 
 
 def _extent(transform: object, shape: tuple[int, int]) -> tuple[float, float, float, float]:
@@ -47,7 +55,10 @@ def render_map(
     if product not in {"ndvi", "anomaly"}:
         raise ValueError(f"Produit inconnu: {product}")
     boundaries = gpd.read_file(boundary_path).to_crs("EPSG:4326")
-    fig = plt.figure(figsize=(14, 9.85), dpi=300, facecolor="white")
+    # Le dpi de creation de la figure ne sert qu'a un rendu ecran (jamais
+    # utilise ici) ; on le garde bas pour ne pas allouer un canvas Agg
+    # inutilement grand avant meme l'enregistrement.
+    fig = plt.figure(figsize=(14, 9.85), dpi=100, facecolor="white")
     # Keep the reference aspect ratio while giving the map and lower-left legend
     # nearly the full canvas. The legend coordinates below are derived from this axis.
     ax = fig.add_axes((0.032, 0.072, 0.936, 0.886))
@@ -148,8 +159,14 @@ def render_map(
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
-        fig.savefig(output, format="jpg", dpi=300, facecolor="white", pil_kwargs={"quality": 92})
+        fig.savefig(output, format="jpg", dpi=RENDER_DPI, facecolor="white", pil_kwargs={"quality": 92})
     finally:
         plt.close(fig)
         del legend_ax, country, boundaries, fig
+        # Le backend Agg et GEOS/Shapely (via union_all) retiennent des
+        # references croisees que le refcounting seul ne libere pas
+        # toujours immediatement ; un gc.collect() explicite ici rend la
+        # memoire au process avant l'etape suivante du pipeline plutot que
+        # d'attendre le prochain cycle du ramasse-miettes.
+        gc.collect()
     return output
