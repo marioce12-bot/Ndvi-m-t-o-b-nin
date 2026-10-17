@@ -169,11 +169,30 @@ def save_pentades(product: str, pentades: list[dict[str, object]]) -> None:
     get_client().table("pentade_catalog").upsert({"product": product, "pentades": pentades, "updated_at": _now()}, on_conflict="product").execute()
 
 
+class JobRecord(dict):
+    """Ligne de la table ``jobs`` (Supabase).
+
+    ``main.generate`` (héritée de Firestore) appelle ``existing.to_dict()`` et lit
+    ``imageUrl`` / ``thumbnailUrl`` / ``completedAt``. Une ligne Supabase est un
+    simple ``dict`` (colonnes en snake_case) sans ``to_dict()`` : l'appel levait
+    une AttributeError, donc une erreur 500 « échec de génération » au lieu de
+    répondre que la carte existe déjà.
+    """
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            **self,
+            "imageUrl": self.get("image_url"),
+            "thumbnailUrl": self.get("thumbnail_url"),
+            "completedAt": self.get("completed_at"),
+        }
+
+
 def find_done_job(product: str, pentade_id: str, owner_id: str | None):
     query = get_client().table("jobs").select("*").eq("product", product).eq("pentade_id", pentade_id).eq("status", "done")
     query = query.is_("owner_id", "null") if owner_id is None else query.eq("owner_id", owner_id)
     response = query.limit(1).execute()
-    return response.data[0] if response.data else None
+    return JobRecord(response.data[0]) if response.data else None
 
 
 def create_pending(job_id: str, product: str, pentade_id: str, label: str, email: str, owner_id: str | None) -> None:
